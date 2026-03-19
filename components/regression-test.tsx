@@ -121,7 +121,7 @@ const SUITE_METRICS_NORMAL: Record<SuiteType, { accuracy: number; precision: num
   current:   { accuracy: 83.3, precision: 100,  recall: 77.8, goldenPassRate: 85.7 },
 }
 
-// Simulate failure: Full Suite (current) drops goldenPassRate to 78.2
+// Simulate failure: Full Set (current) drops goldenPassRate to 78.2
 const SUITE_METRICS_FAILURE: Record<SuiteType, { accuracy: number; precision: number; recall: number; goldenPassRate: number }> = {
   golden:    { accuracy: 91.2, precision: 100,  recall: 85.0, goldenPassRate: 92.0 },
   benchmark: { accuracy: 87.5, precision: 95.0, recall: 81.2, goldenPassRate: 88.3 },
@@ -268,7 +268,7 @@ function VerdictBanner({ suites, simulateFailure }: { suites: SuiteResult[]; sim
             </Text>
             <Text type="secondary" style={{ fontSize: 13 }}>
               {allPass
-                ? "All suites meet the publishing threshold."
+                ? "All sets meet the publishing threshold."
                 : failedSuites.map((s) =>
                     `${s.label}: Golden Pass Rate ${s.goldenPassRate}% is below threshold.`
                   ).join(" ")}
@@ -276,7 +276,7 @@ function VerdictBanner({ suites, simulateFailure }: { suites: SuiteResult[]; sim
           </div>
         </div>
 
-        {/* Right: 3-suite compact summary */}
+        {/* Right: 3-set compact summary */}
         <div style={{ display: "flex", gap: 20, flexShrink: 0, alignItems: "flex-start", paddingTop: 2 }}>
           {summaries.map((s) => (
             <div key={s.label} style={{ textAlign: "right" }}>
@@ -586,7 +586,7 @@ export function RegressionTest({
     if (runStatus === "done" && selectedId) {
       const metrics = simulateFailure ? SUITE_METRICS_FAILURE : SUITE_METRICS_NORMAL
       const rebuilt: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
-        label: type === "golden" ? "Golden Suite" : type === "benchmark" ? "Benchmark Suite" : "Full Suite",
+        label: type === "golden" ? "Golden Set" : type === "benchmark" ? "Benchmark Set" : "Full Set",
         type,
         ...metrics[type],
         cases: buildSuiteCases(selectedId, type, metrics[type].goldenPassRate, sharedGoldenCases, selectedAgentStep),
@@ -610,7 +610,7 @@ export function RegressionTest({
         clearInterval(timerRef.current!)
         const metrics = simulateFailure ? SUITE_METRICS_FAILURE : SUITE_METRICS_NORMAL
         const results: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
-          label: type === "golden" ? "Golden Suite" : type === "benchmark" ? "Benchmark Suite" : "Full Suite",
+          label: type === "golden" ? "Golden Set" : type === "benchmark" ? "Benchmark Set" : "Full Set",
           type,
           ...metrics[type],
           cases: buildSuiteCases(selectedId, type, metrics[type].goldenPassRate, sharedGoldenCases, selectedAgentStep),
@@ -708,7 +708,7 @@ export function RegressionTest({
         {runStatus === "running" && (
           <div style={{ marginTop: 16 }}>
             <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
-              Running test suites: Golden Suite → Benchmark Suite → Full Suite...
+              Running test sets: Golden Set → Benchmark Set → Full Set...
             </Text>
             <Progress
               percent={progress}
@@ -737,7 +737,7 @@ export function RegressionTest({
           {/* Verdict Banner */}
           <VerdictBanner suites={suites} simulateFailure={simulateFailure} />
 
-          {/* Suite tabs */}
+          {/* Set tabs */}
           <div className="flex items-center gap-2 mb-4" style={{ marginTop: 16 }}>
             {suites.map((s) => (
               <Button
@@ -785,7 +785,7 @@ export function RegressionTest({
               style={simulateFailure ? { background: "#ff4d4f" } : {}}
             />
             <Text style={{ fontSize: 12, color: "#874d00" }}>
-              Simulate Failure (demo only) — toggles Full Suite Golden Pass Rate to 78.2%
+              Simulate Failure (demo only) — toggles Full Set Golden Pass Rate to 78.2%
             </Text>
           </div>
         </div>
