@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import {
   Select, Button, Table, Tag, Typography, Space, Progress,
-  Statistic, Card, Divider, Alert, Empty,
+  Statistic, Card, Divider, Alert, Empty, type EmptyProps,
 } from "antd"
 import {
   PlayCircleOutlined, CheckCircleOutlined, CloseCircleOutlined,

@@ -1,5 +1,5 @@
 "use client"
-
+// updated: all Collapse use items prop (no Panel)
 import { useState } from "react"
 import {
   Form, Input, Select, InputNumber, Button, Collapse, Typography,
