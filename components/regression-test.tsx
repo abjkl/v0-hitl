@@ -369,16 +369,15 @@ export function RegressionTest({
       </div>
 
       {/* Results */}
-      {runStatus === "idle" && (
-        <Empty
-          image={<ExperimentOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />}
-          styles={{ image: { height: 56 } }}
-          description={
-            <Text type="secondary">Select an agent and click Run Regression to start.</Text>
-          }
-          style={{ padding: "60px 0" }}
-        />
-      )}
+      {runStatus === "idle" && (() => {
+        const emptyProps: EmptyProps = {
+          image: <ExperimentOutlined style={{ fontSize: 48, color: "#d9d9d9" }} />,
+          styles: { image: { height: 56 } },
+          description: <Text type="secondary">Select an agent and click Run Regression to start.</Text>,
+          style: { padding: "60px 0" },
+        }
+        return <Empty {...emptyProps} />
+      })()}
 
       {runStatus === "done" && suites.length > 0 && (
         <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px" }}>

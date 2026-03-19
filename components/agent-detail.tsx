@@ -1,9 +1,10 @@
 "use client"
-// updated: all Collapse use items prop (no Panel)
+
 import { useState } from "react"
 import {
   Form, Input, Select, InputNumber, Button, Collapse, Typography,
   Space, Tag, Tooltip, Modal, Table, message, Popconfirm, Divider,
+  type CollapseProps,
 } from "antd"
 import {
   ArrowLeftOutlined, EyeOutlined, EyeInvisibleOutlined,
@@ -351,7 +352,7 @@ export function AgentDetail({ onBack }: { onBack: () => void }) {
             defaultActiveKey={["input"]}
             style={{ marginBottom: 12, background: "#fff", border: "1px solid #f0f0f0" }}
             items={[{
-              key: "input",
+              key: "input" as const,
               label: <Text strong style={{ fontSize: 13 }}>Platform Input Config</Text>,
               children: (
                 <>
@@ -447,7 +448,7 @@ export function AgentDetail({ onBack }: { onBack: () => void }) {
             defaultActiveKey={["integration"]}
             style={{ marginBottom: 12, background: "#fff", border: "1px solid #f0f0f0" }}
             items={[{
-              key: "integration",
+              key: "integration" as const,
               label: <Text strong style={{ fontSize: 13 }}>Platform Integration Info</Text>,
               children: (
                 <>
@@ -495,7 +496,7 @@ export function AgentDetail({ onBack }: { onBack: () => void }) {
             defaultActiveKey={["prompt"]}
             style={{ marginBottom: 16, background: "#fff", border: "1px solid #f0f0f0" }}
             items={[{
-              key: "prompt",
+              key: "prompt" as const,
               label: <Text strong style={{ fontSize: 13 }}>Prompt Config</Text>,
               children: (
                 <>
