@@ -1,6 +1,7 @@
 "use client"
+// [Cache-Buster: 2025-03-19-v2] VerdictBanner uses longhand border properties only
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   Select, Button, Table, Tag, Typography, Space, Progress,
   Statistic, Card, Divider, Empty, Switch, Tooltip,
@@ -236,18 +237,12 @@ function VerdictBanner({ suites, simulateFailure }: { suites: SuiteResult[]; sim
   const borderColor = allPass ? "#52C41A" : "#FF4D4F"
   const iconColor = allPass ? "#52C41A" : "#FF4D4F"
 
+  // Use box-shadow to simulate left-accent + thin border to avoid
+  // React shorthand/longhand conflict warnings on border properties.
   const bannerStyle: React.CSSProperties = {
     background: bg,
     borderRadius: 6,
-    borderTopWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderLeftWidth: 4,
-    borderStyle: "solid",
-    borderTopColor: `${borderColor}33`,
-    borderRightColor: `${borderColor}33`,
-    borderBottomColor: `${borderColor}33`,
-    borderLeftColor: borderColor,
+    boxShadow: `inset 4px 0 0 ${borderColor}, 0 0 0 1px ${borderColor}33`,
     padding: "16px 20px",
     display: "flex",
     alignItems: "flex-start",

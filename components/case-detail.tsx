@@ -403,28 +403,43 @@ interface PoLine {
 }
 
 const PO_LINES: PoLine[] = [
-  { key: "1", poLine: "001", description: "IT Consulting Services", poQty: 10, poUnit: "SGD 8,000",  poAmount: "SGD 80,000",  invAmount: "SGD 80,000",  match: "Match" },
-  { key: "2", poLine: "002", description: "Project Management",      poQty: 5,  poUnit: "SGD 10,000", poAmount: "SGD 50,000",  invAmount: "SGD 50,000",  match: "Match" },
-  { key: "3", poLine: "003", description: "Training & Support",      poQty: 3,  poUnit: "SGD 5,000",  poAmount: "SGD 15,000",  invAmount: "SGD 15,000",  match: "Match" },
+  { key: "1", poLine: "001", description: "IT Consulting Services", poQty: 10, poUnit: "SGD 8,000", poAmount: "SGD 80,000", invAmount: "SGD 80,000", match: "Match" },
+  { key: "2", poLine: "002", description: "Project Management",     poQty: 5,  poUnit: "SGD 9,500", poAmount: "SGD 47,500", invAmount: "SGD 50,000", match: "Match" },
+  { key: "3", poLine: "003", description: "Training & Support",     poQty: 3,  poUnit: "SGD 5,000", poAmount: "SGD 15,000", invAmount: "SGD 15,000", match: "Match" },
 ]
 
-const poColumns: ColumnsType<PoLine> = [
-  { title: "PO Line",     dataIndex: "poLine",      key: "poLine",      width: 90 },
-  { title: "Description", dataIndex: "description", key: "description", ellipsis: true },
-  { title: "PO Qty",      dataIndex: "poQty",       key: "poQty",       width: 80 },
-  { title: "Unit Price",  dataIndex: "poUnit",      key: "poUnit",      width: 110 },
-  { title: "PO Amount",   dataIndex: "poAmount",    key: "poAmount",    width: 110 },
-  { title: "Inv. Amount", dataIndex: "invAmount",   key: "invAmount",   width: 110 },
-  {
-    title: "Match", dataIndex: "match", key: "match", width: 100,
-    render: () => (
-      <Space size={4}>
-        <CheckCircleFilled style={{ color: "#52c41a", fontSize: 13 }} />
-        <Text style={{ fontSize: 12, color: "#389e0d", fontWeight: 500 }}>Match</Text>
-      </Space>
-    ),
-  },
-]
+function buildPoColumns(isRejected: boolean): ColumnsType<PoLine> {
+  return [
+    { title: "PO Line",     dataIndex: "poLine",      key: "poLine",      width: 90 },
+    { title: "Description", dataIndex: "description", key: "description", ellipsis: true },
+    { title: "PO Qty",      dataIndex: "poQty",       key: "poQty",       width: 80 },
+    { title: "Unit Price",  dataIndex: "poUnit",      key: "poUnit",      width: 110 },
+    { title: "PO Amount",   dataIndex: "poAmount",    key: "poAmount",    width: 110 },
+    { title: "Inv. Amount", dataIndex: "invAmount",   key: "invAmount",   width: 110 },
+    {
+      title: "Match", dataIndex: "match", key: "match", width: 130,
+      render: (_: unknown, record: PoLine) => {
+        const isMismatch = isRejected && record.poLine === "002"
+        if (isMismatch) {
+          return (
+            <Tooltip title="Invoice unit price SGD 10,000 ≠ PO SGD 9,500">
+              <Space size={4}>
+                <CloseCircleFilled style={{ color: "#ff4d4f", fontSize: 13 }} />
+                <Text style={{ fontSize: 12, color: "#cf1322", fontWeight: 500 }}>Mismatch</Text>
+              </Space>
+            </Tooltip>
+          )
+        }
+        return (
+          <Space size={4}>
+            <CheckCircleFilled style={{ color: "#52c41a", fontSize: 13 }} />
+            <Text style={{ fontSize: 12, color: "#389e0d", fontWeight: 500 }}>Match</Text>
+          </Space>
+        )
+      },
+    },
+  ]
+}
 
 // ── Section 1 — Invoice Review ────────────────────────────────────
 
@@ -487,7 +502,7 @@ function MatchSection({ matchState, onToggle }: { matchState: MatchState; onTogg
         <div style={{ marginBottom: 16 }}>
           <Text strong style={{ fontSize: 13, display: "block", marginBottom: 10 }}>PO Line Items</Text>
           <Table
-            columns={poColumns}
+            columns={buildPoColumns(isRejected)}
             dataSource={PO_LINES}
             size="small"
             rowKey="key"
