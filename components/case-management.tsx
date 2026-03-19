@@ -205,18 +205,6 @@ export function CaseManagement({ onViewDetail }: { onViewDetail?: (record: Audit
       render: (v: CaseGroundTruth) => <GroundTruthBadge value={v} />,
     },
     {
-      title: "Tags",
-      dataIndex: "tags",
-      key: "tags",
-      render: (tags: string[]) => (
-        <Space size={4} wrap>
-          {tags.map((t) => (
-            <Tag key={t} style={{ fontSize: 11, padding: "0 5px", margin: 0 }}>{t}</Tag>
-          ))}
-        </Space>
-      ),
-    },
-    {
       title: "",
       key: "action",
       width: 54,
