@@ -29,7 +29,7 @@ type Page =
   | "agent-detail"
   | "regression-test"
 
-const breadcrumbs: Record<Page, string[]> = {
+const BREADCRUMBS: Record<Page, string[]> = {
   "knowledge-detail":   ["Knowledge Base", "Knowledge Detail"],
   "knowledge-endpoint": ["Knowledge Base", "Endpoint"],
   "case-management":    ["Case Management"],
@@ -64,6 +64,7 @@ function AppShell() {
     setPage("case-detail")
     setSelectedKey("case-management")
   }
+
   function goToCaseList() {
     setPage("case-management")
     setSelectedKey("case-management")
@@ -72,19 +73,22 @@ function AppShell() {
   function goToAgentDetail() {
     setPage("agent-detail")
   }
+
   function goToAgentList() {
     setPage("agent-list")
     setSelectedKey("agent-management")
   }
+
   function goToRegressionTest(agentId?: string) {
     setRegressionAgentId(agentId)
     setPage("regression-test")
     setSelectedKey("regression-test")
   }
 
+  const crumbs = BREADCRUMBS[page]
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* ── Sidebar ─────────────────────────────────────────── */}
       <Sider
         width={240}
         style={{
@@ -98,7 +102,6 @@ function AppShell() {
           overflow: "hidden",
         }}
       >
-        {/* Logo */}
         <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f5f5f5" }}>
           <Text strong style={{ fontSize: 15, color: "#1d1d1d" }}>AP Invoice Audit</Text>
           <Text type="secondary" style={{ display: "block", fontSize: 11, marginTop: 2 }}>
@@ -124,15 +127,13 @@ function AppShell() {
               ],
             },
             { key: "case-management",  icon: <FolderOpenOutlined />, label: "Case Management" },
-            { key: "agent-management", icon: <RobotOutlined />,       label: "Agent Management" },
-            { key: "regression-test",  icon: <ExperimentOutlined />,  label: "Regression Test" },
+            { key: "agent-management", icon: <RobotOutlined />,      label: "Agent Management" },
+            { key: "regression-test",  icon: <ExperimentOutlined />, label: "Regression Test" },
           ]}
         />
       </Sider>
 
-      {/* ── Main area ───────────────────────────────────────── */}
       <Layout style={{ marginLeft: 240 }}>
-        {/* Header */}
         <Header
           style={{
             background: "#fff",
@@ -149,9 +150,9 @@ function AppShell() {
           }}
         >
           <Breadcrumb
-            items={breadcrumbs[page].map((label, idx, arr) => ({
+            items={crumbs.map((label, idx) => ({
               title:
-                idx === arr.length - 1 ? (
+                idx === crumbs.length - 1 ? (
                   <Text style={{ fontSize: 13, color: "#1d1d1d" }}>{label}</Text>
                 ) : (
                   <Text type="secondary" style={{ fontSize: 13 }}>{label}</Text>
@@ -178,7 +179,6 @@ function AppShell() {
           />
         </Header>
 
-        {/* Content */}
         <Content style={{ padding: 24, minHeight: "calc(100vh - 48px)", background: "#f5f6fa" }}>
           {page === "knowledge-detail"   && <KnowledgeDetail />}
           {page === "knowledge-endpoint" && <KnowledgeEndpoint />}
