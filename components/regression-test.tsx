@@ -242,9 +242,15 @@ function VerdictBanner({ suites, simulateFailure }: { suites: SuiteResult[]; sim
         style={{
           background: bg,
           borderRadius: 6,
-          borderLeft: `4px solid ${borderColor}`,
-          border: `1px solid ${borderColor}33`,
+          borderTopWidth: 1,
+          borderRightWidth: 1,
+          borderBottomWidth: 1,
           borderLeftWidth: 4,
+          borderStyle: "solid",
+          borderTopColor: `${borderColor}33`,
+          borderRightColor: `${borderColor}33`,
+          borderBottomColor: `${borderColor}33`,
+          borderLeftColor: borderColor,
           padding: "16px 20px",
           display: "flex",
           alignItems: "flex-start",
@@ -313,7 +319,7 @@ function VerdictBanner({ suites, simulateFailure }: { suites: SuiteResult[]; sim
 
       {/* Threshold footnote */}
       <Text type="secondary" style={{ fontSize: 11, display: "block", marginTop: 6, paddingLeft: 2 }}>
-        Publish threshold: [PLACEHOLDER — thresholds to be confirmed by product]
+        Publish threshold: Golden Pass Rate ≥ 85% (subject to change)
       </Text>
     </div>
   )

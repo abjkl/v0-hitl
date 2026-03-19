@@ -614,13 +614,13 @@ export function GoldenCaseManagement({
       {/* Table */}
       <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 6 }}>
         <Table
+          key={`${activeStep}-${filtered.length}`}
           columns={columns}
           dataSource={filtered}
           size="small"
           rowKey="key"
           pagination={{
             pageSize: 10,
-            total: filtered.length,
             showTotal: (_t, range) => `${range[0]}-${range[1]} of ${filtered.length} records`,
             showSizeChanger: false,
           }}
