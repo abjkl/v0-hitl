@@ -106,6 +106,7 @@ function NewAgentDrawer({
         status: "TESTING",
         lastUpdated: timestamp,
         description: values.description,
+        regions: [],
       }
       onCreated(newAgent)
       msgApi.success(`Agent "${values.agentName}" created successfully`)
@@ -390,7 +391,8 @@ export function AgentList({
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Filter by region first, then by search
-  const regionAgents = agents.filter((r) => r.regions.length === 0 || r.regions.includes(region))
+  // Guard against agents created before `regions` field existed (e.g. via NewAgentDrawer)
+  const regionAgents = agents.filter((r) => !r.regions || r.regions.length === 0 || r.regions.includes(region))
 
   const filtered = regionAgents.filter(
     (r) =>

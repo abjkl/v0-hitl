@@ -410,14 +410,23 @@ const PO_LINES: PoLine[] = [
 
 function buildPoColumns(isRejected: boolean): ColumnsType<PoLine> {
   return [
-    { title: "PO Line",     dataIndex: "poLine",      key: "poLine",      width: 90 },
+    { title: "PO Line",     dataIndex: "poLine",      key: "poLine",      width: 80 },
     { title: "Description", dataIndex: "description", key: "description", ellipsis: true },
-    { title: "PO Qty",      dataIndex: "poQty",       key: "poQty",       width: 80 },
-    { title: "Unit Price",  dataIndex: "poUnit",      key: "poUnit",      width: 110 },
-    { title: "PO Amount",   dataIndex: "poAmount",    key: "poAmount",    width: 110 },
-    { title: "Inv. Amount", dataIndex: "invAmount",   key: "invAmount",   width: 110 },
+    { title: "PO Qty",      dataIndex: "poQty",       key: "poQty",       width: 70 },
+    { title: "Unit Price",  dataIndex: "poUnit",      key: "poUnit",      width: 105 },
+    { title: "PO Amount",   dataIndex: "poAmount",    key: "poAmount",    width: 105 },
+    { title: "Inv. Amount", dataIndex: "invAmount",   key: "invAmount",   width: 105 },
     {
-      title: "Match", dataIndex: "match", key: "match", width: 130,
+      title: "Difference", key: "diff", width: 105,
+      render: (_: unknown, record: PoLine) => {
+        const hasDiff = isRejected && record.poLine === "002"
+        return hasDiff
+          ? <Text style={{ fontSize: 12, color: "#cf1322", fontWeight: 500 }}>SGD 2,500</Text>
+          : <Text style={{ fontSize: 12, color: "#389e0d", fontWeight: 500 }}>SGD 0</Text>
+      },
+    },
+    {
+      title: "Match", dataIndex: "match", key: "match", width: 120,
       render: (_: unknown, record: PoLine) => {
         const isMismatch = isRejected && record.poLine === "002"
         if (isMismatch) {
@@ -440,6 +449,37 @@ function buildPoColumns(isRejected: boolean): ColumnsType<PoLine> {
     },
   ]
 }
+
+// ── Match Summary + Receipt data ──────────────────────────────────
+
+interface ReceiptLine {
+  key: string; receiptNo: string; receiptLine: string
+  lineTotal: string; matchedByInv: string; remaining: string; hasDiff: boolean
+}
+
+const RECEIPT_LINES_MATCHED: ReceiptLine[] = [
+  { key: "1", receiptNo: "RCPT-2025-0041-1", receiptLine: "Line 1", lineTotal: "SGD 94,350", matchedByInv: "SGD 94,350", remaining: "SGD 0",   hasDiff: false },
+  { key: "2", receiptNo: "RCPT-2025-0041-2", receiptLine: "Line 1", lineTotal: "SGD 50,700", matchedByInv: "SGD 50,700", remaining: "SGD 0",   hasDiff: false },
+]
+const RECEIPT_LINES_REJECTED: ReceiptLine[] = [
+  { key: "1", receiptNo: "RCPT-2025-0041-1", receiptLine: "Line 1", lineTotal: "SGD 94,350", matchedByInv: "SGD 94,350", remaining: "SGD 0",     hasDiff: false },
+  { key: "2", receiptNo: "RCPT-2025-0041-2", receiptLine: "Line 1", lineTotal: "SGD 50,700", matchedByInv: "SGD 47,500", remaining: "SGD 3,200", hasDiff: true  },
+]
+
+const receiptColumns: ColumnsType<ReceiptLine> = [
+  { title: "Receipt No.",          dataIndex: "receiptNo",    key: "receiptNo",    ellipsis: true },
+  { title: "Receipt Line",         dataIndex: "receiptLine",  key: "receiptLine",  width: 100 },
+  { title: "Line Total",           dataIndex: "lineTotal",    key: "lineTotal",    width: 110 },
+  { title: "Matched by Invoice",   dataIndex: "matchedByInv", key: "matchedByInv", width: 130 },
+  {
+    title: "Remaining", key: "remaining", width: 110,
+    render: (_: unknown, record: ReceiptLine) => (
+      <Text style={{ fontSize: 12, color: record.hasDiff ? "#cf1322" : "#595959", fontWeight: record.hasDiff ? 600 : 400 }}>
+        {record.remaining}{record.hasDiff ? " ✗" : ""}
+      </Text>
+    ),
+  },
+]
 
 // ── Section 1 — Invoice Review ────────────────────────────────────
 
@@ -498,6 +538,38 @@ function MatchSection({ matchState, onToggle }: { matchState: MatchState; onTogg
           </div>
         </div>
 
+        {/* Match Summary Panel */}
+        <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: 16, marginBottom: 16, background: isRejected ? "#fff8f8" : "#f6ffed" }}>
+          <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Match Summary</Text>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "0 24px" }}>
+            <LV label="Invoice Total vs PO Total">
+              <Space size={6}>
+                {isRejected
+                  ? <CloseCircleFilled style={{ color: "#ff4d4f" }} />
+                  : <CheckCircleFilled style={{ color: "#52c41a" }} />}
+                <Text style={{ fontSize: 12 }}>
+                  {isRejected ? "SGD 145,000 vs SGD 142,500" : "SGD 145,000 vs SGD 145,000"}
+                </Text>
+              </Space>
+            </LV>
+            <LV label="Match Status">
+              {isRejected
+                ? <Tag style={{ color: "#cf1322", background: "#fff1f0", borderColor: "#ffa39e", fontWeight: 700 }}>MISMATCH</Tag>
+                : <Tag style={{ color: "#389e0d", background: "#f6ffed", borderColor: "#b7eb8f", fontWeight: 700 }}>FULL MATCH</Tag>}
+            </LV>
+            <LV label="Matched Amount">
+              <Text style={{ fontSize: 12 }}>
+                {isRejected ? "SGD 142,500 / SGD 145,000" : "SGD 145,000 / SGD 145,000"}
+              </Text>
+            </LV>
+            <LV label="Difference">
+              <Text style={{ fontSize: 12, color: isRejected ? "#cf1322" : "#389e0d", fontWeight: 600 }}>
+                {isRejected ? "SGD 2,500" : "SGD 0"}
+              </Text>
+            </LV>
+          </div>
+        </div>
+
         {/* PO Line Items */}
         <div style={{ marginBottom: 16 }}>
           <Text strong style={{ fontSize: 13, display: "block", marginBottom: 10 }}>PO Line Items</Text>
@@ -512,12 +584,51 @@ function MatchSection({ matchState, onToggle }: { matchState: MatchState; onTogg
           />
         </div>
 
+        {/* Invoice Amount Verification Panel */}
+        <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: 16, marginBottom: 16 }}>
+          <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Invoice Amount Verification</Text>
+          <div style={{ maxWidth: 340 }}>
+            {[
+              { label: "Subtotal",            value: "SGD 145,000", bold: false },
+              { label: "GST (9%)",             value: "SGD 13,050",  bold: false },
+              { label: "Total (incl. GST)",    value: "SGD 158,050", bold: true  },
+              { label: "AP Voucher Amount",    value: "SGD 158,050", bold: false },
+            ].map(({ label, value, bold }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #f5f5f5" }}>
+                <Text style={{ fontSize: 12, fontWeight: bold ? 700 : 400, color: bold ? "#262626" : "#595959" }}>{label}</Text>
+                <Text style={{ fontSize: 12, fontWeight: bold ? 700 : 400, color: bold ? "#262626" : "#595959" }}>{value}</Text>
+              </div>
+            ))}
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
+              <Text style={{ fontSize: 12, color: "#8c8c8c" }}>Tally</Text>
+              <Space size={4}>
+                <CheckCircleFilled style={{ color: "#52c41a", fontSize: 13 }} />
+                <Text style={{ fontSize: 12, color: "#389e0d", fontWeight: 500 }}>Matches AP Voucher</Text>
+              </Space>
+            </div>
+          </div>
+        </div>
+
+        {/* Receipt Match Panel */}
+        <div style={{ marginBottom: 16 }}>
+          <Text strong style={{ fontSize: 13, display: "block", marginBottom: 10 }}>Receipt Match</Text>
+          <Table
+            columns={receiptColumns}
+            dataSource={isRejected ? RECEIPT_LINES_REJECTED : RECEIPT_LINES_MATCHED}
+            size="small"
+            rowKey="key"
+            pagination={false}
+            bordered={false}
+            style={{ border: "1px solid #f0f0f0", borderRadius: 4 }}
+          />
+        </div>
+
         {/* Human Review Result */}
         <div style={{
           borderRadius: 4,
-          border: `1px solid ${isRejected ? "#ffa39e" : "#b7eb8f"}`,
-          borderLeft: `4px solid ${isRejected ? "#ff4d4f" : "#52c41a"}`,
+          boxShadow: `inset 4px 0 0 ${isRejected ? "#ff4d4f" : "#52c41a"}, 0 0 0 1px ${isRejected ? "#ffa39e" : "#b7eb8f"}`,
           padding: 16,
+          marginBottom: 4,
         }}>
           <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Human Review Result</Text>
           <LV label="Decision">
