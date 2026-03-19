@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Layout, Menu, Typography, Select, Breadcrumb, Space } from "antd"
 import {
   DatabaseOutlined, RobotOutlined,
-  FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined,
+  FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -13,11 +13,13 @@ import { KnowledgeEndpoint } from "@/components/knowledge-endpoint"
 import { CaseManagement } from "@/components/case-management"
 import { CaseDetail } from "@/components/case-detail"
 import { GoldenCaseManagement } from "@/components/golden-case-management"
+import { ArchivedCases } from "@/components/archived-cases"
 import { AgentList } from "@/components/agent-list"
 import { AgentDetail } from "@/components/agent-detail"
 import { PatternLibrary } from "@/components/pattern-library"
 import { RegressionTest } from "@/components/regression-test"
 import { agentListData, INITIAL_GOLDEN_CASES, type Agent, type AuditCase, type GoldenCasesState } from "@/lib/mock-data"
+import { type ArchivedCase } from "@/lib/archive-utils"
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -28,6 +30,7 @@ type Page =
   | "case-management"
   | "case-detail"
   | "golden-case-management"
+  | "archived-cases"
   | "agent-list"
   | "pattern-library"
   | "agent-detail"
@@ -39,6 +42,7 @@ const BREADCRUMBS: Record<Page, string[]> = {
   "case-management":       ["Case Management", "Case List"],
   "case-detail":           ["Case Management", "Case List", "Case Detail"],
   "golden-case-management":["Case Management", "Golden Case Management"],
+  "archived-cases":        ["Case Management", "Archived Cases"],
   "agent-list":            ["Agent Management", "Agent List"],
   "pattern-library":       ["Case Management", "Pattern Library"],
   "agent-detail":          ["Agent Management", "Agent List", "Agent Detail"],
@@ -54,7 +58,14 @@ function AppShell() {
   const [agents, setAgents] = useState<Agent[]>(agentListData)
   const [goldenCases, setGoldenCases] = useState<GoldenCasesState>(INITIAL_GOLDEN_CASES)
   const [passedAgentIds, setPassedAgentIds] = useState<string[]>([])
+  const [archivedCases, setArchivedCases] = useState<ArchivedCase[]>([])
   const { region, setRegion } = useRegion()
+
+  // Golden case IDs across all steps — used for archive retention
+  const goldenCaseIdSet = useMemo(
+    () => new Set(Object.values(goldenCases).flat().map((c) => c.caseId)),
+    [goldenCases],
+  )
 
   function handlePublish(agentId: string) {
     setAgents((prev) => prev.map((a) =>
@@ -68,12 +79,23 @@ function AppShell() {
     setPassedAgentIds((prev) => prev.includes(agentId) ? prev : [...prev, agentId])
   }
 
+  function handleArchive(newly: ArchivedCase[]) {
+    setArchivedCases((prev) => [...prev, ...newly])
+  }
+
+  function goToArchivedCases() {
+    setPage("archived-cases")
+    setSelectedKey("archived-cases")
+    setOpenKeys((prev) => prev.includes("case-management-menu") ? prev : [...prev, "case-management-menu"])
+  }
+
   function navigate(key: string) {
     setSelectedKey(key)
     if (key === "knowledge-detail")   setPage("knowledge-detail")
     if (key === "knowledge-endpoint") setPage("knowledge-endpoint")
     if (key === "case-management")         setPage("case-management")
     if (key === "golden-case-management")  setPage("golden-case-management")
+    if (key === "archived-cases")          setPage("archived-cases")
     if (key === "agent-list")          setPage("agent-list")
     if (key === "pattern-library")     setPage("pattern-library")
     if (key === "regression-test") {
@@ -157,6 +179,7 @@ function AppShell() {
               label: "Case Management",
               children: [
                 { key: "case-management",        icon: <TableOutlined />, label: "Case List" },
+                { key: "archived-cases",         icon: <InboxOutlined />, label: "Archived Cases" },
                 { key: "golden-case-management", icon: <CodeOutlined />,  label: "Golden Case Management" },
                 { key: "pattern-library",        icon: <CodeOutlined />,  label: "Pattern Library" },
               ],
@@ -225,7 +248,8 @@ function AppShell() {
         <Content style={{ padding: 24, minHeight: "calc(100vh - 48px)", background: "#f5f6fa" }}>
           {page === "knowledge-detail"   && <KnowledgeDetail />}
           {page === "knowledge-endpoint" && <KnowledgeEndpoint />}
-          {page === "case-management"         && <CaseManagement onViewDetail={goToCaseDetail} />}
+          {page === "case-management"         && <CaseManagement onViewDetail={goToCaseDetail} archivedCases={archivedCases} onArchive={handleArchive} onGoToArchived={goToArchivedCases} goldenCaseIds={goldenCaseIdSet} />}
+          {page === "archived-cases"          && <ArchivedCases archivedCases={archivedCases} />}
           {page === "golden-case-management"  && <GoldenCaseManagement goldenCases={goldenCases} setGoldenCases={setGoldenCases} />}
           {page === "case-detail"        && selectedCase && <CaseDetail record={selectedCase} onBack={goToCaseList} />}
           {page === "regression-test"    && <RegressionTest preselectedAgentId={regressionAgentId} agents={agents} goldenCases={goldenCases} onPublish={handlePublish} onPassedRun={handlePassedRun} />}

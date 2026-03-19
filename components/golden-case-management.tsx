@@ -1,5 +1,4 @@
 "use client"
-// [Cache-Buster: 2025-03-19-v2] Step pills use div role=button, no native button element
 
 import React, { useState, useMemo } from "react"
 import { type GoldenCasesState } from "@/lib/mock-data"

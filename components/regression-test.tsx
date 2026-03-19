@@ -1,5 +1,4 @@
 "use client"
-// [Cache-Buster: 2025-03-19-v2] VerdictBanner uses longhand border properties only
 
 import React, { useState, useEffect, useRef } from "react"
 import {
