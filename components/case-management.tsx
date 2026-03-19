@@ -81,7 +81,7 @@ function CaseDrawer({
       styles={{ body: { padding: "20px 24px" } }}
     >
       {record && (
-        <Descriptions column={1} size="small" bordered labelStyle={{ width: 140 }}>
+        <Descriptions column={1} size="small" bordered styles={{ label: { width: 140 } }}>
           <Descriptions.Item label="Case ID">{record.caseId}</Descriptions.Item>
           <Descriptions.Item label="Invoice No.">{record.invoiceNo}</Descriptions.Item>
           <Descriptions.Item label="Supplier">{record.supplierName}</Descriptions.Item>

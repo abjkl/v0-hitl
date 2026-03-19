@@ -2,10 +2,14 @@
 
 import { useState } from "react"
 import { Layout, Menu, Typography, Space, Select, Breadcrumb, Tag } from "antd"
-import { DatabaseOutlined, RobotOutlined, UserOutlined, FolderOpenOutlined, ExperimentOutlined } from "@ant-design/icons"
+import {
+  DatabaseOutlined, RobotOutlined, UserOutlined,
+  FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined,
+} from "@ant-design/icons"
 import { RoleProvider, useRole } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
-import { KnowledgeBase } from "@/components/knowledge-base"
+import { KnowledgeDetail } from "@/components/knowledge-base"
+import { KnowledgeEndpoint } from "@/components/knowledge-endpoint"
 import { CaseManagement } from "@/components/case-management"
 import { AgentList } from "@/components/agent-list"
 import { AgentDetail } from "@/components/agent-detail"
@@ -14,14 +18,42 @@ import { RegressionTest } from "@/components/regression-test"
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
 
-type Page = "knowledge-base" | "case-management" | "agent-list" | "agent-detail" | "regression-test"
+type Page =
+  | "knowledge-detail"
+  | "knowledge-endpoint"
+  | "case-management"
+  | "agent-list"
+  | "agent-detail"
+  | "regression-test"
+
+const breadcrumbs: Record<Page, string[]> = {
+  "knowledge-detail":   ["Knowledge Base", "Knowledge Detail"],
+  "knowledge-endpoint": ["Knowledge Base", "Endpoint"],
+  "case-management":    ["Case Management"],
+  "agent-list":         ["Agent Management", "Agent List"],
+  "agent-detail":       ["Agent Management", "Agent List", "Agent Detail"],
+  "regression-test":    ["Regression Test"],
+}
 
 function AppShell() {
-  const [page, setPage] = useState<Page>("knowledge-base")
-  const [selectedKey, setSelectedKey] = useState("knowledge-base")
+  const [page, setPage] = useState<Page>("knowledge-detail")
+  const [selectedKey, setSelectedKey] = useState("knowledge-detail")
+  const [openKeys, setOpenKeys] = useState<string[]>(["knowledge-base"])
   const [regressionAgentId, setRegressionAgentId] = useState<string | undefined>(undefined)
   const { role } = useRole()
   const { region, setRegion } = useRegion()
+
+  function navigate(key: string) {
+    setSelectedKey(key)
+    if (key === "knowledge-detail")   setPage("knowledge-detail")
+    if (key === "knowledge-endpoint") setPage("knowledge-endpoint")
+    if (key === "case-management")    setPage("case-management")
+    if (key === "agent-management")   setPage("agent-list")
+    if (key === "regression-test") {
+      setRegressionAgentId(undefined)
+      setPage("regression-test")
+    }
+  }
 
   function goToAgentDetail() {
     setPage("agent-detail")
@@ -34,14 +66,6 @@ function AppShell() {
     setRegressionAgentId(agentId)
     setPage("regression-test")
     setSelectedKey("regression-test")
-  }
-
-  const breadcrumbs: Record<Page, string[]> = {
-    "knowledge-base":  ["Knowledge Base"],
-    "case-management": ["Case Management"],
-    "agent-list":      ["Agent Management", "Agent List"],
-    "agent-detail":    ["Agent Management", "Agent List", "Agent Detail"],
-    "regression-test": ["Regression Test"],
   }
 
   return (
@@ -60,7 +84,7 @@ function AppShell() {
           overflow: "hidden",
         }}
       >
-        {/* Logo / Product title */}
+        {/* Logo */}
         <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f5f5f5" }}>
           <Text strong style={{ fontSize: 15, color: "#1d1d1d" }}>AP Invoice Audit</Text>
           <Text type="secondary" style={{ display: "block", fontSize: 11, marginTop: 2 }}>
@@ -71,19 +95,27 @@ function AppShell() {
         <Menu
           mode="inline"
           selectedKeys={[selectedKey]}
+          openKeys={openKeys}
+          onOpenChange={(keys) => setOpenKeys(keys as string[])}
           style={{ border: "none", marginTop: 4 }}
-          onClick={({ key }) => {
-            setSelectedKey(key)
-            if (key === "knowledge-base") setPage("knowledge-base")
-            if (key === "case-management") setPage("case-management")
-            if (key === "agent-management") setPage("agent-list")
-            if (key === "regression-test") goToRegressionTest(undefined)
-          }}
+          onClick={({ key }) => navigate(key)}
           items={[
             {
               key: "knowledge-base",
               icon: <DatabaseOutlined />,
               label: "Knowledge Base",
+              children: [
+                {
+                  key: "knowledge-detail",
+                  icon: <TableOutlined />,
+                  label: "Knowledge Detail",
+                },
+                {
+                  key: "knowledge-endpoint",
+                  icon: <CodeOutlined />,
+                  label: "Endpoint",
+                },
+              ],
             },
             {
               key: "case-management",
@@ -124,9 +156,12 @@ function AppShell() {
         >
           <Breadcrumb
             items={breadcrumbs[page].map((label, idx, arr) => ({
-              title: idx === arr.length - 1
-                ? <Text style={{ fontSize: 13, color: "#1d1d1d" }}>{label}</Text>
-                : <Text type="secondary" style={{ fontSize: 13 }}>{label}</Text>,
+              title:
+                idx === arr.length - 1 ? (
+                  <Text style={{ fontSize: 13, color: "#1d1d1d" }}>{label}</Text>
+                ) : (
+                  <Text type="secondary" style={{ fontSize: 13 }}>{label}</Text>
+                ),
             }))}
             separator={<Text type="secondary" style={{ fontSize: 13 }}>/</Text>}
           />
@@ -167,17 +202,12 @@ function AppShell() {
 
         {/* Content */}
         <Content style={{ padding: 24, minHeight: "calc(100vh - 48px)", background: "#f5f6fa" }}>
-          {page === "knowledge-base" && <KnowledgeBase />}
-          {page === "case-management" && <CaseManagement />}
-          {page === "regression-test" && (
-            <RegressionTest preselectedAgentId={regressionAgentId} />
-          )}
-          {page === "agent-list" && (
-            <AgentList onView={goToAgentDetail} onTriggerTest={goToRegressionTest} />
-          )}
-          {page === "agent-detail" && (
-            <AgentDetail onBack={goToAgentList} />
-          )}
+          {page === "knowledge-detail"   && <KnowledgeDetail />}
+          {page === "knowledge-endpoint" && <KnowledgeEndpoint />}
+          {page === "case-management"    && <CaseManagement />}
+          {page === "regression-test"    && <RegressionTest preselectedAgentId={regressionAgentId} />}
+          {page === "agent-list"         && <AgentList onView={goToAgentDetail} onTriggerTest={goToRegressionTest} />}
+          {page === "agent-detail"       && <AgentDetail onBack={goToAgentList} />}
         </Content>
       </Layout>
     </Layout>
