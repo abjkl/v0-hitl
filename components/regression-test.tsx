@@ -11,7 +11,7 @@ import {
   ExperimentOutlined, TrophyOutlined, WarningOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
-import { agentListData, auditCaseData, type AgentStatus } from "@/lib/mock-data"
+import { agentListData, auditCaseData, type Agent, type AgentStatus } from "@/lib/mock-data"
 
 const { Text, Title } = Typography
 
@@ -512,8 +512,17 @@ function CaseResultTable({ cases }: { cases: CaseResult[] }) {
 
 // ── Main component ───────────────────────────────────────────────
 
-export function RegressionTest({ preselectedAgentId }: { preselectedAgentId?: string }) {
-  const testingAgents = agentListData.filter((a) => a.status === "TESTING")
+export function RegressionTest({
+  preselectedAgentId,
+  agents,
+  onPublish,
+}: {
+  preselectedAgentId?: string
+  agents?: Agent[]
+  onPublish?: (agentId: string) => void
+}) {
+  const allAgents = agents ?? agentListData
+  const testingAgents = allAgents.filter((a) => a.status === "TESTING")
 
   const [selectedId, setSelectedId] = useState<string>(
     preselectedAgentId ?? testingAgents[0]?.id ?? "",
@@ -523,6 +532,7 @@ export function RegressionTest({ preselectedAgentId }: { preselectedAgentId?: st
   const [suites, setSuites] = useState<SuiteResult[]>([])
   const [activeSuite, setActiveSuite] = useState<SuiteType>("golden")
   const [simulateFailure, setSimulateFailure] = useState(false)
+  const [published, setPublished] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -547,6 +557,7 @@ export function RegressionTest({ preselectedAgentId }: { preselectedAgentId?: st
     if (!selectedId) return
     setSuites([])
     setProgress(0)
+    setPublished(false)
     setRunStatus("running")
 
     let pct = 0
@@ -625,14 +636,25 @@ export function RegressionTest({ preselectedAgentId }: { preselectedAgentId?: st
 
           {runStatus === "done" && (
             <div style={{ paddingTop: 20 }}>
-              <Tooltip title={!canPublish ? "Publishing thresholds not met" : ""}>
+              <Tooltip title={!canPublish ? "Publishing thresholds not met" : published ? "Already published" : ""}>
                 <Button
                   type="primary"
                   icon={<CheckCircleOutlined />}
-                  disabled={!canPublish}
-                  style={canPublish ? { background: "#52c41a", borderColor: "#52c41a" } : {}}
+                  disabled={!canPublish || published}
+                  style={
+                    published
+                      ? { background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default" }
+                      : canPublish
+                        ? { background: "#52c41a", borderColor: "#52c41a" }
+                        : {}
+                  }
+                  onClick={() => {
+                    if (!selectedId || published) return
+                    setPublished(true)
+                    onPublish?.(selectedId)
+                  }}
                 >
-                  Publish Version
+                  {published ? "Published" : "Publish Version"}
                 </Button>
               </Tooltip>
             </div>

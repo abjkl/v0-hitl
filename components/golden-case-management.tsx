@@ -405,6 +405,7 @@ function AddCaseModal({
 
 // ── Main Component ─────�����──────────────────────────────────────────
 
+// Step pill tabs
 const STEPS: StepType[] = ["INVOICE_REVIEW", "MATCH", "AP_VOUCHER"]
 
 export function GoldenCaseManagement() {
@@ -609,7 +610,8 @@ export function GoldenCaseManagement() {
           rowKey="key"
           pagination={{
             pageSize: 10,
-            showTotal: (t) => `Total ${t} records`,
+            total: filtered.length,
+            showTotal: (_t, range) => `${range[0]}-${range[1]} of ${filtered.length} records`,
             showSizeChanger: false,
           }}
         />

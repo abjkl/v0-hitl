@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import {
   Table, Input, Button, Tag, Typography, Space, Drawer,
   Form, Select, InputNumber, Divider, message,
@@ -370,9 +370,21 @@ function NewAgentDrawer({
 }
 
 // ── Agent List ───────────────────────────────────────────────────
-export function AgentList({ onView, onTriggerTest }: { onView: (id: string) => void; onTriggerTest?: (id: string) => void }) {
+export function AgentList({
+  agents: agentsProp,
+  setAgents: setAgentsProp,
+  onView,
+  onTriggerTest,
+}: {
+  agents?: Agent[]
+  setAgents?: React.Dispatch<React.SetStateAction<Agent[]>>
+  onView: (id: string) => void
+  onTriggerTest?: (id: string) => void
+}) {
   const [search, setSearch] = useState("")
-  const [agents, setAgents] = useState<Agent[]>(agentListData)
+  const [localAgents, setLocalAgents] = useState<Agent[]>(agentListData)
+  const agents = agentsProp ?? localAgents
+  const setAgents = setAgentsProp ?? setLocalAgents
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const filtered = agents.filter(
