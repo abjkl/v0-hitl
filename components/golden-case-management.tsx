@@ -486,10 +486,9 @@ export function GoldenCaseManagement() {
               onClick={() => { setActiveStep(step); setSearch(""); setPatternFilter([]); setGtFilter("All") }}
               style={{
                 padding: "8px 20px",
-                borderTopWidth: 1, borderTopStyle: "solid" as const, borderTopColor: isActive ? "#1890ff" : "#d9d9d9",
-                borderBottomWidth: 1, borderBottomStyle: "solid" as const, borderBottomColor: isActive ? "#1890ff" : "#d9d9d9",
-                borderRightWidth: 1, borderRightStyle: "solid" as const, borderRightColor: isActive ? "#1890ff" : "#d9d9d9",
-                borderLeftWidth: step !== "INVOICE_REVIEW" ? 0 : 1, borderLeftStyle: "solid" as const, borderLeftColor: isActive ? "#1890ff" : "#d9d9d9",
+                outline: `1px solid ${isActive ? "#1890ff" : "#d9d9d9"}`,
+                outlineOffset: "-1px",
+                marginLeft: step !== "INVOICE_REVIEW" ? -1 : 0,
                 background: isActive ? "#1890ff" : "#fff",
                 color: isActive ? "#fff" : "#595959",
                 fontWeight: isActive ? 600 : 400,
@@ -501,7 +500,8 @@ export function GoldenCaseManagement() {
                 borderBottomLeftRadius:  step === "INVOICE_REVIEW" ? 4 : 0,
                 borderTopRightRadius:    step === "AP_VOUCHER" ? 4 : 0,
                 borderBottomRightRadius: step === "AP_VOUCHER" ? 4 : 0,
-                transition: "background 0.2s, color 0.2s",
+                border: "none",
+                transition: "background 0.2s, color 0.2s, outline-color 0.2s",
               }}
             >
               {step}{" "}
