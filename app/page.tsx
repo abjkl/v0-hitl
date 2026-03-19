@@ -2,17 +2,18 @@
 
 import { useState } from "react"
 import { Layout, Menu, Typography, Space, Select, Breadcrumb, Tag } from "antd"
-import { DatabaseOutlined, RobotOutlined, UserOutlined, FolderOpenOutlined } from "@ant-design/icons"
+import { DatabaseOutlined, RobotOutlined, UserOutlined, FolderOpenOutlined, ExperimentOutlined } from "@ant-design/icons"
 import { RoleProvider, useRole, type UserRole } from "@/lib/role-context"
 import { KnowledgeBase } from "@/components/knowledge-base"
 import { CaseManagement } from "@/components/case-management"
 import { AgentList } from "@/components/agent-list"
 import { AgentDetail } from "@/components/agent-detail"
+import { RegressionTest } from "@/components/regression-test"
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
 
-type Page = "knowledge-base" | "case-management" | "agent-list" | "agent-detail"
+type Page = "knowledge-base" | "case-management" | "agent-list" | "agent-detail" | "regression-test"
 
 const ROLE_COLORS: Record<UserRole, string> = {
   AP_MANAGER: "#722ed1",
@@ -22,6 +23,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
 function AppShell() {
   const [page, setPage] = useState<Page>("knowledge-base")
   const [selectedKey, setSelectedKey] = useState("knowledge-base")
+  const [regressionAgentId, setRegressionAgentId] = useState<string | undefined>(undefined)
   const { role, setRole } = useRole()
 
   function goToAgentDetail() {
@@ -31,12 +33,18 @@ function AppShell() {
     setPage("agent-list")
     setSelectedKey("agent-management")
   }
+  function goToRegressionTest(agentId?: string) {
+    setRegressionAgentId(agentId)
+    setPage("regression-test")
+    setSelectedKey("regression-test")
+  }
 
   const breadcrumbs: Record<Page, string[]> = {
     "knowledge-base":  ["Knowledge Base"],
     "case-management": ["Case Management"],
     "agent-list":      ["Agent Management", "Agent List"],
     "agent-detail":    ["Agent Management", "Agent List", "Agent Detail"],
+    "regression-test": ["Regression Test"],
   }
 
   return (
@@ -72,6 +80,7 @@ function AppShell() {
             if (key === "knowledge-base") setPage("knowledge-base")
             if (key === "case-management") setPage("case-management")
             if (key === "agent-management") setPage("agent-list")
+            if (key === "regression-test") goToRegressionTest(undefined)
           }}
           items={[
             {
@@ -88,6 +97,11 @@ function AppShell() {
               key: "agent-management",
               icon: <RobotOutlined />,
               label: "Agent Management",
+            },
+            {
+              key: "regression-test",
+              icon: <ExperimentOutlined />,
+              label: "Regression Test",
             },
           ]}
         />
@@ -151,8 +165,11 @@ function AppShell() {
         <Content style={{ padding: 24, minHeight: "calc(100vh - 48px)", background: "#f5f6fa" }}>
           {page === "knowledge-base" && <KnowledgeBase />}
           {page === "case-management" && <CaseManagement />}
+          {page === "regression-test" && (
+            <RegressionTest preselectedAgentId={regressionAgentId} />
+          )}
           {page === "agent-list" && (
-            <AgentList onView={goToAgentDetail} />
+            <AgentList onView={goToAgentDetail} onTriggerTest={goToRegressionTest} />
           )}
           {page === "agent-detail" && (
             <AgentDetail onBack={goToAgentList} />

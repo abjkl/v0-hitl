@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Table, Input, Button, Tag, Typography, Space } from "antd"
-import { SearchOutlined, PlusOutlined } from "@ant-design/icons"
+import { SearchOutlined, PlusOutlined, ExperimentOutlined } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import { agentListData, type Agent, type AgentStatus, type AgentStep } from "@/lib/mock-data"
 
@@ -38,7 +38,7 @@ function StatusTag({ status }: { status: AgentStatus }) {
   )
 }
 
-export function AgentList({ onView }: { onView: (id: string) => void }) {
+export function AgentList({ onView, onTriggerTest }: { onView: (id: string) => void; onTriggerTest?: (id: string) => void }) {
   const [search, setSearch] = useState("")
 
   const filtered = agentListData.filter(
@@ -89,11 +89,19 @@ export function AgentList({ onView }: { onView: (id: string) => void }) {
     {
       title: "Actions",
       key: "actions",
-      width: 90,
+      width: 160,
       render: (_: unknown, record: Agent) => (
-        <Link onClick={() => onView(record.id)} style={{ fontSize: 13 }}>
-          View
-        </Link>
+        <Space size={12}>
+          <Link onClick={() => onView(record.id)} style={{ fontSize: 13 }}>
+            View
+          </Link>
+          {record.status === "TESTING" && onTriggerTest && (
+            <Link onClick={() => onTriggerTest(record.id)} style={{ fontSize: 13, color: "#d46b08" }}>
+              <ExperimentOutlined style={{ marginRight: 4 }} />
+              Run Test
+            </Link>
+          )}
+        </Space>
       ),
     },
   ]
