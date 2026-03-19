@@ -89,6 +89,7 @@ function AppShell() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      {/* Sidebar */}
       <Sider
         width={240}
         style={{
@@ -134,6 +135,7 @@ function AppShell() {
       </Sider>
 
       <Layout style={{ marginLeft: 240 }}>
+        {/* Header */}
         <Header
           style={{
             background: "#fff",
@@ -179,6 +181,7 @@ function AppShell() {
           />
         </Header>
 
+        {/* Content */}
         <Content style={{ padding: 24, minHeight: "calc(100vh - 48px)", background: "#f5f6fa" }}>
           {page === "knowledge-detail"   && <KnowledgeDetail />}
           {page === "knowledge-endpoint" && <KnowledgeEndpoint />}

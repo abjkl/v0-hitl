@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react"
 import {
-  Button, Tag, Badge, Typography, Space, Table,
+  Button, Tag, Badge, Typography, Space, Table, Switch,
 } from "antd"
 import {
-  ArrowLeftOutlined, CheckCircleFilled, ClockCircleOutlined, StarFilled,
+  ArrowLeftOutlined, CheckCircleFilled, ClockCircleOutlined,
+  StarFilled, FileTextOutlined, FilePdfOutlined, FileImageOutlined,
+  CloseCircleFilled,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import type { AuditCase } from "@/lib/mock-data"
@@ -15,6 +17,9 @@ const { Text, Title } = Typography
 // ── Types ────────────────────────────────────────────────────────
 
 type StepStatus = "Pass" | "Fail" | "Pending"
+type DocTab = "invoice" | "receipt" | "contract" | "other"
+type MatchState = "matched" | "rejected"
+type VoucherState = "pending" | "submitted" | "rejected"
 
 interface Step {
   key: "invoice-review" | "match" | "ap-voucher"
@@ -22,12 +27,6 @@ interface Step {
   label: string
   status: StepStatus
 }
-
-const STEPS: Step[] = [
-  { key: "invoice-review", number: 1, label: "Invoice Review", status: "Pass" },
-  { key: "match",          number: 2, label: "Match",          status: "Pass" },
-  { key: "ap-voucher",     number: 3, label: "AP Voucher",     status: "Pending" },
-]
 
 // ── Status Badge ─────────────────────────────────────────────────
 
@@ -44,42 +43,41 @@ function StatusBadge({ status }: { status: StepStatus }) {
 function StepTimeline({
   activeStep,
   onStepClick,
+  matchState,
+  voucherState,
 }: {
   activeStep: string
   onStepClick: (key: string) => void
+  matchState: MatchState
+  voucherState: VoucherState
 }) {
+  const steps: Step[] = [
+    { key: "invoice-review", number: 1, label: "Invoice Review", status: "Pass" },
+    { key: "match",          number: 2, label: "Match",          status: matchState === "rejected" ? "Fail" : "Pass" },
+    { key: "ap-voucher",     number: 3, label: "AP Voucher",     status: voucherState === "submitted" ? "Pass" : voucherState === "rejected" ? "Fail" : "Pending" },
+  ]
+
   return (
-    <div
-      style={{
-        width: 240,
-        flexShrink: 0,
-        background: "#f9fafb",
-        borderRight: "1px solid #f0f0f0",
-        padding: "24px 0",
-        position: "sticky",
-        top: 0,
-        height: "100%",
-        alignSelf: "flex-start",
-      }}
-    >
+    <div style={{
+      width: 240,
+      flexShrink: 0,
+      background: "#f9fafb",
+      borderRight: "1px solid #f0f0f0",
+      padding: "24px 0",
+      position: "sticky",
+      top: 0,
+      height: "100%",
+      alignSelf: "flex-start",
+    }}>
       <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.5, paddingLeft: 24, display: "block", marginBottom: 16, textTransform: "uppercase" }}>
         Step Navigator
       </Text>
-      {STEPS.map((step, idx) => {
+      {steps.map((step, idx) => {
         const isActive = activeStep === step.key
         return (
           <div key={step.key} style={{ position: "relative" }}>
-            {/* Connector line */}
-            {idx < STEPS.length - 1 && (
-              <div style={{
-                position: "absolute",
-                left: 35,
-                top: 40,
-                width: 2,
-                height: 36,
-                background: "#e8e8e8",
-                zIndex: 0,
-              }} />
+            {idx < steps.length - 1 && (
+              <div style={{ position: "absolute", left: 35, top: 40, width: 2, height: 36, background: "#e8e8e8", zIndex: 0 }} />
             )}
             <div
               onClick={() => onStepClick(step.key)}
@@ -87,39 +85,33 @@ function StepTimeline({
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
-                padding: "10px 20px 10px 20px",
+                padding: "10px 20px",
                 cursor: "pointer",
                 background: isActive ? "#e6f7ff" : "transparent",
                 borderLeft: isActive ? "3px solid #1890ff" : "3px solid transparent",
                 transition: "all 0.15s",
               }}
             >
-              {/* Circle */}
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: isActive ? "#1890ff" : "#d9d9d9",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  flexShrink: 0,
-                  zIndex: 1,
-                  position: "relative",
-                  transition: "background 0.15s",
-                }}
-              >
+              <div style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: isActive ? "#1890ff" : step.status === "Fail" ? "#ff4d4f" : step.status === "Pass" ? "#52c41a" : "#d9d9d9",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 700,
+                flexShrink: 0,
+                zIndex: 1,
+                position: "relative",
+                transition: "background 0.15s",
+              }}>
                 {step.number}
               </div>
               <div style={{ minWidth: 0 }}>
-                <Text
-                  strong={isActive}
-                  style={{ fontSize: 13, display: "block", color: isActive ? "#1890ff" : "#434343" }}
-                >
+                <Text strong={isActive} style={{ fontSize: 13, display: "block", color: isActive ? "#1890ff" : "#434343" }}>
                   {step.label}
                 </Text>
                 <div style={{ marginTop: 2 }}>
@@ -134,19 +126,14 @@ function StepTimeline({
   )
 }
 
-// ── Section Header Bar ───────────────────────────────────────────
+// ── Layout helpers ────────────────────────────────────────────────
 
 function SectionHeader({ step, status }: { step: string; status: StepStatus }) {
   return (
     <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      padding: "10px 20px",
-      background: "#fafafa",
-      border: "1px solid #f0f0f0",
-      borderRadius: "4px 4px 0 0",
-      borderBottom: "none",
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "10px 20px", background: "#fafafa",
+      border: "1px solid #f0f0f0", borderRadius: "4px 4px 0 0", borderBottom: "none",
     }}>
       <Text strong style={{ fontSize: 14, color: "#1d1d1d" }}>{step}</Text>
       <StatusBadge status={status} />
@@ -156,27 +143,17 @@ function SectionHeader({ step, status }: { step: string; status: StepStatus }) {
 
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      border: "1px solid #f0f0f0",
-      borderRadius: 4,
-      background: "#fff",
-      overflow: "hidden",
-      marginBottom: 20,
-    }}>
+    <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, background: "#fff", overflow: "hidden", marginBottom: 20 }}>
       {children}
     </div>
   )
 }
 
 function SectionBody({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "20px 20px" }}>{children}</div>
+  return <div style={{ padding: "20px" }}>{children}</div>
 }
 
-// ── Mini label-value row ──────────────────────────────────────────
-
-const LV_LABEL: React.CSSProperties = {
-  fontSize: 12, color: "#8c8c8c", fontWeight: 500, minWidth: 140, flexShrink: 0,
-}
+const LV_LABEL: React.CSSProperties = { fontSize: 12, color: "#8c8c8c", fontWeight: 500, minWidth: 140, flexShrink: 0 }
 const LV_VALUE: React.CSSProperties = { fontSize: 13, color: "#1d1d1d" }
 
 function LV({ label, children }: { label: string; children: React.ReactNode }) {
@@ -188,25 +165,42 @@ function LV({ label, children }: { label: string; children: React.ReactNode }) {
   )
 }
 
-// ── Invoice Preview ───────────────────────────────────────────────
+function DemoToggleBar({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "8px 12px", marginTop: 16,
+      background: "#fffbe6", border: "1px dashed #ffe58f", borderRadius: 4,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function RejectReasonBlock({ text }: { text: string }) {
+  return (
+    <div style={{
+      background: "#FFF2F0", borderLeft: "3px solid #ff4d4f",
+      borderRadius: "0 4px 4px 0", padding: "10px 14px", marginBottom: 10,
+    }}>
+      <Text style={{ fontSize: 12, color: "#cf1322", fontWeight: 600, display: "block", marginBottom: 4 }}>
+        Reject Reason
+      </Text>
+      <Text style={{ fontSize: 13, color: "#434343" }}>{text}</Text>
+    </div>
+  )
+}
+
+// ── Document Viewer (Section 1 left) ─────────────────────────────
 
 function InvoicePreview() {
   const lineItems = [
-    { desc: "IT Consulting Services",  qty: 10, unit: "SGD 8,000",  amount: "SGD 80,000" },
-    { desc: "Project Management",       qty: 5,  unit: "SGD 10,000", amount: "SGD 50,000" },
-    { desc: "Training & Support",       qty: 3,  unit: "SGD 5,000",  amount: "SGD 15,000" },
+    { desc: "IT Consulting Services", qty: 10, unit: "SGD 8,000",  amount: "SGD 80,000" },
+    { desc: "Project Management",      qty: 5,  unit: "SGD 10,000", amount: "SGD 50,000" },
+    { desc: "Training & Support",      qty: 3,  unit: "SGD 5,000",  amount: "SGD 15,000" },
   ]
-
   return (
-    <div style={{
-      background: "#fafafa",
-      border: "1px solid #e8e8e8",
-      borderRadius: 6,
-      padding: 20,
-      fontSize: 12,
-      fontFamily: "sans-serif",
-    }}>
-      {/* Header */}
+    <div style={{ background: "#fafafa", border: "1px solid #e8e8e8", borderRadius: 6, padding: 20, fontSize: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
         <div>
           <div style={{ width: 40, height: 40, background: "#d9d9d9", borderRadius: 4, marginBottom: 4 }} />
@@ -217,20 +211,10 @@ function InvoicePreview() {
           <Text type="secondary" style={{ fontSize: 11 }}>INV-2025-0001</Text>
         </div>
       </div>
-
-      {/* Meta */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14, fontSize: 11 }}>
-        <div>
-          <Text type="secondary">Invoice Date</Text>
-          <div style={{ fontWeight: 600 }}>2025-01-05</div>
-        </div>
-        <div>
-          <Text type="secondary">Bill To</Text>
-          <div style={{ fontWeight: 600 }}>Shopee Singapore Pte Ltd</div>
-        </div>
+        <div><Text type="secondary">Invoice Date</Text><div style={{ fontWeight: 600 }}>2025-01-05</div></div>
+        <div><Text type="secondary">Bill To</Text><div style={{ fontWeight: 600 }}>Shopee Singapore Pte Ltd</div></div>
       </div>
-
-      {/* Line items table */}
       <div style={{ border: "1px solid #e8e8e8", borderRadius: 3, overflow: "hidden", marginBottom: 10 }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
           <thead>
@@ -252,8 +236,6 @@ function InvoicePreview() {
           </tbody>
         </table>
       </div>
-
-      {/* Totals */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3, fontSize: 11 }}>
         <div style={{ display: "flex", gap: 24 }}><span style={{ color: "#8c8c8c" }}>Subtotal</span><span style={{ fontWeight: 500, minWidth: 90, textAlign: "right" }}>SGD 145,000</span></div>
         <div style={{ display: "flex", gap: 24 }}><span style={{ color: "#8c8c8c" }}>Tax (9% GST)</span><span style={{ fontWeight: 500, minWidth: 90, textAlign: "right" }}>SGD 13,050</span></div>
@@ -262,8 +244,6 @@ function InvoicePreview() {
           <span style={{ fontWeight: 700, color: "#1890ff", minWidth: 90, textAlign: "right" }}>SGD 158,050</span>
         </div>
       </div>
-
-      {/* View PDF button */}
       <div style={{ marginTop: 14 }}>
         <Button size="small" disabled style={{ fontSize: 11 }}>View Full PDF</Button>
       </div>
@@ -271,7 +251,122 @@ function InvoicePreview() {
   )
 }
 
-// ── Checklist ────────────────────────────────────────────────────
+function ReceiptPreview() {
+  return (
+    <div style={{ background: "#fafafa", border: "1px solid #e8e8e8", borderRadius: 6, padding: 20, fontSize: 12 }}>
+      <div style={{ fontWeight: 800, fontSize: 15, color: "#1d1d1d", marginBottom: 16, letterSpacing: 1 }}>DELIVERY ORDER</div>
+      <LV label="DO No">DO-2025-0088</LV>
+      <LV label="Delivery Date">2025-01-04</LV>
+      <LV label="Items Delivered">
+        <div>
+          <div>IT Consulting Services — 10 units</div>
+          <div>Project Management — 5 units</div>
+          <div>Training {"&"} Support — 3 units</div>
+        </div>
+      </LV>
+      <LV label="Received By"><Text code style={{ fontSize: 11 }}>ops_sg_02</Text></LV>
+    </div>
+  )
+}
+
+function ContractPreview() {
+  return (
+    <div style={{ background: "#fafafa", border: "1px solid #e8e8e8", borderRadius: 6, padding: 20, fontSize: 12 }}>
+      <div style={{ fontWeight: 800, fontSize: 15, color: "#1d1d1d", marginBottom: 16, letterSpacing: 1 }}>CONTRACT SUMMARY</div>
+      <LV label="Contract No">CTR-2024-SG-0051</LV>
+      <LV label="Contract Period">2024-07-01 — 2025-06-30</LV>
+      <LV label="Total Contract Value">SGD 600,000</LV>
+      <LV label="Payment Terms">Net 30 from invoice date</LV>
+    </div>
+  )
+}
+
+function OtherAttachmentsPreview() {
+  const files = [
+    { name: "supporting_doc_1.pdf",    type: "PDF",   uploadedBy: "ap_user_sg", date: "2025-01-04" },
+    { name: "bank_confirmation.jpg",   type: "Image", uploadedBy: "ap_user_sg", date: "2025-01-04" },
+  ]
+  return (
+    <div style={{ border: "1px solid #e8e8e8", borderRadius: 6, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+        <thead>
+          <tr style={{ background: "#f5f5f5" }}>
+            {["Filename", "Type", "Uploaded By", "Date", ""].map((h) => (
+              <th key={h} style={{ padding: "7px 10px", textAlign: "left", fontWeight: 600, color: "#595959", borderBottom: "1px solid #e8e8e8" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {files.map((f) => (
+            <tr key={f.name} style={{ borderBottom: "1px solid #f5f5f5" }}>
+              <td style={{ padding: "8px 10px" }}>
+                <Space size={6}>
+                  {f.type === "PDF" ? <FilePdfOutlined style={{ color: "#ff4d4f" }} /> : <FileImageOutlined style={{ color: "#1890ff" }} />}
+                  <Text style={{ fontSize: 12 }}>{f.name}</Text>
+                </Space>
+              </td>
+              <td style={{ padding: "8px 10px", color: "#8c8c8c" }}>{f.type}</td>
+              <td style={{ padding: "8px 10px" }}><Text code style={{ fontSize: 11 }}>{f.uploadedBy}</Text></td>
+              <td style={{ padding: "8px 10px", color: "#8c8c8c" }}>{f.date}</td>
+              <td style={{ padding: "8px 10px" }}>
+                <Button type="link" size="small" style={{ padding: 0, fontSize: 12 }}>View</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+const DOC_TABS: { key: DocTab; label: string }[] = [
+  { key: "invoice",  label: "Invoice" },
+  { key: "receipt",  label: "Receipt / DO" },
+  { key: "contract", label: "Contract" },
+  { key: "other",    label: "Other Attachments" },
+]
+
+function DocumentViewer() {
+  const [activeTab, setActiveTab] = useState<DocTab>("invoice")
+
+  return (
+    <div>
+      {/* Tab bar */}
+      <div style={{ display: "flex", gap: 0, marginBottom: 12, borderBottom: "1px solid #f0f0f0" }}>
+        {DOC_TABS.map((t) => {
+          const isActive = activeTab === t.key
+          return (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              style={{
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: isActive ? 600 : 400,
+                color: isActive ? "#1890ff" : "#595959",
+                background: "none",
+                border: "none",
+                borderBottom: isActive ? "2px solid #1890ff" : "2px solid transparent",
+                cursor: "pointer",
+                marginBottom: -1,
+                transition: "all 0.15s",
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
+      {/* Preview panel */}
+      {activeTab === "invoice"  && <InvoicePreview />}
+      {activeTab === "receipt"  && <ReceiptPreview />}
+      {activeTab === "contract" && <ContractPreview />}
+      {activeTab === "other"    && <OtherAttachmentsPreview />}
+    </div>
+  )
+}
+
+// ── Checklist ─────────────────────────────────────────────────────
 
 const CHECKLIST = [
   "Supplier name matches PO",
@@ -288,17 +383,7 @@ function ReviewChecklist() {
         <Text strong style={{ fontSize: 13 }}>Review Checklist</Text>
       </div>
       {CHECKLIST.map((item) => (
-        <div
-          key={item}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "8px 14px",
-            borderBottom: "1px solid #f8f8f8",
-            fontSize: 13,
-          }}
-        >
+        <div key={item} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 14px", borderBottom: "1px solid #f8f8f8", fontSize: 13 }}>
           <span style={{ color: "#434343" }}>{item}</span>
           <Space size={4}>
             <CheckCircleFilled style={{ color: "#52c41a", fontSize: 13 }} />
@@ -310,37 +395,28 @@ function ReviewChecklist() {
   )
 }
 
-// ── PO Line Items table ──────────────────────────────────────────
+// ── PO Line Items ─────────────────────────────────────────────────
 
 interface PoLine {
-  key: string
-  poLine: string
-  description: string
-  poQty: number
-  poUnit: string
-  poAmount: string
-  invAmount: string
-  match: string
+  key: string; poLine: string; description: string; poQty: number
+  poUnit: string; poAmount: string; invAmount: string; match: string
 }
 
 const PO_LINES: PoLine[] = [
-  { key: "1", poLine: "001", description: "IT Consulting Services",  poQty: 10, poUnit: "SGD 8,000",  poAmount: "SGD 80,000",  invAmount: "SGD 80,000",  match: "Match" },
-  { key: "2", poLine: "002", description: "Project Management",       poQty: 5,  poUnit: "SGD 10,000", poAmount: "SGD 50,000",  invAmount: "SGD 50,000",  match: "Match" },
-  { key: "3", poLine: "003", description: "Training & Support",       poQty: 3,  poUnit: "SGD 5,000",  poAmount: "SGD 15,000",  invAmount: "SGD 15,000",  match: "Match" },
+  { key: "1", poLine: "001", description: "IT Consulting Services", poQty: 10, poUnit: "SGD 8,000",  poAmount: "SGD 80,000",  invAmount: "SGD 80,000",  match: "Match" },
+  { key: "2", poLine: "002", description: "Project Management",      poQty: 5,  poUnit: "SGD 10,000", poAmount: "SGD 50,000",  invAmount: "SGD 50,000",  match: "Match" },
+  { key: "3", poLine: "003", description: "Training & Support",      poQty: 3,  poUnit: "SGD 5,000",  poAmount: "SGD 15,000",  invAmount: "SGD 15,000",  match: "Match" },
 ]
 
 const poColumns: ColumnsType<PoLine> = [
-  { title: "PO Line",      dataIndex: "poLine",      key: "poLine",      width: 90 },
-  { title: "Description",  dataIndex: "description", key: "description", ellipsis: true },
-  { title: "PO Qty",       dataIndex: "poQty",       key: "poQty",       width: 80 },
-  { title: "Unit Price",   dataIndex: "poUnit",      key: "poUnit",      width: 110 },
-  { title: "PO Amount",    dataIndex: "poAmount",    key: "poAmount",    width: 110 },
-  { title: "Inv. Amount",  dataIndex: "invAmount",   key: "invAmount",   width: 110 },
+  { title: "PO Line",     dataIndex: "poLine",      key: "poLine",      width: 90 },
+  { title: "Description", dataIndex: "description", key: "description", ellipsis: true },
+  { title: "PO Qty",      dataIndex: "poQty",       key: "poQty",       width: 80 },
+  { title: "Unit Price",  dataIndex: "poUnit",      key: "poUnit",      width: 110 },
+  { title: "PO Amount",   dataIndex: "poAmount",    key: "poAmount",    width: 110 },
+  { title: "Inv. Amount", dataIndex: "invAmount",   key: "invAmount",   width: 110 },
   {
-    title: "Match",
-    dataIndex: "match",
-    key: "match",
-    width: 100,
+    title: "Match", dataIndex: "match", key: "match", width: 100,
     render: () => (
       <Space size={4}>
         <CheckCircleFilled style={{ color: "#52c41a", fontSize: 13 }} />
@@ -350,7 +426,7 @@ const poColumns: ColumnsType<PoLine> = [
   },
 ]
 
-// ── Section 1 — Invoice Review ───────────────────────────────────
+// ── Section 1 — Invoice Review ────────────────────────────────────
 
 function InvoiceReviewSection() {
   return (
@@ -358,15 +434,13 @@ function InvoiceReviewSection() {
       <SectionHeader step="Step 1 — Invoice Review" status="Pass" />
       <SectionBody>
         <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-          {/* Left 45%: Invoice preview */}
+          {/* Left 45%: Document Viewer */}
           <div style={{ flex: "0 0 44%" }}>
-            <Text strong style={{ fontSize: 13, display: "block", marginBottom: 10 }}>Invoice Preview</Text>
-            <InvoicePreview />
+            <DocumentViewer />
           </div>
-
-          {/* Right 55%: Human Review */}
+          {/* Right: Human Review + Checklist */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px", marginBottom: 14 }}>
+            <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: 16, marginBottom: 14 }}>
               <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Human Review</Text>
               <LV label="Ground Truth">
                 <Space size={4}>
@@ -377,9 +451,7 @@ function InvoiceReviewSection() {
               <LV label="Reviewed By"><Text code style={{ fontSize: 12 }}>ap_manager_sg_01</Text></LV>
               <LV label="Review Date">2025-01-06</LV>
               <LV label="Comment">
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  Invoice details match PO requirements. GST amount verified.
-                </Text>
+                <Text type="secondary" style={{ fontSize: 13 }}>Invoice details match PO requirements. GST amount verified.</Text>
               </LV>
             </div>
             <ReviewChecklist />
@@ -390,12 +462,13 @@ function InvoiceReviewSection() {
   )
 }
 
-// ── Section 2 — Match ────────────────────────────────────────────
+// ── Section 2 — Match ─────────────────────────────────────────────
 
-function MatchSection() {
+function MatchSection({ matchState, onToggle }: { matchState: MatchState; onToggle: (v: boolean) => void }) {
+  const isRejected = matchState === "rejected"
   return (
     <SectionCard>
-      <SectionHeader step="Step 2 — Match" status="Pass" />
+      <SectionHeader step="Step 2 — Match" status={isRejected ? "Fail" : "Pass"} />
       <SectionBody>
         {/* PO Info */}
         <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: 16, marginBottom: 16 }}>
@@ -424,36 +497,61 @@ function MatchSection() {
           />
         </div>
 
-        {/* Human Review */}
-        <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: 16 }}>
-          <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Human Review</Text>
-          <LV label="Ground Truth">
-            <Space size={4}>
-              <CheckCircleFilled style={{ color: "#52c41a" }} />
-              <Text strong style={{ color: "#389e0d" }}>Pass</Text>
-            </Space>
+        {/* Human Review Result */}
+        <div style={{
+          borderRadius: 4,
+          border: `1px solid ${isRejected ? "#ffa39e" : "#b7eb8f"}`,
+          borderLeft: `4px solid ${isRejected ? "#ff4d4f" : "#52c41a"}`,
+          padding: 16,
+        }}>
+          <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Human Review Result</Text>
+          <LV label="Decision">
+            {isRejected
+              ? <Tag style={{ color: "#cf1322", background: "#fff1f0", borderColor: "#ffa39e", fontWeight: 700, fontSize: 13 }}>Rejected</Tag>
+              : <Tag style={{ color: "#389e0d", background: "#f6ffed", borderColor: "#b7eb8f", fontWeight: 700, fontSize: 13 }}>Matched</Tag>
+            }
           </LV>
+          {isRejected && (
+            <div style={{ marginBottom: 10 }}>
+              <RejectReasonBlock text="Line item 002 unit price does not match PO. Invoice shows SGD 10,000 but PO states SGD 9,500." />
+            </div>
+          )}
           <LV label="Reviewed By"><Text code style={{ fontSize: 12 }}>ap_manager_sg_01</Text></LV>
           <LV label="Review Date">2025-01-07</LV>
-          <LV label="Comment">
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              Three-way match confirmed. All line items reconciled.
-            </Text>
-          </LV>
+          {!isRejected && (
+            <LV label="Comment">
+              <Text type="secondary" style={{ fontSize: 13 }}>Three-way match confirmed. All line items reconciled.</Text>
+            </LV>
+          )}
         </div>
+
+        {/* Demo toggle */}
+        <DemoToggleBar>
+          <Switch
+            size="small"
+            checked={isRejected}
+            onChange={onToggle}
+            style={isRejected ? { background: "#ff4d4f" } : {}}
+          />
+          <Text style={{ fontSize: 12, color: "#874d00" }}>Preview: Show Rejected State</Text>
+        </DemoToggleBar>
       </SectionBody>
     </SectionCard>
   )
 }
 
-// ── Section 3 — AP Voucher ───────────────────────────────────────
+// ── Section 3 — AP Voucher ────────────────────────────────────────
 
-function APVoucherSection() {
+const VOUCHER_STATE_ORDER: VoucherState[] = ["pending", "submitted", "rejected"]
+
+function APVoucherSection({ voucherState, onCycle }: { voucherState: VoucherState; onCycle: () => void }) {
+  const stepStatus: StepStatus = voucherState === "submitted" ? "Pass" : voucherState === "rejected" ? "Fail" : "Pending"
+
   return (
     <SectionCard>
-      <SectionHeader step="Step 3 — AP Voucher" status="Pending" />
+      <SectionHeader step="Step 3 — AP Voucher" status={stepStatus} />
       <SectionBody>
-        {/* AP Voucher Info */}
+        {/* AP Voucher Info (system) */}
         <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, padding: 16, marginBottom: 20 }}>
           <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>AP Voucher Info</Text>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
@@ -464,27 +562,73 @@ function APVoucherSection() {
             <LV label="Cost Center">CC-SG-TECH</LV>
             <LV label="Posted By"><Text code style={{ fontSize: 12 }}>finance_sg_03</Text></LV>
             <LV label="Status">
-              <Tag style={{ color: "#389e0d", background: "#f6ffed", borderColor: "#b7eb8f", fontWeight: 600, fontSize: 11 }}>
-                Posted
-              </Tag>
+              <Tag style={{ color: "#389e0d", background: "#f6ffed", borderColor: "#b7eb8f", fontWeight: 600, fontSize: 11 }}>Posted</Tag>
             </LV>
           </div>
         </div>
 
-        {/* Pending Human Review empty state */}
-        <div style={{
-          border: "2px dashed #d9d9d9",
-          borderRadius: 6,
-          padding: "32px 20px",
-          textAlign: "center",
-          background: "#fafafa",
-        }}>
-          <ClockCircleOutlined style={{ fontSize: 32, color: "#bfbfbf", display: "block", marginBottom: 10 }} />
-          <Text strong style={{ fontSize: 14, color: "#595959", display: "block" }}>Pending Human Review</Text>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            No review result has been submitted for this step yet.
+        {/* Human Submission */}
+        {voucherState === "pending" && (
+          <div style={{ border: "2px dashed #d9d9d9", borderRadius: 6, padding: "32px 20px", textAlign: "center", background: "#fafafa" }}>
+            <ClockCircleOutlined style={{ fontSize: 32, color: "#bfbfbf", display: "block", marginBottom: 10 }} />
+            <Text strong style={{ fontSize: 14, color: "#595959", display: "block" }}>Pending Human Submission</Text>
+            <Text type="secondary" style={{ fontSize: 13 }}>
+              The AP team has not yet submitted the voucher entry for this case.
+            </Text>
+          </div>
+        )}
+
+        {voucherState === "submitted" && (
+          <div style={{
+            borderRadius: 4,
+            border: "1px solid #b7eb8f",
+            borderLeft: "4px solid #52c41a",
+            padding: 16,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <Text strong style={{ fontSize: 13 }}>Human Submitted Voucher</Text>
+              <Tag style={{ color: "#389e0d", background: "#f6ffed", borderColor: "#b7eb8f", fontWeight: 700, fontSize: 12 }}>Submitted</Tag>
+            </div>
+            <LV label="Voucher No">APV-2025-00312</LV>
+            <LV label="Entry Date">2025-01-08</LV>
+            <LV label="Amount">SGD 158,050</LV>
+            <LV label="GL Account">21000 — Accounts Payable</LV>
+            <LV label="Cost Center">CC-SG-TECH</LV>
+            <LV label="Submitted By"><Text code style={{ fontSize: 12 }}>finance_sg_03</Text></LV>
+            <LV label="Submission Note">
+              <Text type="secondary" style={{ fontSize: 13 }}>Voucher entered per approved 3-way match. GST included.</Text>
+            </LV>
+          </div>
+        )}
+
+        {voucherState === "rejected" && (
+          <div style={{
+            borderRadius: 4,
+            border: "1px solid #ffa39e",
+            borderLeft: "4px solid #ff4d4f",
+            padding: 16,
+          }}>
+            <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>Human Review Result</Text>
+            <LV label="Decision">
+              <Tag style={{ color: "#cf1322", background: "#fff1f0", borderColor: "#ffa39e", fontWeight: 700, fontSize: 13 }}>Rejected</Tag>
+            </LV>
+            <div style={{ marginBottom: 10 }}>
+              <RejectReasonBlock text="GL account incorrect. Should be posted to 21500 — Accrued Liabilities." />
+            </div>
+            <LV label="Reviewed By"><Text code style={{ fontSize: 12 }}>finance_sg_03</Text></LV>
+            <LV label="Review Date">2025-01-09</LV>
+          </div>
+        )}
+
+        {/* Demo cycle toggle */}
+        <DemoToggleBar>
+          <Button size="small" onClick={onCycle} style={{ fontSize: 12 }}>
+            Cycle State
+          </Button>
+          <Text style={{ fontSize: 12, color: "#874d00" }}>
+            Preview: Cycle States (Pending → Submitted → Rejected) — current: <strong>{voucherState}</strong>
           </Text>
-        </div>
+        </DemoToggleBar>
       </SectionBody>
     </SectionCard>
   )
@@ -495,15 +639,9 @@ function APVoucherSection() {
 function CaseHeader({ record }: { record: AuditCase }) {
   return (
     <div style={{
-      background: "#fff",
-      border: "1px solid #f0f0f0",
-      borderRadius: 4,
-      padding: "14px 20px",
-      marginBottom: 16,
-      display: "flex",
-      alignItems: "center",
-      flexWrap: "wrap",
-      gap: 16,
+      background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4,
+      padding: "14px 20px", marginBottom: 16,
+      display: "flex", alignItems: "center", flexWrap: "wrap", gap: 16,
     }}>
       <div>
         <Text strong style={{ fontSize: 18, color: "#1d1d1d" }}>{record.caseId}</Text>
@@ -538,7 +676,11 @@ function CaseHeader({ record }: { record: AuditCase }) {
         )}
         <Badge
           status={record.groundTruth === "Pass" ? "success" : record.groundTruth === "Fail" ? "error" : "processing"}
-          text={<Text strong style={{ fontSize: 12, color: record.groundTruth === "Pass" ? "#389e0d" : record.groundTruth === "Fail" ? "#cf1322" : "#8c8c8c" }}>{record.groundTruth}</Text>}
+          text={
+            <Text strong style={{ fontSize: 12, color: record.groundTruth === "Pass" ? "#389e0d" : record.groundTruth === "Fail" ? "#cf1322" : "#8c8c8c" }}>
+              {record.groundTruth}
+            </Text>
+          }
         />
         {record.tags.map((t) => (
           <Tag key={t} style={{ fontSize: 11, margin: 0, background: "#f5f5f5", border: "none", color: "#595959" }}>{t}</Tag>
@@ -550,14 +692,10 @@ function CaseHeader({ record }: { record: AuditCase }) {
 
 // ── Main Component ────────────────────────────────────────────────
 
-export function CaseDetail({
-  record,
-  onBack,
-}: {
-  record: AuditCase
-  onBack: () => void
-}) {
+export function CaseDetail({ record, onBack }: { record: AuditCase; onBack: () => void }) {
   const [activeStep, setActiveStep] = useState("invoice-review")
+  const [matchState, setMatchState] = useState<MatchState>("matched")
+  const [voucherState, setVoucherState] = useState<VoucherState>("pending")
 
   const sectionRefs = {
     "invoice-review": useRef<HTMLDivElement>(null),
@@ -565,31 +703,23 @@ export function CaseDetail({
     "ap-voucher":     useRef<HTMLDivElement>(null),
   }
 
-  // IntersectionObserver — update active step on scroll
   useEffect(() => {
     const observers: IntersectionObserver[] = []
     const entries = new Map<string, boolean>()
-
     Object.entries(sectionRefs).forEach(([key, ref]) => {
       if (!ref.current) return
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          entries.set(key, entry.isIntersecting)
-          const visible = Object.entries(Object.fromEntries(entries))
-            .filter(([, v]) => v)
-            .map(([k]) => k)
-          if (visible.length > 0) {
-            const order = ["invoice-review", "match", "ap-voucher"]
-            const first = order.find((o) => visible.includes(o))
-            if (first) setActiveStep(first)
-          }
-        },
-        { threshold: 0.25 },
-      )
+      const obs = new IntersectionObserver(([entry]) => {
+        entries.set(key, entry.isIntersecting)
+        const visible = Object.entries(Object.fromEntries(entries)).filter(([, v]) => v).map(([k]) => k)
+        if (visible.length > 0) {
+          const order = ["invoice-review", "match", "ap-voucher"]
+          const first = order.find((o) => visible.includes(o))
+          if (first) setActiveStep(first)
+        }
+      }, { threshold: 0.25 })
       obs.observe(ref.current)
       observers.push(obs)
     })
-
     return () => observers.forEach((o) => o.disconnect())
   }, [])
 
@@ -599,14 +729,20 @@ export function CaseDetail({
     setActiveStep(key)
   }
 
+  function cycleVoucherState() {
+    const idx = VOUCHER_STATE_ORDER.indexOf(voucherState)
+    setVoucherState(VOUCHER_STATE_ORDER[(idx + 1) % VOUCHER_STATE_ORDER.length])
+  }
+
   return (
     <div style={{ display: "flex", gap: 0, alignItems: "flex-start", minHeight: "calc(100vh - 96px)" }}>
-      {/* Left: Step Timeline */}
-      <StepTimeline activeStep={activeStep} onStepClick={scrollToSection} />
-
-      {/* Right: scrollable content */}
+      <StepTimeline
+        activeStep={activeStep}
+        onStepClick={scrollToSection}
+        matchState={matchState}
+        voucherState={voucherState}
+      />
       <div style={{ flex: 1, minWidth: 0, padding: "0 0 40px 20px" }}>
-        {/* Back link */}
         <Button
           type="link"
           icon={<ArrowLeftOutlined />}
@@ -615,19 +751,21 @@ export function CaseDetail({
         >
           Back to Case List
         </Button>
-
-        {/* Case Header */}
         <CaseHeader record={record} />
-
-        {/* Sections */}
         <div ref={sectionRefs["invoice-review"]}>
           <InvoiceReviewSection />
         </div>
         <div ref={sectionRefs["match"]}>
-          <MatchSection />
+          <MatchSection
+            matchState={matchState}
+            onToggle={(v) => setMatchState(v ? "rejected" : "matched")}
+          />
         </div>
         <div ref={sectionRefs["ap-voucher"]}>
-          <APVoucherSection />
+          <APVoucherSection
+            voucherState={voucherState}
+            onCycle={cycleVoucherState}
+          />
         </div>
       </div>
     </div>
