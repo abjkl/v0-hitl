@@ -1,60 +1,163 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { AppSidebar, type Module } from "@/components/app-sidebar";
-import { CaseLibrary } from "@/components/case-library";
-import { AgentManagement } from "@/components/agent-management";
-import { RegressionTesting } from "@/components/regression-testing";
+import { useState } from "react"
+import { Layout, Menu, Typography, Space, Select, Breadcrumb, Tag } from "antd"
+import { DatabaseOutlined, RobotOutlined, UserOutlined } from "@ant-design/icons"
+import { RoleProvider, useRole, type UserRole } from "@/lib/role-context"
+import { KnowledgeBase } from "@/components/knowledge-base"
+import { AgentList } from "@/components/agent-list"
+import { AgentDetail } from "@/components/agent-detail"
 
-export default function Home() {
-  const [activeModule, setActiveModule] = useState<Module>("cases");
-  const [pendingRegressionId, setPendingRegressionId] = useState<string | undefined>(undefined);
+const { Sider, Header, Content } = Layout
+const { Text } = Typography
 
-  function handleTriggerRegression(agentId: string) {
-    setPendingRegressionId(agentId);
-    setActiveModule("regression");
+type Page = "knowledge-base" | "agent-list" | "agent-detail"
+
+const ROLE_COLORS: Record<UserRole, string> = {
+  AP_MANAGER: "#722ed1",
+  AI_OPS: "#1890ff",
+}
+
+function AppShell() {
+  const [page, setPage] = useState<Page>("knowledge-base")
+  const [selectedKey, setSelectedKey] = useState("knowledge-base")
+  const { role, setRole } = useRole()
+
+  function goToAgentDetail() {
+    setPage("agent-detail")
+  }
+  function goToAgentList() {
+    setPage("agent-list")
+    setSelectedKey("agent-management")
   }
 
-  const MODULE_TITLES: Record<Module, string> = {
-    cases: "案例库",
-    agents: "Agent 版本管理",
-    regression: "回测模块",
-  };
+  const breadcrumbs: Record<Page, string[]> = {
+    "knowledge-base":  ["Knowledge Base"],
+    "agent-list":      ["Agent Management", "Agent List"],
+    "agent-detail":    ["Agent Management", "Agent List", "Agent Detail"],
+  }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AppSidebar activeModule={activeModule} onModuleChange={setActiveModule} />
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* ── Sidebar ─────────────────────────────────────────── */}
+      <Sider
+        width={240}
+        style={{
+          background: "#fff",
+          borderRight: "1px solid #f0f0f0",
+          position: "fixed",
+          height: "100vh",
+          left: 0,
+          top: 0,
+          zIndex: 100,
+          overflow: "hidden",
+        }}
+      >
+        {/* Logo / Product title */}
+        <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid #f5f5f5" }}>
+          <Text strong style={{ fontSize: 15, color: "#1d1d1d" }}>AP Invoice Audit</Text>
+          <Text type="secondary" style={{ display: "block", fontSize: 11, marginTop: 2 }}>
+            Agent Management System
+          </Text>
+        </div>
 
-      <div className="flex flex-col flex-1 min-w-0">
-        {/* Top Bar */}
-        <header className="h-12 flex items-center px-6 border-b border-border bg-card shrink-0">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-foreground">AP Invoice Audit</span>
-            <span className="text-muted-foreground">—</span>
-            <span className="text-muted-foreground">Agent Management</span>
-            <span className="text-muted-foreground mx-1">/</span>
-            <span className="text-foreground font-medium">{MODULE_TITLES[activeModule]}</span>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">内部工具</span>
-            <span className="text-xs text-muted-foreground">v2.5.0</span>
-          </div>
-        </header>
+        <Menu
+          mode="inline"
+          selectedKeys={[selectedKey]}
+          style={{ border: "none", marginTop: 4 }}
+          onClick={({ key }) => {
+            setSelectedKey(key)
+            if (key === "knowledge-base") setPage("knowledge-base")
+            if (key === "agent-management") setPage("agent-list")
+          }}
+          items={[
+            {
+              key: "knowledge-base",
+              icon: <DatabaseOutlined />,
+              label: "Knowledge Base",
+            },
+            {
+              key: "agent-management",
+              icon: <RobotOutlined />,
+              label: "Agent Management",
+            },
+          ]}
+        />
+      </Sider>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          {activeModule === "cases" && <CaseLibrary />}
-          {activeModule === "agents" && (
-            <AgentManagement onTriggerRegression={handleTriggerRegression} />
-          )}
-          {activeModule === "regression" && (
-            <RegressionTesting
-              preselectedAgentId={pendingRegressionId}
-              onPreselectedConsumed={() => setPendingRegressionId(undefined)}
+      {/* ── Main area ───────────────────────────────────────── */}
+      <Layout style={{ marginLeft: 240 }}>
+        {/* Header */}
+        <Header
+          style={{
+            background: "#fff",
+            borderBottom: "1px solid #f0f0f0",
+            padding: "0 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            position: "sticky",
+            top: 0,
+            zIndex: 99,
+            height: 48,
+            lineHeight: "48px",
+          }}
+        >
+          <Breadcrumb
+            items={breadcrumbs[page].map((label, idx, arr) => ({
+              title: idx === arr.length - 1
+                ? <Text style={{ fontSize: 13, color: "#1d1d1d" }}>{label}</Text>
+                : <Text type="secondary" style={{ fontSize: 13 }}>{label}</Text>,
+            }))}
+            separator={<Text type="secondary" style={{ fontSize: 13 }}>/</Text>}
+          />
+
+          <Space size={12}>
+            <UserOutlined style={{ color: "#8c8c8c", fontSize: 14 }} />
+            <Tag
+              style={{
+                color: ROLE_COLORS[role],
+                background: ROLE_COLORS[role] + "14",
+                border: `1px solid ${ROLE_COLORS[role]}44`,
+                fontWeight: 600,
+                fontSize: 11,
+                letterSpacing: 0.3,
+              }}
+            >
+              {role}
+            </Tag>
+            <Select
+              value={role}
+              size="small"
+              style={{ width: 130 }}
+              onChange={(v) => setRole(v as UserRole)}
+              options={[
+                { value: "AI_OPS", label: "AI_OPS" },
+                { value: "AP_MANAGER", label: "AP_MANAGER" },
+              ]}
             />
+          </Space>
+        </Header>
+
+        {/* Content */}
+        <Content style={{ padding: 24, minHeight: "calc(100vh - 48px)", background: "#f5f6fa" }}>
+          {page === "knowledge-base" && <KnowledgeBase />}
+          {page === "agent-list" && (
+            <AgentList onView={goToAgentDetail} />
           )}
-        </main>
-      </div>
-    </div>
-  );
+          {page === "agent-detail" && (
+            <AgentDetail onBack={goToAgentList} />
+          )}
+        </Content>
+      </Layout>
+    </Layout>
+  )
+}
+
+export default function Home() {
+  return (
+    <RoleProvider>
+      <AppShell />
+    </RoleProvider>
+  )
 }
