@@ -290,7 +290,7 @@ function AddCaseModal({
   )
 }
 
-// ── Main Component ────────────────────────────────────────────────
+// ── Main Component ─────���──────────────────────────────────────────
 
 const STEPS: StepType[] = ["INVOICE_REVIEW", "MATCH", "AP_VOUCHER"]
 
@@ -385,15 +385,18 @@ export function GoldenCaseManagement() {
               onClick={() => { setActiveStep(step); setSearch(""); setPatternFilter([]); setGtFilter("All") }}
               style={{
                 padding: "8px 20px",
-                border: "1px solid",
-                borderColor: isActive ? "#1890ff" : "#d9d9d9",
+                borderStyle: "solid",
+                borderWidth: "1px",
+                borderTopColor:    isActive ? "#1890ff" : "#d9d9d9",
+                borderBottomColor: isActive ? "#1890ff" : "#d9d9d9",
+                borderRightColor:  isActive ? "#1890ff" : "#d9d9d9",
+                borderLeftColor:   step !== "INVOICE_REVIEW" ? "transparent" : (isActive ? "#1890ff" : "#d9d9d9"),
                 background: isActive ? "#1890ff" : "#fff",
                 color: isActive ? "#fff" : "#595959",
                 fontWeight: isActive ? 600 : 400,
                 fontSize: 13,
                 cursor: "pointer",
                 borderRadius: step === "INVOICE_REVIEW" ? "4px 0 0 4px" : step === "AP_VOUCHER" ? "0 4px 4px 0" : "0",
-                borderLeft: step !== "INVOICE_REVIEW" ? "none" : undefined,
                 transition: "all 0.2s",
               }}
             >

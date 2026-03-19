@@ -13,7 +13,7 @@ import {
 import type { ColumnsType } from "antd/es/table"
 import {
   auditCaseData,
-  type AuditCase, type CaseGolden, type CaseGroundTruth,
+  type AuditCase, type CaseGolden,
 } from "@/lib/mock-data"
 
 const { Text } = Typography
@@ -285,7 +285,7 @@ export function CaseManagement({ onViewDetail }: { onViewDetail?: (record: Audit
   const [regionFilter, setRegionFilter]   = useState<string | null>(null)
   const [entityFilter, setEntityFilter]   = useState<string | null>(null)
   const [goldenFilter, setGoldenFilter]   = useState<CaseGolden | null>(null)
-  const [groundTruthFilter, setGroundTruthFilter] = useState<CaseGroundTruth | null>(null)
+
   const [detail, setDetail]               = useState<AuditCase | null>(null)
   const [expandedKeys, setExpandedKeys]   = useState<string[]>([])
   const [expandedData, setExpandedData]   = useState<Record<string, CaseExpanded>>({})
@@ -305,10 +305,9 @@ export function CaseManagement({ onViewDetail }: { onViewDetail?: (record: Audit
       const matchRegion = !regionFilter || r.region === regionFilter
       const matchEntity = !entityFilter || r.entity === entityFilter
       const matchGolden = !goldenFilter || r.isGolden === goldenFilter
-      const matchGT     = !groundTruthFilter || r.groundTruth === groundTruthFilter
-      return matchSearch && matchRegion && matchEntity && matchGolden && matchGT
+        return matchSearch && matchRegion && matchEntity && matchGolden
     })
-  }, [search, regionFilter, entityFilter, goldenFilter, groundTruthFilter])
+  }, [search, regionFilter, entityFilter, goldenFilter])
 
   function getExpanded(caseId: string): CaseExpanded {
     return expandedData[caseId] ?? getDefaultExpanded(caseId)
@@ -327,10 +326,9 @@ export function CaseManagement({ onViewDetail }: { onViewDetail?: (record: Audit
     setRegionFilter(null)
     setEntityFilter(null)
     setGoldenFilter(null)
-    setGroundTruthFilter(null)
   }
 
-  const hasFilters = !!(search || regionFilter || entityFilter || goldenFilter || groundTruthFilter)
+  const hasFilters = !!(search || regionFilter || entityFilter || goldenFilter)
 
   const columns: ColumnsType<AuditCase> = [
     {
@@ -383,13 +381,6 @@ export function CaseManagement({ onViewDetail }: { onViewDetail?: (record: Audit
       width: 120,
       sorter: (a, b) => a.invoiceDate.localeCompare(b.invoiceDate),
       render: (v: string) => <Text style={{ fontSize: 13, color: "#595959" }}>{v}</Text>,
-    },
-    {
-      title: "Ground Truth",
-      dataIndex: "groundTruth",
-      key: "groundTruth",
-      width: 120,
-      render: (v: CaseGroundTruth) => <GroundTruthBadge value={v} />,
     },
     {
       title: "",
@@ -450,18 +441,6 @@ export function CaseManagement({ onViewDetail }: { onViewDetail?: (record: Audit
             { label: "Non-Golden", value: "Non-Golden" },
           ]}
           style={{ width: 130 }}
-          allowClear
-        />
-        <Select
-          placeholder="Ground Truth"
-          value={groundTruthFilter}
-          onChange={(v) => setGroundTruthFilter(v)}
-          options={[
-            { label: "Pass", value: "Pass" },
-            { label: "Fail", value: "Fail" },
-            { label: "Pending", value: "Pending" },
-          ]}
-          style={{ width: 140 }}
           allowClear
         />
         {hasFilters && (
