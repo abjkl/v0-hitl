@@ -708,7 +708,7 @@ function ExpandedRowPanel({ record }: { record: CaseResult }) {
 
 // ── Case Result Table ─────────────────────────────────────────────
 
-function CaseResultTable({ cases }: { cases: CaseResult[] }) {
+function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewDetail?: (c: CaseResult) => void }) {
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
 
   function toggleRow(key: string) {
@@ -726,8 +726,7 @@ function CaseResultTable({ cases }: { cases: CaseResult[] }) {
       render: (v: string) => <Text code style={{ fontSize: 12 }}>{v}</Text>,
       onCell: (record) => ({
         onClick: () => {
-          setSelectedCaseDetail(record)
-          setDetailDrawerOpen(true)
+          onViewDetail?.(record)
         },
         style: { cursor: "pointer" },
       }),
@@ -811,9 +810,7 @@ function CaseResultTable({ cases }: { cases: CaseResult[] }) {
           style={{ padding: 0, fontSize: 12 }}
           onClick={(e) => {
             e.stopPropagation()
-            console.log("[v0] AI Detail clicked, record:", record)
-            setSelectedCaseDetail(record)
-            setDetailDrawerOpen(true)
+            onViewDetail?.(record)
           }}
         >
           View
@@ -1234,7 +1231,7 @@ export function RegressionTest({
               <Title level={5} style={{ marginBottom: 12, fontSize: 13, color: "#595959" }}>
                 Case-level Results — {activeSuiteData.label}
               </Title>
-              <CaseResultTable cases={activeSuiteData.cases} />
+              <CaseResultTable cases={activeSuiteData.cases} onViewDetail={(c) => { setSelectedCaseDetail(c); setDetailDrawerOpen(true) }} />
             </>
           )}
 
@@ -1331,7 +1328,6 @@ export function RegressionTest({
         placement="right"
         width={420}
         onClose={() => {
-          console.log("[v0] Drawer closing")
           setDetailDrawerOpen(false)
           setSelectedCaseDetail(null)
         }}
@@ -1339,8 +1335,6 @@ export function RegressionTest({
         bodyStyle={{ padding: "20px 0" }}
       >
         {selectedCaseDetail && (() => {
-          console.log("[v0] Drawer content rendering with case:", selectedCaseDetail.caseId)
-          console.log("[v0] Confidence value:", selectedCaseDetail.confidence, "type:", typeof selectedCaseDetail.confidence)
           const gtCfg = RESULT_TAG_CFG[selectedCaseDetail.groundTruth as keyof typeof RESULT_TAG_CFG]
           const finalGtCfg = gtCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
           const predCfg = RESULT_TAG_CFG[selectedCaseDetail.agentPrediction as keyof typeof RESULT_TAG_CFG]
