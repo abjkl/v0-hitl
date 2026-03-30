@@ -46,6 +46,41 @@ interface CaseResult {
   modelVersion: string
 }
 
+// ── Regression run history mock data ─────────────────────────────
+
+interface RegressionRunRecord {
+  runId: string
+  runAt: string
+  passRate: number
+  status: "Passed" | "Failed"
+}
+
+const REGRESSION_HISTORY: Record<string, RegressionRunRecord[]> = {
+  // keyed by "agentId::version"
+  "AGT-001::v1.3.0": [
+    { runId: "RUN-2043", runAt: "2025-03-18 14:22", passRate: 92, status: "Passed" },
+    { runId: "RUN-2031", runAt: "2025-03-12 10:05", passRate: 88, status: "Passed" },
+    { runId: "RUN-2020", runAt: "2025-03-05 09:40", passRate: 76, status: "Failed" },
+  ],
+  "AGT-001::v1.4.0-beta": [
+    { runId: "RUN-2043", runAt: "2025-03-20 11:30", passRate: 89, status: "Passed" },
+    { runId: "RUN-2038", runAt: "2025-03-19 16:15", passRate: 72, status: "Failed" },
+  ],
+  "AGT-001::v1.5.0-beta": [
+    { runId: "RUN-2042", runAt: "2025-03-21 09:10", passRate: 65, status: "Failed" },
+  ],
+  "AGT-002::v1.2.0": [
+    { runId: "RUN-2035", runAt: "2025-03-15 13:00", passRate: 91, status: "Passed" },
+  ],
+  "AGT-002::v1.3.0-beta": [
+    { runId: "RUN-2044", runAt: "2025-03-22 10:00", passRate: 84, status: "Failed" },
+    { runId: "RUN-2040", runAt: "2025-03-20 14:30", passRate: 90, status: "Passed" },
+  ],
+  "AGT-002::v1.4.0-beta": [
+    { runId: "RUN-2045", runAt: "2025-03-23 09:45", passRate: 78, status: "Failed" },
+  ],
+}
+
 // ── Fixed per-case mock data (Invoice Review step) ───────────────
 
 const CASE_MOCK_DATA: Record<string, {
@@ -601,6 +636,7 @@ export function RegressionTest({
   const [activeSuite, setActiveSuite] = useState<SuiteType>("golden")
   const [simulateFailure, setSimulateFailure] = useState(false)
   const [published, setPublished] = useState(false)
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -702,6 +738,7 @@ export function RegressionTest({
     setRunStatus("idle")
     setProgress(0)
     setPublished(false)
+    setHistoryPanelOpen(false)
   }
 
   return (
@@ -770,6 +807,15 @@ export function RegressionTest({
             </Button>
           </div>
 
+          <div style={{ paddingTop: 20 }}>
+            <Button
+              disabled={!selectedId || !selectedVersion}
+              onClick={() => setHistoryPanelOpen(v => !v)}
+            >
+              {historyPanelOpen ? "Hide History" : "View Regression History"}
+            </Button>
+          </div>
+
           {runStatus === "done" && (
             <div style={{ paddingTop: 20 }}>
               <Tooltip title={!canPublish ? "Publishing thresholds not met" : published ? "Already published" : ""}>
@@ -810,6 +856,62 @@ export function RegressionTest({
           </div>
         )}
       </div>
+
+      {/* Regression History Panel */}
+      {historyPanelOpen && (() => {
+        const historyKey = `${selectedId}::${selectedVersion}`
+        const records = REGRESSION_HISTORY[historyKey] ?? []
+        return (
+          <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px", marginBottom: 16 }}>
+            <Text strong style={{ fontSize: 13, display: "block", marginBottom: 12 }}>
+              Regression History — {agentsWithTestingVersions.find(a => a.id === selectedId)?.agentName} / <Text code style={{ fontSize: 13 }}>{selectedVersion}</Text>
+            </Text>
+            {records.length === 0 ? (
+              <Text type="secondary" style={{ fontSize: 12 }}>No regression runs found for this agent and version.</Text>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #f0f0f0" }}>
+                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Run ID</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Date / Time</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Pass Rate</th>
+                    <th style={{ textAlign: "left", padding: "6px 0", color: "#8c8c8c", fontWeight: 500 }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map((r) => (
+                    <tr key={r.runId} style={{ borderBottom: "1px solid #f9f9f9" }}>
+                      <td style={{ padding: "8px 12px 8px 0" }}>
+                        <Text code style={{ fontSize: 12 }}>{r.runId}</Text>
+                      </td>
+                      <td style={{ padding: "8px 12px 8px 0" }}>
+                        <Text type="secondary">{r.runAt}</Text>
+                      </td>
+                      <td style={{ padding: "8px 12px 8px 0" }}>
+                        <Text style={{ color: r.passRate >= 85 ? "#52c41a" : "#cf1322", fontWeight: 500 }}>
+                          {r.passRate}%
+                        </Text>
+                      </td>
+                      <td style={{ padding: "8px 0" }}>
+                        <Tag style={{
+                          margin: 0,
+                          fontWeight: 500,
+                          fontSize: 11,
+                          color: r.status === "Passed" ? "#389e0d" : "#cf1322",
+                          background: r.status === "Passed" ? "#f6ffed" : "#fff1f0",
+                          borderColor: r.status === "Passed" ? "#b7eb8f" : "#ffa39e",
+                        }}>
+                          {r.status}
+                        </Tag>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Idle empty state */}
       {runStatus === "idle" && (() => {
