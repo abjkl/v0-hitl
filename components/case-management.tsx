@@ -15,11 +15,11 @@ import {
   auditCaseData,
   type AuditCase, type CaseGolden, type ArchivedCaseMock,
 } from "@/lib/mock-data"
-import { useRegion } from "@/lib/region-context"
+import { useRegion, getEntitiesForRegion, type EntityCode } from "@/lib/region-context"
 import { useRole } from "@/lib/role-context"
 import { getActiveCases, runArchiveJob, ARCHIVE_WINDOW_DAYS } from "@/lib/archive-utils"
 
-const { Text } = Typography
+const { Text, Title } = Typography
 
 // ── Types ─────────────────────────────────────────────────────────
 
@@ -301,6 +301,17 @@ export function CaseManagement({
   const { region } = useRegion()
   const { role } = useRole()
   const isOps = role === "AI_OPS"
+
+  // Entity selector (driven by region)
+  const entityOptions = getEntitiesForRegion(region)
+  const [selectedEntity, setSelectedEntity] = useState<EntityCode>(entityOptions[0] ?? "")
+
+  // Reset entity when region changes
+  React.useEffect(() => {
+    const newOptions = getEntitiesForRegion(region)
+    setSelectedEntity(newOptions[0] ?? "")
+  }, [region])
+
   const [search, setSearch]               = useState("")
   const [regionFilter, setRegionFilter]   = useState<string | null>(null)
   const [entityFilter, setEntityFilter]   = useState<string | null>(null)
@@ -463,6 +474,18 @@ export function CaseManagement({
   return (
     <div style={{ background: "#fff", borderRadius: 4, border: "1px solid #f0f0f0", padding: "16px 20px" }}>
       {contextHolder}
+
+      {/* Page Title with Entity Selector */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <Title level={4} style={{ margin: 0 }}>Case Management</Title>
+        <Select
+          value={selectedEntity}
+          onChange={setSelectedEntity}
+          size="small"
+          style={{ width: 110 }}
+          options={entityOptions.map((e) => ({ value: e, label: e }))}
+        />
+      </div>
 
       {/* Active-window info banner */}
       <Alert
