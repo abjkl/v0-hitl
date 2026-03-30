@@ -481,6 +481,7 @@ export function AgentDetail({
   const [apiKeyVisible, setApiKeyVisible] = useState(false)
   const [params, setParams] = useState(agentDetailData.additionalParams)
   const [published, setPublished] = useState(false)
+  const [basicInfoEditing, setBasicInfoEditing] = useState(false)
 
   const d = agentDetailData
 
@@ -495,6 +496,10 @@ export function AgentDetail({
   function updateParam(idx: number, field: "key" | "value", val: string) {
     setParams((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: val } : p)))
   }
+  function handleBasicInfoSave() {
+    setBasicInfoEditing(false)
+    msgApi.success("Basic info updated")
+  }
 
   const sectionStyle: React.CSSProperties = {
     background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px", marginBottom: 12,
@@ -502,6 +507,8 @@ export function AgentDetail({
   const labelStyle: React.CSSProperties = {
     fontSize: 13, color: "#595959", display: "block", marginBottom: 4, fontWeight: 500,
   }
+  // Basic Info is always read-only by default; edit mode toggled explicitly by AI_OPS
+  const basicInfoReadonly = !basicInfoEditing
   const readonlyInput = !isOps
 
   return (
@@ -538,22 +545,56 @@ export function AgentDetail({
         <div style={{ flex: "0 0 60%", minWidth: 0 }}>
 
           {/* Basic Info */}
-          <div style={sectionStyle}>
-            <Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>Basic Info</Title>
+          <div style={{
+            ...sectionStyle,
+            border: basicInfoEditing ? "1px solid #1890ff" : "1px solid #f0f0f0",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <Title level={5} style={{ margin: 0 }}>Basic Info</Title>
+              {isOps && (
+                basicInfoEditing ? (
+                  <Space size={8}>
+                    <Button
+                      size="small"
+                      onClick={() => setBasicInfoEditing(false)}
+                      style={{ fontSize: 12 }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      style={{ background: "#1890ff", fontSize: 12 }}
+                      onClick={handleBasicInfoSave}
+                    >
+                      Save
+                    </Button>
+                  </Space>
+                ) : (
+                  <Button
+                    size="small"
+                    style={{ fontSize: 12 }}
+                    onClick={() => setBasicInfoEditing(true)}
+                  >
+                    Edit
+                  </Button>
+                )
+              )}
+            </div>
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Agent Name</label>
-              <Input defaultValue={d.agentName} disabled={readonlyInput} />
+              <Input defaultValue={d.agentName} disabled={basicInfoReadonly} />
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Description</label>
-              <TextArea defaultValue={d.description} rows={2} disabled={readonlyInput} />
+              <TextArea defaultValue={d.description} rows={2} disabled={basicInfoReadonly} />
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>Belongs to Flow</label>
                 <Select
                   defaultValue={d.flowId}
-                  disabled={readonlyInput}
+                  disabled={basicInfoReadonly}
                   style={{ width: "100%" }}
                   options={flowData.map((f) => ({ value: f.id, label: f.name }))}
                 />
@@ -562,7 +603,7 @@ export function AgentDetail({
                 <label style={labelStyle}>Belongs to Step</label>
                 <Select
                   defaultValue={d.step}
-                  disabled={readonlyInput}
+                  disabled={basicInfoReadonly}
                   style={{ width: "100%" }}
                   options={(flowData.find((f) => f.id === d.flowId)?.steps ?? []).map((s) => ({
                     value: s.id,
@@ -576,6 +617,11 @@ export function AgentDetail({
                 />
               </div>
             </div>
+            {!basicInfoEditing && (
+              <Text type="secondary" style={{ fontSize: 11, marginTop: 10, display: "block" }}>
+                {isOps ? "Click Edit to modify basic info." : "Read-only. Contact AI_OPS to modify."}
+              </Text>
+            )}
           </div>
 
           {/* Platform Input Config */}
