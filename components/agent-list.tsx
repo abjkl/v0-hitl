@@ -5,7 +5,7 @@ import {
   Table, Input, Button, Tag, Typography, Space, Drawer,
   Form, Select, InputNumber, Divider, message, Empty,
 } from "antd"
-import { SearchOutlined, PlusOutlined, ExperimentOutlined, DeleteOutlined } from "@ant-design/icons"
+import { SearchOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import { agentListData, flowData, type Agent, type AgentStatus, type AgentStep } from "@/lib/mock-data"
 import { useRegion, getEntitiesForRegion, type EntityCode } from "@/lib/region-context"
@@ -452,41 +452,50 @@ export function AgentList({
     },
     {
       title: "Current Version",
-      dataIndex: "currentVersion",
       key: "currentVersion",
+      width: 220,
+      render: (_: unknown, record: Agent) => {
+        if (!record.currentVersion) {
+          return <Text type="secondary">—</Text>
+        }
+        const cfg = STATUS_CONFIG[record.status]
+        return (
+          <Space size={6}>
+            <Text code>{record.currentVersion}</Text>
+            <Tag
+              style={{
+                color: cfg.color,
+                background: cfg.bg,
+                borderColor: cfg.color + "66",
+                fontWeight: 500,
+                fontSize: 11,
+                letterSpacing: 0.3,
+                margin: 0,
+              }}
+            >
+              {cfg.label}
+            </Tag>
+          </Space>
+        )
+      },
+    },
+    {
+      title: "Testing Version",
+      key: "testingVersion",
       width: 160,
-      render: (v: string) => <Text code>{v}</Text>,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 140,
-      render: (status: AgentStatus) => <StatusTag status={status} />,
-    },
-    {
-      title: "Last Updated",
-      dataIndex: "lastUpdated",
-      key: "lastUpdated",
-      width: 170,
-      render: (v: string) => <Text type="secondary" style={{ fontSize: 13 }}>{v}</Text>,
+      render: (_: unknown, record: Agent) =>
+        record.testingVersion
+          ? <Text code>{record.testingVersion}</Text>
+          : <Text type="secondary">—</Text>,
     },
     {
       title: "Actions",
       key: "actions",
-      width: 160,
+      width: 80,
       render: (_: unknown, record: Agent) => (
-        <Space size={12}>
-          <Link onClick={() => onView(record.id)} style={{ fontSize: 13 }}>
-            View
-          </Link>
-          {record.status === "TESTING" && onTriggerTest && (
-            <Link onClick={() => onTriggerTest(record.id)} style={{ fontSize: 13, color: "#d46b08" }}>
-              <ExperimentOutlined style={{ marginRight: 4 }} />
-              Run Test
-            </Link>
-          )}
-        </Space>
+        <Link onClick={() => onView(record.id)} style={{ fontSize: 13 }}>
+          View
+        </Link>
       ),
     },
   ]
