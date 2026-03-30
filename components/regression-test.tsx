@@ -204,6 +204,10 @@ function buildSuiteCases(
 const RESULT_TAG_CFG = {
   Pass: { color: "#389e0d", bg: "#f6ffed", border: "#b7eb8f" },
   Fail: { color: "#cf1322", bg: "#fff1f0", border: "#ffa39e" },
+  Matched: { color: "#389e0d", bg: "#f6ffed", border: "#b7eb8f" },
+  NA: { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" },
+  Pending: { color: "#faad14", bg: "#fffbe6", border: "#ffe58f" },
+  "Submitted to EBS": { color: "#389e0d", bg: "#f6ffed", border: "#b7eb8f" },
 }
 
 function PredictionTag({ value }: { value: "Pass" | "Fail" }) {
@@ -369,8 +373,8 @@ function MetricCards({ suite }: { suite: SuiteResult }) {
 
 // ── Rich verdict cell ─────────────────────────────────────────────
 
-function VerdictCell({ verdict, reason }: { verdict: "Pass" | "Fail"; reason: string }) {
-  const cfg = RESULT_TAG_CFG[verdict]
+function VerdictCell({ verdict, reason }: { verdict: string; reason: string }) {
+  const cfg = RESULT_TAG_CFG[verdict as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
   return (
     <div>
       <Tag style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, fontWeight: 500, fontSize: 11, marginBottom: 2 }}>
