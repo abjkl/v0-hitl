@@ -451,42 +451,33 @@ export function AgentList({
       ),
     },
     {
-      title: "Current Version",
-      key: "currentVersion",
-      width: 220,
-      render: (_: unknown, record: Agent) => {
-        if (!record.currentVersion) {
-          return <Text type="secondary">—</Text>
-        }
-        const cfg = STATUS_CONFIG[record.status]
-        return (
-          <Space size={6}>
-            <Text code>{record.currentVersion}</Text>
-            <Tag
-              style={{
-                color: cfg.color,
-                background: cfg.bg,
-                borderColor: cfg.color + "66",
-                fontWeight: 500,
-                fontSize: 11,
-                letterSpacing: 0.3,
-                margin: 0,
-              }}
-            >
-              {cfg.label}
-            </Tag>
-          </Space>
-        )
-      },
+      title: "Live Version",
+      key: "liveVersion",
+      width: 120,
+      render: (_: unknown, record: Agent) =>
+        record.liveVersion
+          ? <Text code>{record.liveVersion}</Text>
+          : <Text type="secondary">—</Text>,
     },
     {
       title: "Testing Version",
-      key: "testingVersion",
-      width: 160,
-      render: (_: unknown, record: Agent) =>
-        record.testingVersion
-          ? <Text code>{record.testingVersion}</Text>
-          : <Text type="secondary">—</Text>,
+      key: "testingVersions",
+      width: 200,
+      render: (_: unknown, record: Agent) => {
+        const versions = record.testingVersions ?? []
+        if (versions.length === 0) {
+          return <Text type="secondary">—</Text>
+        }
+        return (
+          <Space size={4} wrap>
+            {versions.map((v) => (
+              <Tag key={v} style={{ margin: 0, fontSize: 12, background: "#fafafa", borderColor: "#d9d9d9", color: "#595959" }}>
+                {v}
+              </Tag>
+            ))}
+          </Space>
+        )
+      },
     },
     {
       title: "Actions",

@@ -207,8 +207,8 @@ export interface Agent {
   agentName: string
   flowId: string
   step: AgentStep
-  currentVersion: string
-  testingVersion?: string
+  liveVersion?: string
+  testingVersions?: string[]
   status: AgentStatus
   lastUpdated: string
   description: string
@@ -221,7 +221,7 @@ export const agentListData: Agent[] = [
     key: '1', id: 'AGT-001',
     agentName: 'Invoice Header Extractor',
     flowId: 'FLOW-001', step: 'INVOICE_REVIEW',
-    currentVersion: 'v1.3.0', testingVersion: undefined, status: 'ACTIVE',
+    liveVersion: 'v1.3.0', testingVersions: [], status: 'ACTIVE',
     lastUpdated: '2025-03-15 10:22',
     description: 'Extracts header fields (vendor, date, amount) from raw invoice PDFs using vision model.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],
@@ -230,7 +230,7 @@ export const agentListData: Agent[] = [
     key: '2', id: 'AGT-002',
     agentName: 'Line Item Validator',
     flowId: 'FLOW-001', step: 'INVOICE_REVIEW',
-    currentVersion: 'v1.3.0', testingVersion: 'v1.4.0-beta', status: 'ACTIVE',
+    liveVersion: 'v1.3.0', testingVersions: ['v1.4.0-beta', 'v1.5.0-beta'], status: 'ACTIVE',
     lastUpdated: '2025-03-18 14:05',
     description: 'Validates each invoice line item against PO data and flags discrepancies.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],
@@ -239,7 +239,7 @@ export const agentListData: Agent[] = [
     key: '3', id: 'AGT-003',
     agentName: 'PO Matching Agent',
     flowId: 'FLOW-001', step: 'MATCH',
-    currentVersion: undefined as unknown as string, testingVersion: 'v2.2.0-beta', status: 'TESTING',
+    liveVersion: 'v2.1.0', testingVersions: ['v2.2.0-beta'], status: 'ACTIVE',
     lastUpdated: '2025-03-10 09:30',
     description: 'Matches invoices to purchase orders using fuzzy logic and embedding similarity.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],
@@ -248,7 +248,7 @@ export const agentListData: Agent[] = [
     key: '4', id: 'AGT-004',
     agentName: 'Three-Way Match Auditor',
     flowId: 'FLOW-001', step: 'MATCH',
-    currentVersion: 'v1.0.2', testingVersion: undefined, status: 'DEPRECATED',
+    liveVersion: undefined, testingVersions: ['v1.1.0-beta'], status: 'TESTING',
     lastUpdated: '2025-02-28 16:45',
     description: 'Legacy three-way match logic. Superseded by PO Matching Agent v2.x.',
     regions: ['SG'],
@@ -257,7 +257,7 @@ export const agentListData: Agent[] = [
     key: '5', id: 'AGT-005',
     agentName: 'AP Voucher Generator',
     flowId: 'FLOW-001', step: 'AP_VOUCHER',
-    currentVersion: 'v1.2.0', testingVersion: undefined, status: 'ACTIVE',
+    liveVersion: 'v1.2.0', testingVersions: [], status: 'ACTIVE',
     lastUpdated: '2025-03-12 11:00',
     description: 'Generates AP voucher entries in SAP format from matched invoice data.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],
@@ -266,7 +266,7 @@ export const agentListData: Agent[] = [
     key: '6', id: 'AGT-006',
     agentName: 'Voucher Approval Router',
     flowId: 'FLOW-001', step: 'AP_VOUCHER',
-    currentVersion: 'v0.9.1', testingVersion: 'v0.9.2-beta', status: 'ACTIVE',
+    liveVersion: undefined, testingVersions: ['v0.9.1-beta', 'v1.0.0-beta'], status: 'TESTING',
     lastUpdated: '2025-03-19 08:15',
     description: 'Routes generated vouchers to the correct approval workflow based on amount and cost center.',
     regions: ['SG', 'TH', 'MY'],
@@ -275,7 +275,7 @@ export const agentListData: Agent[] = [
     key: '7', id: 'AGT-007',
     agentName: 'Supplier Data Validator',
     flowId: 'FLOW-002', step: 'SUPPLIER_VERIFY',
-    currentVersion: 'v1.0.0', testingVersion: undefined, status: 'ACTIVE',
+    liveVersion: 'v1.0.0', testingVersions: [], status: 'ACTIVE',
     lastUpdated: '2025-03-01 09:00',
     description: 'Validates supplier registration data against government registries and internal blacklists.',
     regions: ['SG', 'MY', 'VN', 'PH', 'ID'],
@@ -284,7 +284,7 @@ export const agentListData: Agent[] = [
     key: '8', id: 'AGT-008',
     agentName: 'Bank Account Verifier',
     flowId: 'FLOW-002', step: 'BANK_CHECK',
-    currentVersion: 'v1.0.0', testingVersion: 'v1.1.0-beta', status: 'ACTIVE',
+    liveVersion: 'v1.0.0', testingVersions: ['v1.1.0-beta'], status: 'ACTIVE',
     lastUpdated: '2025-03-17 13:40',
     description: 'Cross-checks supplier bank account details against known fraud patterns and SWIFT directory.',
     regions: ['SG', 'TW', 'BR'],
@@ -293,7 +293,7 @@ export const agentListData: Agent[] = [
     key: '9', id: 'AGT-009',
     agentName: 'Bank Statement Reconciler',
     flowId: 'FLOW-003', step: 'BANK_RECON',
-    currentVersion: 'v2.0.1', testingVersion: undefined, status: 'ACTIVE',
+    liveVersion: 'v2.0.1', testingVersions: [], status: 'ACTIVE',
     lastUpdated: '2025-03-08 10:15',
     description: 'Reconciles bank statements against AP ledger entries using transaction ID matching.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],
@@ -302,7 +302,7 @@ export const agentListData: Agent[] = [
     key: '10', id: 'AGT-010',
     agentName: 'Exception Classifier',
     flowId: 'FLOW-003', step: 'EXCEPTION_MGT',
-    currentVersion: 'v1.0.0', testingVersion: undefined, status: 'ACTIVE',
+    liveVersion: 'v1.0.0', testingVersions: [], status: 'ACTIVE',
     lastUpdated: '2025-03-05 15:30',
     description: 'Classifies unmatched transactions into exception categories and routes for manual review.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],
