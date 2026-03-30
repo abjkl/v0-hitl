@@ -5,7 +5,7 @@ import { Layout, Menu, Typography, Select, Breadcrumb, Space } from "antd"
 import {
   DatabaseOutlined, RobotOutlined,
   FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
-  ApartmentOutlined, FileTextOutlined,
+  ApartmentOutlined, FileTextOutlined, GlobalOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -239,10 +239,19 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           <Select
             value={region}
             size="small"
-            style={{ width: 180 }}
+            popupMatchSelectWidth={160}
             onChange={(v) => setRegion(v as RegionCode)}
-            optionLabelProp="label"
-            options={REGIONS.map((r) => ({
+            suffixIcon={null}
+            labelRender={() => (
+              <Space size={5}>
+                <GlobalOutlined style={{ fontSize: 13, color: "#595959" }} />
+                <Text strong style={{ fontSize: 13 }}>{region}</Text>
+              </Space>
+            )}
+            style={{ width: 80 }}
+            options={REGIONS.filter((r) =>
+              ["SG", "ID", "TH", "MY", "PH", "VN"].includes(r.code)
+            ).map((r) => ({
               value: r.code,
               label: (
                 <Space size={6}>
