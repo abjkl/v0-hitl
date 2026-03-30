@@ -27,7 +27,7 @@ interface GoldenCase {
   region: string
   groundTruth: GroundTruth
   patterns: string[]
-  addedBy: string
+  addedBy: { name: string; email: string }
   addedDate: string
 }
 
@@ -84,31 +84,31 @@ const PATTERN_COUNTS: Record<StepType, Record<string, number>> = {
 
 const GOLDEN_CASES: Record<StepType, GoldenCase[]> = {
   INVOICE_REVIEW: [
-    { key: "1",  caseId: "CASE-001", invoiceNo: "INV-2025-0001", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Pass", patterns: ["amount-mismatch", "header-check"],        addedBy: "ai_ops_01", addedDate: "2025-01-10" },
-    { key: "2",  caseId: "CASE-002", invoiceNo: "INV-2025-0002", supplier: "AWS Singapore Pte Ltd",  region: "SG", groundTruth: "Fail", patterns: ["supplier-name-mismatch"],                  addedBy: "ai_ops_01", addedDate: "2025-01-10" },
-    { key: "3",  caseId: "CASE-004", invoiceNo: "INV-2025-0004", supplier: "Microsoft Thailand",     region: "TH", groundTruth: "Pass", patterns: ["gst-calculation-error"],                   addedBy: "ai_ops_02", addedDate: "2025-01-15" },
-    { key: "4",  caseId: "CASE-006", invoiceNo: "INV-2025-0006", supplier: "Alibaba Cloud HK",       region: "TW", groundTruth: "Pass", patterns: ["header-check"],                            addedBy: "ai_ops_01", addedDate: "2025-02-01" },
-    { key: "5",  caseId: "CASE-008", invoiceNo: "INV-2025-0008", supplier: "Mercado Pago Brasil",    region: "BR", groundTruth: "Pass", patterns: ["amount-mismatch"],                         addedBy: "ai_ops_02", addedDate: "2025-02-05" },
-    { key: "6",  caseId: "CASE-010", invoiceNo: "INV-2025-0010", supplier: "Shopee Indonesia",       region: "ID", groundTruth: "Fail", patterns: ["duplicate-invoice"],                       addedBy: "ai_ops_01", addedDate: "2025-02-10" },
-    { key: "7",  caseId: "CASE-012", invoiceNo: "INV-2025-0012", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Pass", patterns: ["date-out-of-range"],                       addedBy: "ai_ops_02", addedDate: "2025-02-12" },
-    { key: "8",  caseId: "CASE-014", invoiceNo: "INV-2025-0014", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Pass", patterns: ["gst-calculation-error", "header-check"],   addedBy: "ai_ops_01", addedDate: "2025-02-15" },
-    { key: "9",  caseId: "CASE-016", invoiceNo: "INV-2025-0016", supplier: "Tencent Cloud Intl",     region: "TW", groundTruth: "Fail", patterns: ["amount-mismatch", "duplicate-invoice"],    addedBy: "ai_ops_02", addedDate: "2025-02-18" },
-    { key: "10", caseId: "CASE-018", invoiceNo: "INV-2025-0018", supplier: "Deloitte Advisory SEA",  region: "VN", groundTruth: "Pass", patterns: ["supplier-name-mismatch"],                  addedBy: "ai_ops_01", addedDate: "2025-02-20" },
-    { key: "11", caseId: "CASE-020", invoiceNo: "INV-2025-0020", supplier: "Shopee Philippines",     region: "PH", groundTruth: "Pass", patterns: ["date-out-of-range", "header-check"],       addedBy: "ai_ops_02", addedDate: "2025-02-22" },
-    { key: "12", caseId: "CASE-022", invoiceNo: "INV-2025-0022", supplier: "Microsoft Thailand",     region: "TH", groundTruth: "Fail", patterns: ["gst-calculation-error"],                   addedBy: "ai_ops_01", addedDate: "2025-02-25" },
+    { key: "1",  caseId: "CASE-001", invoiceNo: "INV-2025-0001", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Pass", patterns: ["amount-mismatch", "header-check"],        addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-01-10" },
+    { key: "2",  caseId: "CASE-002", invoiceNo: "INV-2025-0002", supplier: "AWS Singapore Pte Ltd",  region: "SG", groundTruth: "Fail", patterns: ["supplier-name-mismatch"],                  addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-01-10" },
+    { key: "3",  caseId: "CASE-004", invoiceNo: "INV-2025-0004", supplier: "Microsoft Thailand",     region: "TH", groundTruth: "Pass", patterns: ["gst-calculation-error"],                   addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-01-15" },
+    { key: "4",  caseId: "CASE-006", invoiceNo: "INV-2025-0006", supplier: "Alibaba Cloud HK",       region: "TW", groundTruth: "Pass", patterns: ["header-check"],                            addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-01" },
+    { key: "5",  caseId: "CASE-008", invoiceNo: "INV-2025-0008", supplier: "Mercado Pago Brasil",    region: "BR", groundTruth: "Pass", patterns: ["amount-mismatch"],                         addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-05" },
+    { key: "6",  caseId: "CASE-010", invoiceNo: "INV-2025-0010", supplier: "Shopee Indonesia",       region: "ID", groundTruth: "Fail", patterns: ["duplicate-invoice"],                       addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-10" },
+    { key: "7",  caseId: "CASE-012", invoiceNo: "INV-2025-0012", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Pass", patterns: ["date-out-of-range"],                       addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-12" },
+    { key: "8",  caseId: "CASE-014", invoiceNo: "INV-2025-0014", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Pass", patterns: ["gst-calculation-error", "header-check"],   addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-15" },
+    { key: "9",  caseId: "CASE-016", invoiceNo: "INV-2025-0016", supplier: "Tencent Cloud Intl",     region: "TW", groundTruth: "Fail", patterns: ["amount-mismatch", "duplicate-invoice"],    addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-18" },
+    { key: "10", caseId: "CASE-018", invoiceNo: "INV-2025-0018", supplier: "Deloitte Advisory SEA",  region: "VN", groundTruth: "Pass", patterns: ["supplier-name-mismatch"],                  addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-20" },
+    { key: "11", caseId: "CASE-020", invoiceNo: "INV-2025-0020", supplier: "Shopee Philippines",     region: "PH", groundTruth: "Pass", patterns: ["date-out-of-range", "header-check"],       addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-22" },
+    { key: "12", caseId: "CASE-022", invoiceNo: "INV-2025-0022", supplier: "Microsoft Thailand",     region: "TH", groundTruth: "Fail", patterns: ["gst-calculation-error"],                   addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-25" },
   ],
   MATCH: [
-    { key: "1",  caseId: "CASE-003", invoiceNo: "INV-2025-0003", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Fail", patterns: ["three-way-match-fail"],                    addedBy: "ai_ops_01", addedDate: "2025-01-12" },
-    { key: "2",  caseId: "CASE-005", invoiceNo: "INV-2025-0005", supplier: "Deloitte Advisory SEA",  region: "VN", groundTruth: "Pass", patterns: ["line-item-qty-mismatch"],                  addedBy: "ai_ops_02", addedDate: "2025-01-20" },
-    { key: "3",  caseId: "CASE-007", invoiceNo: "INV-2025-0007", supplier: "Tencent Cloud Intl",     region: "TW", groundTruth: "Fail", patterns: ["unit-price-discrepancy"],                  addedBy: "ai_ops_01", addedDate: "2025-02-05" },
-    { key: "4",  caseId: "CASE-009", invoiceNo: "INV-2025-0009", supplier: "Shopee Philippines",     region: "PH", groundTruth: "Pass", patterns: ["line-item-qty-mismatch", "three-way-match-fail"], addedBy: "ai_ops_02", addedDate: "2025-02-14" },
-    { key: "5",  caseId: "CASE-011", invoiceNo: "INV-2025-0011", supplier: "AWS Singapore Pte Ltd",  region: "SG", groundTruth: "Pass", patterns: ["unit-price-discrepancy"],                  addedBy: "ai_ops_01", addedDate: "2025-02-18" },
-    { key: "6",  caseId: "CASE-013", invoiceNo: "INV-2025-0013", supplier: "Alibaba Cloud HK",       region: "TW", groundTruth: "Fail", patterns: ["three-way-match-fail"],                    addedBy: "ai_ops_02", addedDate: "2025-02-20" },
+    { key: "1",  caseId: "CASE-003", invoiceNo: "INV-2025-0003", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Fail", patterns: ["three-way-match-fail"],                    addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-01-12" },
+    { key: "2",  caseId: "CASE-005", invoiceNo: "INV-2025-0005", supplier: "Deloitte Advisory SEA",  region: "VN", groundTruth: "Pass", patterns: ["line-item-qty-mismatch"],                  addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-01-20" },
+    { key: "3",  caseId: "CASE-007", invoiceNo: "INV-2025-0007", supplier: "Tencent Cloud Intl",     region: "TW", groundTruth: "Fail", patterns: ["unit-price-discrepancy"],                  addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-05" },
+    { key: "4",  caseId: "CASE-009", invoiceNo: "INV-2025-0009", supplier: "Shopee Philippines",     region: "PH", groundTruth: "Pass", patterns: ["line-item-qty-mismatch", "three-way-match-fail"], addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-14" },
+    { key: "5",  caseId: "CASE-011", invoiceNo: "INV-2025-0011", supplier: "AWS Singapore Pte Ltd",  region: "SG", groundTruth: "Pass", patterns: ["unit-price-discrepancy"],                  addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-18" },
+    { key: "6",  caseId: "CASE-013", invoiceNo: "INV-2025-0013", supplier: "Alibaba Cloud HK",       region: "TW", groundTruth: "Fail", patterns: ["three-way-match-fail"],                    addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-20" },
   ],
   AP_VOUCHER: [
-    { key: "1",  caseId: "CASE-015", invoiceNo: "INV-2025-0015", supplier: "Mercado Pago Brasil",    region: "BR", groundTruth: "Fail", patterns: ["gl-account-wrong"],                        addedBy: "ai_ops_01", addedDate: "2025-02-10" },
-    { key: "2",  caseId: "CASE-017", invoiceNo: "INV-2025-0017", supplier: "Shopee Indonesia",       region: "ID", groundTruth: "Pass", patterns: ["cost-center-mismatch"],                    addedBy: "ai_ops_02", addedDate: "2025-02-15" },
-    { key: "3",  caseId: "CASE-019", invoiceNo: "INV-2025-0019", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Fail", patterns: ["gl-account-wrong", "cost-center-mismatch"], addedBy: "ai_ops_01", addedDate: "2025-02-20" },
+    { key: "1",  caseId: "CASE-015", invoiceNo: "INV-2025-0015", supplier: "Mercado Pago Brasil",    region: "BR", groundTruth: "Fail", patterns: ["gl-account-wrong"],                        addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-10" },
+    { key: "2",  caseId: "CASE-017", invoiceNo: "INV-2025-0017", supplier: "Shopee Indonesia",       region: "ID", groundTruth: "Pass", patterns: ["cost-center-mismatch"],                    addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-15" },
+    { key: "3",  caseId: "CASE-019", invoiceNo: "INV-2025-0019", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Fail", patterns: ["gl-account-wrong", "cost-center-mismatch"], addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-20" },
   ],
 }
 
@@ -407,8 +407,14 @@ function AddCaseModal({
 
 // ── Main Component ─────�����──────────────────────────────────────────
 
-// Step pill tabs
-const STEPS: StepType[] = ["INVOICE_REVIEW", "MATCH", "AP_VOUCHER"]
+  // Step pill tabs
+  const STEPS: StepType[] = ["INVOICE_REVIEW", "MATCH", "AP_VOUCHER"]
+
+  const STEP_LABELS: Record<StepType, string> = {
+    INVOICE_REVIEW: "Golden Set",
+    MATCH: "Benchmark Set",
+    AP_VOUCHER: "Current Set",
+  }
 
 export function GoldenCaseManagement({
   goldenCases,
@@ -468,7 +474,15 @@ export function GoldenCaseManagement({
       render: (v: string) => <Text code style={{ fontSize: 12 }}>{v}</Text>,
     },
     {
-      title: "Invoice No", dataIndex: "invoiceNo", key: "invoiceNo", width: 145,
+      title: "Payment Request ID", dataIndex: "caseId", key: "paymentRequestId", width: 130,
+      render: () => <Text style={{ fontSize: 12 }}>PR-XXX</Text>,
+    },
+    {
+      title: "Payment Group ID", dataIndex: "caseId", key: "paymentGroupId", width: 130,
+      render: () => <Text style={{ fontSize: 12 }}>PG-XXX</Text>,
+    },
+    {
+      title: "Invoice Number", dataIndex: "invoiceNo", key: "invoiceNo", width: 140,
       render: (v: string) => <Text style={{ fontSize: 12 }}>{v}</Text>,
     },
     {
@@ -476,30 +490,8 @@ export function GoldenCaseManagement({
       render: (v: string) => <Text style={{ fontSize: 12 }}>{v}</Text>,
     },
     {
-      title: "Region", dataIndex: "region", key: "region", width: 70,
-      render: (v: string) => <Text type="secondary" style={{ fontSize: 12 }}>{v}</Text>,
-    },
-    {
-      title: "Ground Truth", dataIndex: "groundTruth", key: "groundTruth", width: 115,
-      render: (v: GroundTruth) => <GtTag value={v} />,
-    },
-    {
-      title: "Patterns", dataIndex: "patterns", key: "patterns",
-      render: (patterns: string[]) => (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {patterns.map((p) => (
-            <Tag key={p} style={{ fontSize: 11, padding: "0 5px", margin: 0 }}>{p}</Tag>
-          ))}
-        </div>
-      ),
-    },
-    {
-      title: "Added By", dataIndex: "addedBy", key: "addedBy", width: 100,
-      render: (v: string) => <Text type="secondary" style={{ fontSize: 12 }}>{v}</Text>,
-    },
-    {
-      title: "Added Date", dataIndex: "addedDate", key: "addedDate", width: 105,
-      render: (v: string) => <Text type="secondary" style={{ fontSize: 12 }}>{v}</Text>,
+      title: "Invoice Amount", dataIndex: "caseId", key: "amount", width: 130,
+      render: () => <Text style={{ fontSize: 12 }}>SGD 0</Text>,
     },
     {
       title: "Actions", key: "actions", width: 80,
@@ -551,7 +543,7 @@ export function GoldenCaseManagement({
                 transition: "background 0.2s, color 0.2s, box-shadow 0.2s",
               }}
             >
-              {step}{" "}
+              {STEP_LABELS[step]}{" "}
               <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.85 }}>
                 ({stepCount} / {stepCfg.limit})
               </span>
