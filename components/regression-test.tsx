@@ -811,6 +811,7 @@ function CaseResultTable({ cases }: { cases: CaseResult[] }) {
           style={{ padding: 0, fontSize: 12 }}
           onClick={(e) => {
             e.stopPropagation()
+            console.log("[v0] AI Detail clicked, record:", record)
             setSelectedCaseDetail(record)
             setDetailDrawerOpen(true)
           }}
@@ -1330,6 +1331,7 @@ export function RegressionTest({
         placement="right"
         width={420}
         onClose={() => {
+          console.log("[v0] Drawer closing")
           setDetailDrawerOpen(false)
           setSelectedCaseDetail(null)
         }}
@@ -1337,6 +1339,8 @@ export function RegressionTest({
         bodyStyle={{ padding: "20px 0" }}
       >
         {selectedCaseDetail && (() => {
+          console.log("[v0] Drawer content rendering with case:", selectedCaseDetail.caseId)
+          console.log("[v0] Confidence value:", selectedCaseDetail.confidence, "type:", typeof selectedCaseDetail.confidence)
           const gtCfg = RESULT_TAG_CFG[selectedCaseDetail.groundTruth as keyof typeof RESULT_TAG_CFG]
           const finalGtCfg = gtCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
           const predCfg = RESULT_TAG_CFG[selectedCaseDetail.agentPrediction as keyof typeof RESULT_TAG_CFG]
@@ -1357,7 +1361,7 @@ export function RegressionTest({
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Progress
                     type="circle"
-                    percent={parseInt(selectedCaseDetail.confidence.split("%")[0])}
+                    percent={Math.round(selectedCaseDetail.confidence)}
                     width={60}
                     format={(p) => <Text style={{ fontSize: 12, fontWeight: 500 }}>{p}%</Text>}
                   />
