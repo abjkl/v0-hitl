@@ -142,11 +142,13 @@ function buildSuiteCases(
 ): CaseResult[] {
   if (suiteType === "golden") {
     // Use the shared golden cases for the agent's step
-    const stepCases = goldenCases[agentStep] ?? []
-    return stepCases.map((c, idx) => {
-      const mock = CASE_MOCK_DATA[c.caseId]
-      const gt: "Pass" | "Fail" = c.groundTruth
-      const pred: "Pass" | "Fail" = mock?.pred ?? gt
+  const stepCases = goldenCases[agentStep] ?? []
+  return stepCases.map((c, idx) => {
+  const mock = CASE_MOCK_DATA[c.caseId]
+  // Map ground truth: Matched/Submitted to EBS → Pass, NA/Pending → Fail, otherwise keep original
+  const rawGt = c.groundTruth
+  const gt: "Pass" | "Fail" = rawGt === "Matched" || rawGt === "Submitted to EBS" ? "Pass" : rawGt === "NA" || rawGt === "Pending" ? "Fail" : (rawGt as "Pass" | "Fail")
+  const pred: "Pass" | "Fail" = mock?.pred ?? gt
       const correct = mock ? mock.correct : gt === pred
       return {
         key: c.key,
@@ -375,7 +377,7 @@ function MetricCards({ suite }: { suite: SuiteResult }) {
 
 function VerdictCell({ verdict, reason }: { verdict: string; reason: string }) {
   const cfg = RESULT_TAG_CFG[verdict as keyof typeof RESULT_TAG_CFG]
-  const finalCfg = cfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+  const finalCfg = cfg || { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
   return (
     <div>
       <Tag style={{ color: finalCfg.color, background: finalCfg.bg, borderColor: finalCfg.border, fontWeight: 500, fontSize: 11, marginBottom: 2 }}>
@@ -391,7 +393,7 @@ function VerdictCell({ verdict, reason }: { verdict: string; reason: string }) {
   )
 }
 
-// ── Expandable row panel ──────────────────────────────���───────────
+// ── Expandable row panel ──────────────────────��───────���───────────
 
 function ExpandedRowPanel({ record }: { record: CaseResult }) {
   const gtCfg = RESULT_TAG_CFG[record.groundTruth as keyof typeof RESULT_TAG_CFG]
