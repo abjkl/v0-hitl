@@ -268,7 +268,7 @@ function AppShell() {
           {page === "pattern-library"    && <PatternLibrary />}
           {page === "agent-detail"       && <AgentDetail agentId="AGT-002" passedAgentIds={passedAgentIds} onBack={goToAgentList} onPublish={handlePublish} onGoToRegressionTest={goToRegressionTest} />}
           {page === "system-architecture" && <SystemArchitecture />}
-          {page === "prd"                 && <PrdViewer />}
+          {page === "prd"                 && <PrdViewer onNavigate={(p) => { setPage(p as Page); setSelectedKey(p); }} />}
         </Content>
       </Layout>
     </Layout>

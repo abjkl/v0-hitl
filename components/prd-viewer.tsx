@@ -1,12 +1,12 @@
 "use client"
 
 import React from "react"
-import { Card, Tabs, Typography, Table, Tag } from "antd"
-import { FileTextOutlined } from "@ant-design/icons"
+import { Card, Tabs, Typography, Table, Tag, Button } from "antd"
+import { FileTextOutlined, LinkOutlined, DatabaseOutlined, ApiOutlined, RobotOutlined, SafetyCertificateOutlined, GlobalOutlined, BranchesOutlined } from "@ant-design/icons"
 
 const { Title, Text, Paragraph } = Typography
 
-export function PrdViewer() {
+export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const tabItems = [
     {
       key: "overview",
@@ -44,25 +44,141 @@ export function PrdViewer() {
       label: "系统架构",
       children: (
         <div style={{ display: "grid", gap: 20 }}>
-          <Card>
-            <Title level={4} style={{ marginTop: 0 }}>技术栈</Title>
-            <ul style={{ fontSize: 13 }}>
-              <li><Text strong>框架</Text>: Next.js 16 (App Router)</li>
-              <li><Text strong>UI 库</Text>: Ant Design 5.x + Tailwind CSS 4.x</li>
-              <li><Text strong>状态管理</Text>: React Context + useState/useMemo</li>
-              <li><Text strong>类型系统</Text>: TypeScript 5.x</li>
-            </ul>
+          {/* Link to full System Architecture page */}
+          <Card style={{ background: "#e6f4ff", border: "1px solid #91caff" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <Title level={5} style={{ marginTop: 0, marginBottom: 4 }}>完整系统架构图</Title>
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  查看交互式架构图、数据流图、模块详情和 Agent 状态机
+                </Text>
+              </div>
+              {onNavigate && (
+                <Button
+                  type="primary"
+                  icon={<LinkOutlined />}
+                  onClick={() => onNavigate("system-architecture")}
+                  style={{ background: "#1890ff" }}
+                >
+                  打开 System Architecture
+                </Button>
+              )}
+            </div>
           </Card>
 
+          {/* Tech Stack */}
+          <Card>
+            <Title level={4} style={{ marginTop: 0 }}>技术栈</Title>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              {[
+                { name: "Next.js", version: "16", color: "#000" },
+                { name: "React", version: "19", color: "#61dafb" },
+                { name: "TypeScript", version: "5.x", color: "#3178c6" },
+                { name: "Ant Design", version: "5.x", color: "#1890ff" },
+                { name: "Tailwind CSS", version: "4.x", color: "#06b6d4" },
+              ].map((t) => (
+                <div key={t.name} style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  background: `${t.color}10`,
+                  border: `1px solid ${t.color}30`,
+                  borderRadius: 6,
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: t.color }} />
+                  <Text style={{ fontSize: 12, fontWeight: 500 }}>{t.name}</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>{t.version}</Text>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Layered Architecture */}
+          <Card>
+            <Title level={4} style={{ marginTop: 0 }}>分层架构</Title>
+            <div style={{ display: "grid", gap: 12 }}>
+              {[
+                { layer: "Frontend Layer", icon: <GlobalOutlined />, color: "#1890ff", modules: ["React UI Layer", "State Management (Context)", "Role-Based Access"] },
+                { layer: "Core Modules", icon: <RobotOutlined />, color: "#52c41a", modules: ["Knowledge Base", "Case Management", "Agent Management", "Regression Test"] },
+                { layer: "Data Layer", icon: <DatabaseOutlined />, color: "#722ed1", modules: ["Mock Data Store", "Archive Utils", "Golden Cases State"] },
+                { layer: "Cross-Cutting", icon: <SafetyCertificateOutlined />, color: "#fa8c16", modules: ["Region Context", "Role Context", "Type Definitions"] },
+              ].map((l) => (
+                <div key={l.layer} style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 12,
+                  padding: 12,
+                  background: `${l.color}08`,
+                  border: `1px solid ${l.color}20`,
+                  borderRadius: 6,
+                }}>
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 6,
+                    background: `${l.color}15`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: l.color,
+                    fontSize: 16,
+                    flexShrink: 0,
+                  }}>
+                    {l.icon}
+                  </div>
+                  <div>
+                    <Text strong style={{ fontSize: 13, display: "block", marginBottom: 4 }}>{l.layer}</Text>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      {l.modules.map((m) => (
+                        <Tag key={m} style={{ fontSize: 11, margin: 0 }}>{m}</Tag>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Core Modules */}
           <Card>
             <Title level={4} style={{ marginTop: 0 }}>核心模块</Title>
-            <ul style={{ fontSize: 13 }}>
-              <li><Text strong>Knowledge Base</Text> - 知识库管理 (Buyer、Supplier、Bank)</li>
-              <li><Text strong>Case Management</Text> - 发票 Case 管理，365 天活跃窗口，自动归档</li>
-              <li><Text strong>Agent Management</Text> - AI Agent 生命周期管理，版本控制</li>
-              <li><Text strong>Regression Test</Text> - 三集合回归测试 (Golden/Benchmark/Full)</li>
-              <li><Text strong>Golden Case Management</Text> - 黄金测试集配置</li>
-            </ul>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+              {[
+                { name: "Knowledge Base", icon: <DatabaseOutlined />, desc: "Buyer、Supplier、Bank 知识库管理", color: "#1890ff" },
+                { name: "Case Management", icon: <ApiOutlined />, desc: "发票 Case 管理，365 天活跃窗口，自动归档", color: "#52c41a" },
+                { name: "Agent Management", icon: <RobotOutlined />, desc: "AI Agent 生命周期管理，版本控制", color: "#722ed1" },
+                { name: "Regression Test", icon: <BranchesOutlined />, desc: "三集合回归测试 (Golden/Benchmark/Full)", color: "#fa8c16" },
+              ].map((m) => (
+                <div key={m.name} style={{
+                  padding: 12,
+                  border: "1px solid #f0f0f0",
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                }}>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 6,
+                    background: `${m.color}10`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: m.color,
+                    fontSize: 14,
+                    flexShrink: 0,
+                  }}>
+                    {m.icon}
+                  </div>
+                  <div>
+                    <Text strong style={{ fontSize: 13, display: "block" }}>{m.name}</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>{m.desc}</Text>
+                  </div>
+                </div>
+              ))}
+            </div>
           </Card>
         </div>
       ),
