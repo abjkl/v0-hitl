@@ -187,69 +187,187 @@ export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void 
       key: "features",
       label: "功能特性",
       children: (
-        <div style={{ display: "grid", gap: 20 }}>
+        <div style={{ display: "grid", gap: 24 }}>
+          {/* Knowledge Base */}
           <Card>
-            <Title level={4} style={{ marginTop: 0 }}>活跃窗口 & 归档机制</Title>
-            <Paragraph>
-              <Text strong>规则</Text>
-              <ul style={{ fontSize: 13 }}>
-                <li>默认显示 reviewDate 在最近 365 天内的 Case</li>
-                <li>Golden Set 中的 Case 永久保留</li>
-                <li>超过 365 天且非 Golden 的 Case 自动归档</li>
-                <li>AI_OPS 可手动触发 "Run Archive Now" 按钮</li>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#1890ff15", display: "flex", alignItems: "center", justifyContent: "center", color: "#1890ff" }}>
+                <DatabaseOutlined />
+              </div>
+              <Title level={4} style={{ margin: 0 }}>Knowledge Base</Title>
+            </div>
+            
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 13, color: "#1890ff", display: "block", marginBottom: 8 }}>核心实体</Text>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                {[
+                  { name: "Buyer", desc: "采购方信息，包含公司名称、地址、联系方式" },
+                  { name: "Supplier", desc: "供应商信息，包含供应商代码、银行账户" },
+                  { name: "Bank", desc: "银行信息，用于付款和对账" },
+                ].map((e) => (
+                  <div key={e.name} style={{ padding: 10, background: "#fafafa", borderRadius: 4 }}>
+                    <Text strong style={{ fontSize: 12, display: "block" }}>{e.name}</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>{e.desc}</Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Text strong style={{ fontSize: 13, color: "#1890ff", display: "block", marginBottom: 8 }}>交互细节</Text>
+              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
+                <li><Text strong>Knowledge Detail</Text> - 查看实体详情，展示字段结构和示例数据</li>
+                <li><Text strong>Endpoint 配置</Text> - 配置外部数据源连接，支持 API Endpoint、认证方式</li>
+                <li><Text strong>数据同步</Text> - 手动触发或定时同步外部数据源</li>
               </ul>
-            </Paragraph>
+            </div>
           </Card>
 
+          {/* Case Management */}
           <Card>
-            <Title level={4} style={{ marginTop: 0 }}>Agent 生命周期</Title>
-            <Paragraph>
-              <ul style={{ fontSize: 13 }}>
-                <li><Tag color="orange">TESTING</Tag> - 开发测试阶段，支持运行回归测试</li>
-                <li><Tag color="green">ACTIVE</Tag> - 生产运行阶段，当前版本</li>
-                <li><Tag color="default">DEPRECATED</Tag> - 被新版本替代，只读</li>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#52c41a15", display: "flex", alignItems: "center", justifyContent: "center", color: "#52c41a" }}>
+                <ApiOutlined />
+              </div>
+              <Title level={4} style={{ margin: 0 }}>Case Management</Title>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 13, color: "#52c41a", display: "block", marginBottom: 8 }}>核心实体</Text>
+              <div style={{ background: "#fafafa", padding: 12, borderRadius: 4 }}>
+                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>AuditCase (发票 Case)</Text>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, fontSize: 11 }}>
+                  <div><Text code>caseId</Text> - Case 唯一标识</div>
+                  <div><Text code>invoiceNo</Text> - 发票编号</div>
+                  <div><Text code>supplierName</Text> - 供应商名称</div>
+                  <div><Text code>entity</Text> - 所属实体 (SG/TH/VN...)</div>
+                  <div><Text code>amount</Text> / <Text code>currency</Text> - 金额与币种</div>
+                  <div><Text code>reviewDate</Text> - 审核日期 (用于 365 天窗口)</div>
+                  <div><Text code>isGolden</Text> - Golden / Non-Golden 标记</div>
+                  <div><Text code>groundTruth</Text> - Pass / Fail / Pending</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Text strong style={{ fontSize: 13, color: "#52c41a", display: "block", marginBottom: 8 }}>交互细节</Text>
+              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
+                <li><Text strong>Case List</Text> - 主列表，支持搜索、筛选、分页；显示最近 365 天的 Case</li>
+                <li><Text strong>Case Detail</Text> - 点击 Case 查看完整详情，包括发票图片、提取结果、Ground Truth</li>
+                <li><Text strong>Golden Case Management</Text> - 管理黄金测试集，按 Step 分组展示，支持添加/移除 Golden 标记</li>
+                <li><Text strong>Pattern Library</Text> - 管理 Case 的 Pattern 标签，用于分类和测试覆盖分析</li>
+                <li><Text strong>Archived Cases</Text> - 查看已归档 Case，只读模式，支持搜索</li>
               </ul>
-            </Paragraph>
-            <Paragraph>
-              <Text strong>发布条件</Text>
-              <ul style={{ fontSize: 13 }}>
-                <li>Golden Set Pass Rate ≥ 85%</li>
-                <li>Benchmark Set Pass Rate ≥ 85%</li>
-                <li>Full Set Pass Rate ≥ 85%</li>
-              </ul>
-            </Paragraph>
+              <div style={{ marginTop: 12, padding: 10, background: "#fff7e6", borderRadius: 4, border: "1px solid #ffd591" }}>
+                <Text strong style={{ fontSize: 11, color: "#fa8c16" }}>归档规则</Text>
+                <ul style={{ fontSize: 11, margin: "4px 0 0", paddingLeft: 16 }}>
+                  <li>reviewDate 超过 365 天自动归档</li>
+                  <li>Golden Set 中的 Case 永久保留，不归档</li>
+                  <li>AI_OPS 可手动触发 "Run Archive Now"</li>
+                </ul>
+              </div>
+            </div>
           </Card>
 
+          {/* Agent Management */}
           <Card>
-            <Title level={4} style={{ marginTop: 0 }}>版本管理</Title>
-            <Paragraph>
-              <ul style={{ fontSize: 13 }}>
-                <li>每个 Agent 维护当前版本、测试版本、历史版本</li>
-                <li>发布时新建版本，支持从任意历史版本 Copy 配置</li>
-                <li>版本采用 semver 格式 (e.g., v1.2.0、v1.2.0-beta)</li>
-                <li>所有版本配置变化都记录历史</li>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#722ed115", display: "flex", alignItems: "center", justifyContent: "center", color: "#722ed1" }}>
+                <RobotOutlined />
+              </div>
+              <Title level={4} style={{ margin: 0 }}>Agent Management</Title>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 13, color: "#722ed1", display: "block", marginBottom: 8 }}>核心实体</Text>
+              <div style={{ background: "#fafafa", padding: 12, borderRadius: 4, marginBottom: 12 }}>
+                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Agent</Text>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, fontSize: 11 }}>
+                  <div><Text code>id</Text> - Agent 唯一标识 (AGT-XXX)</div>
+                  <div><Text code>agentName</Text> - Agent 名称</div>
+                  <div><Text code>flowId</Text> - 所属 Flow (Invoice Processing)</div>
+                  <div><Text code>step</Text> - INVOICE_REVIEW / MATCH / AP_VOUCHER</div>
+                  <div><Text code>currentVersion</Text> - 当前版本 (v1.3.0)</div>
+                  <div><Text code>status</Text> - TESTING / ACTIVE / DEPRECATED</div>
+                  <div><Text code>regions</Text> - 适用区域，空数组表示全区域</div>
+                  <div><Text code>description</Text> - Agent 描述</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Tag color="orange">TESTING</Tag><Text style={{ fontSize: 11 }}>开发测试阶段</Text>
+                <Tag color="green">ACTIVE</Tag><Text style={{ fontSize: 11 }}>生产运行中</Text>
+                <Tag color="default">DEPRECATED</Tag><Text style={{ fontSize: 11 }}>已被新版本替代</Text>
+              </div>
+            </div>
+
+            <div>
+              <Text strong style={{ fontSize: 13, color: "#722ed1", display: "block", marginBottom: 8 }}>交互细节</Text>
+              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
+                <li><Text strong>Agent List</Text> - 列表展示所有 Agent，支持按 Region 筛选、搜索、状态过滤</li>
+                <li><Text strong>Agent Detail (只读)</Text> - 左侧展示当前选中版本的配置 (Model、Temperature、Prompt 等)，全部只读</li>
+                <li><Text strong>Version Management</Text> - 右侧展示版本列表 (Current/Testing/Deprecated)，点击切换左侧配置</li>
+                <li><Text strong>Create New Version</Text> - 选择 Copy From 版本，输入新版本号，创建 TESTING 版本</li>
+                <li><Text strong>Publish</Text> - 回归测试通过后，AI_OPS 可将 TESTING 版本发布为 ACTIVE</li>
               </ul>
-            </Paragraph>
+              <div style={{ marginTop: 12, padding: 10, background: "#f6ffed", borderRadius: 4, border: "1px solid #b7eb8f" }}>
+                <Text strong style={{ fontSize: 11, color: "#52c41a" }}>发布条件</Text>
+                <ul style={{ fontSize: 11, margin: "4px 0 0", paddingLeft: 16 }}>
+                  <li>Golden Set Pass Rate &ge; 85%</li>
+                  <li>Benchmark Set Pass Rate &ge; 85%</li>
+                  <li>Full Set Pass Rate &ge; 85%</li>
+                </ul>
+              </div>
+            </div>
           </Card>
 
+          {/* Regression Test */}
           <Card>
-            <Title level={4} style={{ marginTop: 0 }}>Regression Test</Title>
-            <Paragraph>
-              <Text strong>三个测试集</Text>
-              <ul style={{ fontSize: 13 }}>
-                <li><Text code>Golden Set</Text> - 黄金测试集，由 Golden Case Management 配置</li>
-                <li><Text code>Benchmark Set</Text> - 基准测试集，性能基准参考</li>
-                <li><Text code>Full Set</Text> - 全量测试集，完整覆盖</li>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#fa8c1615", display: "flex", alignItems: "center", justifyContent: "center", color: "#fa8c16" }}>
+                <BranchesOutlined />
+              </div>
+              <Title level={4} style={{ margin: 0 }}>Regression Test</Title>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ fontSize: 13, color: "#fa8c16", display: "block", marginBottom: 8 }}>核心实体</Text>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                {[
+                  { name: "Golden Set", desc: "黄金测试集，由 Golden Case Management 维护，高质量标注" },
+                  { name: "Benchmark Set", desc: "基准测试集，用于性能基准比较" },
+                  { name: "Full Set", desc: "全量测试集，完整覆盖所有 Pattern" },
+                ].map((e) => (
+                  <div key={e.name} style={{ padding: 10, background: "#fafafa", borderRadius: 4 }}>
+                    <Text strong style={{ fontSize: 12, display: "block" }}>{e.name}</Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>{e.desc}</Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Text strong style={{ fontSize: 13, color: "#fa8c16", display: "block", marginBottom: 8 }}>交互细节</Text>
+              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
+                <li><Text strong>Agent 选择</Text> - 选择要测试的 TESTING 状态 Agent</li>
+                <li><Text strong>Trigger Regression Test</Text> - 点击按钮启动测试，依次执行 Golden → Benchmark → Full</li>
+                <li><Text strong>Progress Bar</Text> - 实时显示测试进度和当前执行的 Set</li>
+                <li><Text strong>Verdict Banner</Text> - 所有 Set 通过 (&ge;85%) 显示 PASS (绿色)，否则 FAIL (红色)</li>
+                <li><Text strong>Set Tabs</Text> - 切换查看每个 Set 的详细 Case-level 结果</li>
+                <li><Text strong>从 Agent Detail 跳转</Text> - 点击 "Run Regression Test" 链接直接跳转</li>
               </ul>
-            </Paragraph>
-            <Paragraph>
-              <Text strong>流程</Text>
-              <ul style={{ fontSize: 13 }}>
-                <li>选择 Agent 并点击 "Trigger Regression Test"</li>
-                <li>依次执行三个测试集，显示进度条</li>
-                <li>所有测试通过 (≥85%) 后显示 PASS，可发布</li>
-              </ul>
-            </Paragraph>
+              <div style={{ marginTop: 12, padding: 10, background: "#f0f5ff", borderRadius: 4, border: "1px solid #adc6ff" }}>
+                <Text strong style={{ fontSize: 11, color: "#2f54eb" }}>测试流程</Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                  <Tag color="gold">Golden Set</Tag>
+                  <span style={{ color: "#bfbfbf" }}>→</span>
+                  <Tag color="blue">Benchmark Set</Tag>
+                  <span style={{ color: "#bfbfbf" }}>→</span>
+                  <Tag color="purple">Full Set</Tag>
+                  <span style={{ color: "#bfbfbf" }}>→</span>
+                  <Tag color="green">PASS / Publish</Tag>
+                </div>
+              </div>
+            </div>
           </Card>
         </div>
       ),
