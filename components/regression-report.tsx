@@ -38,6 +38,11 @@ export function RegressionReport({ runId, onBack }: { runId: string; onBack: () 
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedCase, setSelectedCase] = useState<RunReportCase | null>(null)
 
+  console.log("[v0] RegressionReport opened with runId:", runId)
+  console.log("[v0] Report data:", report)
+  console.log("[v0] Drawer open:", detailDrawerOpen)
+  console.log("[v0] Selected case:", selectedCase)
+
   if (!report) {
     return (
       <div style={{ background: "#fff", borderRadius: 8, padding: 40 }}>
@@ -60,14 +65,18 @@ export function RegressionReport({ runId, onBack }: { runId: string; onBack: () 
       dataIndex: "caseId",
       key: "caseId",
       width: 110,
-      render: (v) => <Text code style={{ fontSize: 12, cursor: "pointer" }}>{v}</Text>,
-      onCell: (record) => ({
-        onClick: () => {
-          setSelectedCase(record)
-          setDetailDrawerOpen(true)
-        },
-        style: { cursor: "pointer" },
-      }),
+      render: (v) => (
+        <Text
+          code
+          style={{ fontSize: 12, cursor: "pointer", color: "#1890ff" }}
+          onClick={(e) => {
+            e.stopPropagation()
+            console.log("[v0] Case ID clicked:", v)
+          }}
+        >
+          {v}
+        </Text>
+      ),
     },
     {
       title: "Invoice No.",
@@ -208,12 +217,13 @@ export function RegressionReport({ runId, onBack }: { runId: string; onBack: () 
           pagination={false}
           size="small"
           rowClassName={(r) => (r.correct ? "" : "ant-table-row-error")}
-          onRow={(r) => ({
-            style: { background: r.correct ? undefined : "#fff9f9", cursor: "pointer" },
+          onRow={(record) => ({
             onClick: () => {
-              setSelectedCase(r)
+              console.log("[v0] Row clicked, record:", record)
+              setSelectedCase(record)
               setDetailDrawerOpen(true)
             },
+            style: { cursor: "pointer", background: record.correct ? undefined : "#fff9f9" },
           })}
         />
       </div>
