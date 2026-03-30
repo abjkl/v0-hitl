@@ -199,27 +199,41 @@ export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void 
             
             <div style={{ marginBottom: 16 }}>
               <Text strong style={{ fontSize: 13, color: "#1890ff", display: "block", marginBottom: 8 }}>核心实体</Text>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                {[
-                  { name: "Buyer", desc: "采购方信息，包含公司名称、地址、联系方式" },
-                  { name: "Supplier", desc: "供应商信息，包含供应商代码、银行账户" },
-                  { name: "Bank", desc: "银行信息，用于付款和对账" },
-                ].map((e) => (
-                  <div key={e.name} style={{ padding: 10, background: "#fafafa", borderRadius: 4 }}>
-                    <Text strong style={{ fontSize: 12, display: "block" }}>{e.name}</Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{e.desc}</Text>
-                  </div>
-                ))}
-              </div>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "实体", dataIndex: "name", width: 100, render: (v: string) => <Text strong>{v}</Text> },
+                  { title: "描述", dataIndex: "desc" },
+                  { title: "关键字段", dataIndex: "fields", render: (v: string) => <Text code style={{ fontSize: 11 }}>{v}</Text> },
+                ]}
+                dataSource={[
+                  { key: "1", name: "Buyer", desc: "采购方信息，代表发起采购请求的公司", fields: "id, name, address, contact" },
+                  { key: "2", name: "Supplier", desc: "供应商信息，代表提供商品/服务的供应商", fields: "code, name, bankAccount, taxId" },
+                  { key: "3", name: "Bank", desc: "银行信息，用于付款对账", fields: "bankCode, bankName, swiftCode" },
+                ]}
+              />
             </div>
 
             <div>
               <Text strong style={{ fontSize: 13, color: "#1890ff", display: "block", marginBottom: 8 }}>交互细节</Text>
-              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
-                <li><Text strong>Knowledge Detail</Text> - 查看实体详情，展示字段结构和示例数据</li>
-                <li><Text strong>Endpoint 配置</Text> - 配置外部数据源连接，支持 API Endpoint、认证方式</li>
-                <li><Text strong>数据同步</Text> - 手动触发或定时同步外部数据源</li>
-              </ul>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "页面", dataIndex: "page", width: 140, render: (v: string) => <Text strong>{v}</Text> },
+                  { title: "功能描述", dataIndex: "desc", width: 200 },
+                  { title: "交互操作", dataIndex: "interaction" },
+                  { title: "UI 元素", dataIndex: "ui", width: 160, render: (v: string) => <Tag style={{ fontSize: 10 }}>{v}</Tag> },
+                ]}
+                dataSource={[
+                  { key: "1", page: "Knowledge Detail", desc: "查看实体详情", interaction: "点击侧边栏菜单进入，展示实体字段结构、示例数据、数据统计", ui: "Card + Descriptions" },
+                  { key: "2", page: "Endpoint 配置", desc: "配置外部数据源连接", interaction: "填写 API Endpoint URL、选择认证方式、配置 API Key、点击 Test Connection 验证", ui: "Form + Input + Select" },
+                  { key: "3", page: "数据同步", desc: "同步外部数据源", interaction: "点击 Sync Now 按钮手动触发，或配置定时任务自动同步", ui: "Button + Progress" },
+                ]}
+              />
             </div>
           </Card>
 
@@ -233,38 +247,58 @@ export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void 
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 13, color: "#52c41a", display: "block", marginBottom: 8 }}>核心实体</Text>
-              <div style={{ background: "#fafafa", padding: 12, borderRadius: 4 }}>
-                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>AuditCase (发票 Case)</Text>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, fontSize: 11 }}>
-                  <div><Text code>caseId</Text> - Case 唯一标识</div>
-                  <div><Text code>invoiceNo</Text> - 发票编号</div>
-                  <div><Text code>supplierName</Text> - 供应商名称</div>
-                  <div><Text code>entity</Text> - 所属实体 (SG/TH/VN...)</div>
-                  <div><Text code>amount</Text> / <Text code>currency</Text> - 金额与币种</div>
-                  <div><Text code>reviewDate</Text> - 审核日期 (用于 365 天窗口)</div>
-                  <div><Text code>isGolden</Text> - Golden / Non-Golden 标记</div>
-                  <div><Text code>groundTruth</Text> - Pass / Fail / Pending</div>
-                </div>
-              </div>
+              <Text strong style={{ fontSize: 13, color: "#52c41a", display: "block", marginBottom: 8 }}>核心实体: AuditCase</Text>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "字段", dataIndex: "field", width: 120, render: (v: string) => <Text code style={{ fontSize: 11 }}>{v}</Text> },
+                  { title: "类型", dataIndex: "type", width: 100 },
+                  { title: "描述", dataIndex: "desc" },
+                  { title: "示例值", dataIndex: "example", render: (v: string) => <Text type="secondary" style={{ fontSize: 11 }}>{v}</Text> },
+                ]}
+                dataSource={[
+                  { key: "1", field: "caseId", type: "string", desc: "Case 唯一标识", example: "CASE-001" },
+                  { key: "2", field: "invoiceNo", type: "string", desc: "发票编号", example: "INV-2025-0001" },
+                  { key: "3", field: "supplierName", type: "string", desc: "供应商名称", example: "Acme Corp" },
+                  { key: "4", field: "entity", type: "string", desc: "所属实体 (区域代码)", example: "SG / TH / VN" },
+                  { key: "5", field: "amount", type: "number", desc: "发票金额", example: "12500.00" },
+                  { key: "6", field: "currency", type: "string", desc: "币种", example: "USD / SGD" },
+                  { key: "7", field: "reviewDate", type: "string", desc: "审核日期 (365 天窗口判断依据)", example: "2025-03-15" },
+                  { key: "8", field: "isGolden", type: "enum", desc: "是否为黄金测试集", example: "Golden / Non-Golden" },
+                  { key: "9", field: "groundTruth", type: "enum", desc: "人工标注结果", example: "Pass / Fail / Pending" },
+                ]}
+              />
             </div>
 
             <div>
               <Text strong style={{ fontSize: 13, color: "#52c41a", display: "block", marginBottom: 8 }}>交互细节</Text>
-              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
-                <li><Text strong>Case List</Text> - 主列表，支持搜索、筛选、分页；显示最近 365 天的 Case</li>
-                <li><Text strong>Case Detail</Text> - 点击 Case 查看完整详情，包括发票图片、提取结果、Ground Truth</li>
-                <li><Text strong>Golden Case Management</Text> - 管理黄金测试集，按 Step 分组展示，支持添加/移除 Golden 标记</li>
-                <li><Text strong>Pattern Library</Text> - 管理 Case 的 Pattern 标签，用于分类和测试覆盖分析</li>
-                <li><Text strong>Archived Cases</Text> - 查看已归档 Case，只读模式，支持搜索</li>
-              </ul>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "页面", dataIndex: "page", width: 160, render: (v: string) => <Text strong>{v}</Text> },
+                  { title: "功能描述", dataIndex: "desc", width: 180 },
+                  { title: "交互操作", dataIndex: "interaction" },
+                  { title: "UI 元素", dataIndex: "ui", width: 140, render: (v: string) => <Tag style={{ fontSize: 10 }}>{v}</Tag> },
+                  { title: "权限", dataIndex: "role", width: 80, render: (v: string) => <Text type="secondary" style={{ fontSize: 10 }}>{v}</Text> },
+                ]}
+                dataSource={[
+                  { key: "1", page: "Case List", desc: "主列表，展示最近 365 天 Case", interaction: "搜索框输入关键词；Filter 选择 Entity/Golden/Ground Truth；点击行进入详情", ui: "Table + Search + Filter", role: "All" },
+                  { key: "2", page: "Case Detail", desc: "查看 Case 完整信息", interaction: "查看发票图片预览、AI 提取结果、PO 匹配结果、Ground Truth 标注", ui: "Card + Image + JSON", role: "All" },
+                  { key: "3", page: "Golden Case Mgmt", desc: "管理黄金测试集", interaction: "按 Step 切换 Tab；点击 Add to Golden Set 添加；Remove 移除；搜索/筛选", ui: "Tabs + Table + Button", role: "AI_OPS" },
+                  { key: "4", page: "Pattern Library", desc: "管理 Case Pattern 标签", interaction: "查看 Pattern 分布统计；为 Case 添加/编辑 Pattern 标签", ui: "Table + Tag + Modal", role: "AI_OPS" },
+                  { key: "5", page: "Archived Cases", desc: "查看已归档 Case (只读)", interaction: "搜索已归档 Case；查看 archivedAt 时间戳；点击行查看详情 (只读)", ui: "Table + Search", role: "All" },
+                  { key: "6", page: "Run Archive Now", desc: "手动触发归档任务", interaction: "点击按钮触发归档；显示归档结果 (归档数量、跳过的 Golden Case)", ui: "Button + Confirm", role: "AI_OPS" },
+                ]}
+              />
               <div style={{ marginTop: 12, padding: 10, background: "#fff7e6", borderRadius: 4, border: "1px solid #ffd591" }}>
                 <Text strong style={{ fontSize: 11, color: "#fa8c16" }}>归档规则</Text>
-                <ul style={{ fontSize: 11, margin: "4px 0 0", paddingLeft: 16 }}>
-                  <li>reviewDate 超过 365 天自动归档</li>
-                  <li>Golden Set 中的 Case 永久保留，不归档</li>
-                  <li>AI_OPS 可手动触发 "Run Archive Now"</li>
-                </ul>
+                <Text style={{ fontSize: 11, display: "block", marginTop: 4 }}>
+                  reviewDate &gt; 365 天 → 自动归档 | Golden Case 永久保留 | AI_OPS 可手动触发
+                </Text>
               </div>
             </div>
           </Card>
@@ -279,43 +313,61 @@ export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void 
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 13, color: "#722ed1", display: "block", marginBottom: 8 }}>核心实体</Text>
-              <div style={{ background: "#fafafa", padding: 12, borderRadius: 4, marginBottom: 12 }}>
-                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Agent</Text>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, fontSize: 11 }}>
-                  <div><Text code>id</Text> - Agent 唯一标识 (AGT-XXX)</div>
-                  <div><Text code>agentName</Text> - Agent 名称</div>
-                  <div><Text code>flowId</Text> - 所属 Flow (Invoice Processing)</div>
-                  <div><Text code>step</Text> - INVOICE_REVIEW / MATCH / AP_VOUCHER</div>
-                  <div><Text code>currentVersion</Text> - 当前版本 (v1.3.0)</div>
-                  <div><Text code>status</Text> - TESTING / ACTIVE / DEPRECATED</div>
-                  <div><Text code>regions</Text> - 适用区域，空数组表示全区域</div>
-                  <div><Text code>description</Text> - Agent 描述</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Tag color="orange">TESTING</Tag><Text style={{ fontSize: 11 }}>开发测试阶段</Text>
-                <Tag color="green">ACTIVE</Tag><Text style={{ fontSize: 11 }}>生产运行中</Text>
-                <Tag color="default">DEPRECATED</Tag><Text style={{ fontSize: 11 }}>已被新版本替代</Text>
+              <Text strong style={{ fontSize: 13, color: "#722ed1", display: "block", marginBottom: 8 }}>核心实体: Agent</Text>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "字段", dataIndex: "field", width: 130, render: (v: string) => <Text code style={{ fontSize: 11 }}>{v}</Text> },
+                  { title: "类型", dataIndex: "type", width: 100 },
+                  { title: "描述", dataIndex: "desc" },
+                  { title: "示例值", dataIndex: "example", render: (v: string) => <Text type="secondary" style={{ fontSize: 11 }}>{v}</Text> },
+                ]}
+                dataSource={[
+                  { key: "1", field: "id", type: "string", desc: "Agent 唯一标识", example: "AGT-001" },
+                  { key: "2", field: "agentName", type: "string", desc: "Agent 名称", example: "Line Item Validator" },
+                  { key: "3", field: "flowId", type: "string", desc: "所属业务流程", example: "Invoice Processing" },
+                  { key: "4", field: "step", type: "enum", desc: "处理步骤", example: "INVOICE_REVIEW / MATCH / AP_VOUCHER" },
+                  { key: "5", field: "currentVersion", type: "string", desc: "当前生产版本", example: "v1.3.0" },
+                  { key: "6", field: "status", type: "enum", desc: "Agent 状态", example: "TESTING / ACTIVE / DEPRECATED" },
+                  { key: "7", field: "regions", type: "string[]", desc: "适用区域 (空数组=全区域)", example: "[\"SG\", \"TH\"]" },
+                ]}
+              />
+              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                <div><Tag color="orange">TESTING</Tag><Text style={{ fontSize: 11 }}> 开发测试中</Text></div>
+                <div><Tag color="green">ACTIVE</Tag><Text style={{ fontSize: 11 }}> 生产运行中</Text></div>
+                <div><Tag color="default">DEPRECATED</Tag><Text style={{ fontSize: 11 }}> 已被替代</Text></div>
               </div>
             </div>
 
             <div>
               <Text strong style={{ fontSize: 13, color: "#722ed1", display: "block", marginBottom: 8 }}>交互细节</Text>
-              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
-                <li><Text strong>Agent List</Text> - 列表展示所有 Agent，支持按 Region 筛选、搜索、状态过滤</li>
-                <li><Text strong>Agent Detail (只读)</Text> - 左侧展示当前选中版本的配置 (Model、Temperature、Prompt 等)，全部只读</li>
-                <li><Text strong>Version Management</Text> - 右侧展示版本列表 (Current/Testing/Deprecated)，点击切换左侧配置</li>
-                <li><Text strong>Create New Version</Text> - 选择 Copy From 版本，输入新版本号，创建 TESTING 版本</li>
-                <li><Text strong>Publish</Text> - 回归测试通过后，AI_OPS 可将 TESTING 版本发布为 ACTIVE</li>
-              </ul>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "页面", dataIndex: "page", width: 150, render: (v: string) => <Text strong>{v}</Text> },
+                  { title: "功能描述", dataIndex: "desc", width: 180 },
+                  { title: "交互操作", dataIndex: "interaction" },
+                  { title: "UI 元素", dataIndex: "ui", width: 140, render: (v: string) => <Tag style={{ fontSize: 10 }}>{v}</Tag> },
+                  { title: "权限", dataIndex: "role", width: 80, render: (v: string) => <Text type="secondary" style={{ fontSize: 10 }}>{v}</Text> },
+                ]}
+                dataSource={[
+                  { key: "1", page: "Agent List", desc: "Agent 列表，按 Region 筛选", interaction: "全局 Region Selector 切换区域；搜索框搜索 Agent 名称；点击行进入详情", ui: "Table + Search", role: "All" },
+                  { key: "2", page: "Agent Detail 左侧", desc: "查看版本配置 (只读)", interaction: "展示 Model、Temperature、Max Tokens、Prompt 等配置；点击版本卡片切换配置", ui: "Card + Descriptions", role: "All" },
+                  { key: "3", page: "Version List 右侧", desc: "版本管理面板", interaction: "查看 Current/Testing/Deprecated 版本列表；点击 View Config 切换左侧配置", ui: "Card + Table", role: "All" },
+                  { key: "4", page: "Create New Version", desc: "创建新版本", interaction: "点击 New Version 按钮；选择 Copy From 版本；输入版本号 (v1.4.0-beta)；创建 TESTING 版本", ui: "Modal + Select + Input", role: "AI_OPS" },
+                  { key: "5", page: "Publish", desc: "发布 TESTING 版本", interaction: "Regression Test 通过后，点击 Publish to Current；确认后 TESTING → ACTIVE", ui: "Button + Popconfirm", role: "AI_OPS" },
+                  { key: "6", page: "Run Regression Test", desc: "跳转回归测试", interaction: "点击 Run Regression Test 链接，跳转至 Regression Test 页面并预选当前 Agent", ui: "Link", role: "AI_OPS" },
+                ]}
+              />
               <div style={{ marginTop: 12, padding: 10, background: "#f6ffed", borderRadius: 4, border: "1px solid #b7eb8f" }}>
                 <Text strong style={{ fontSize: 11, color: "#52c41a" }}>发布条件</Text>
-                <ul style={{ fontSize: 11, margin: "4px 0 0", paddingLeft: 16 }}>
-                  <li>Golden Set Pass Rate &ge; 85%</li>
-                  <li>Benchmark Set Pass Rate &ge; 85%</li>
-                  <li>Full Set Pass Rate &ge; 85%</li>
-                </ul>
+                <Text style={{ fontSize: 11, display: "block", marginTop: 4 }}>
+                  Golden Set &ge; 85% | Benchmark Set &ge; 85% | Full Set &ge; 85% | 仅 AI_OPS 可操作
+                </Text>
               </div>
             </div>
           </Card>
@@ -330,31 +382,47 @@ export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void 
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <Text strong style={{ fontSize: 13, color: "#fa8c16", display: "block", marginBottom: 8 }}>核心实体</Text>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                {[
-                  { name: "Golden Set", desc: "黄金测试集，由 Golden Case Management 维护，高质量标注" },
-                  { name: "Benchmark Set", desc: "基准测试集，用于性能基准比较" },
-                  { name: "Full Set", desc: "全量测试集，完整覆盖所有 Pattern" },
-                ].map((e) => (
-                  <div key={e.name} style={{ padding: 10, background: "#fafafa", borderRadius: 4 }}>
-                    <Text strong style={{ fontSize: 12, display: "block" }}>{e.name}</Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>{e.desc}</Text>
-                  </div>
-                ))}
-              </div>
+              <Text strong style={{ fontSize: 13, color: "#fa8c16", display: "block", marginBottom: 8 }}>核心实体: Test Set</Text>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "测试集", dataIndex: "name", width: 120, render: (v: string) => <Text strong>{v}</Text> },
+                  { title: "描述", dataIndex: "desc" },
+                  { title: "数据来源", dataIndex: "source" },
+                  { title: "通过阈值", dataIndex: "threshold", width: 80, render: (v: string) => <Tag color="blue">{v}</Tag> },
+                ]}
+                dataSource={[
+                  { key: "1", name: "Golden Set", desc: "黄金测试集，高质量人工标注", source: "Golden Case Management 维护", threshold: "≥ 85%" },
+                  { key: "2", name: "Benchmark Set", desc: "基准测试集，性能基准参考", source: "历史稳定 Case 集合", threshold: "≥ 85%" },
+                  { key: "3", name: "Full Set", desc: "全量测试集，完整 Pattern 覆盖", source: "所有可用测试 Case", threshold: "≥ 85%" },
+                ]}
+              />
             </div>
 
             <div>
               <Text strong style={{ fontSize: 13, color: "#fa8c16", display: "block", marginBottom: 8 }}>交互细节</Text>
-              <ul style={{ fontSize: 13, margin: 0, paddingLeft: 20 }}>
-                <li><Text strong>Agent 选择</Text> - 选择要测试的 TESTING 状态 Agent</li>
-                <li><Text strong>Trigger Regression Test</Text> - 点击按钮启动测试，依次执行 Golden → Benchmark → Full</li>
-                <li><Text strong>Progress Bar</Text> - 实时显示测试进度和当前执行的 Set</li>
-                <li><Text strong>Verdict Banner</Text> - 所有 Set 通过 (&ge;85%) 显示 PASS (绿色)，否则 FAIL (红色)</li>
-                <li><Text strong>Set Tabs</Text> - 切换查看每个 Set 的详细 Case-level 结果</li>
-                <li><Text strong>从 Agent Detail 跳转</Text> - 点击 "Run Regression Test" 链接直接跳转</li>
-              </ul>
+              <Table
+                size="small"
+                pagination={false}
+                bordered
+                columns={[
+                  { title: "功能", dataIndex: "feature", width: 160, render: (v: string) => <Text strong>{v}</Text> },
+                  { title: "功能描述", dataIndex: "desc", width: 180 },
+                  { title: "交互操作", dataIndex: "interaction" },
+                  { title: "UI 元素", dataIndex: "ui", width: 140, render: (v: string) => <Tag style={{ fontSize: 10 }}>{v}</Tag> },
+                ]}
+                dataSource={[
+                  { key: "1", feature: "Agent 选择", desc: "选择待测试 Agent", interaction: "下拉选择 TESTING 状态的 Agent；从 Agent Detail 跳转时自动预选", ui: "Select" },
+                  { key: "2", feature: "Trigger Test", desc: "启动回归测试", interaction: "点击 Trigger Regression Test 按钮；依次执行 Golden → Benchmark → Full", ui: "Button" },
+                  { key: "3", feature: "Progress Bar", desc: "实时显示测试进度", interaction: "显示当前执行的 Set 名称；进度条动态更新；预计剩余时间", ui: "Progress + Text" },
+                  { key: "4", feature: "Verdict Banner", desc: "测试结果汇总", interaction: "所有 Set 通过 (≥85%) 显示 PASS (绿色大 Banner)；任一失败显示 FAIL (红色)", ui: "Alert Banner" },
+                  { key: "5", feature: "Set Tabs", desc: "查看各 Set 详情", interaction: "切换 Golden/Benchmark/Full Tab；查看 Case-level 结果表格；展示 Pass/Fail 数量", ui: "Tabs + Table" },
+                  { key: "6", feature: "Case-level Results", desc: "单个 Case 测试结果", interaction: "查看每个 Case 的 Expected vs Actual；Pass/Fail 状态；错误详情", ui: "Table + Tag" },
+                  { key: "7", feature: "Simulate Failure", desc: "模拟测试失败 (Demo)", interaction: "点击按钮切换 Full Set 通过率为 78.2%，触发 FAIL 状态 (仅演示)", ui: "Button" },
+                ]}
+              />
               <div style={{ marginTop: 12, padding: 10, background: "#f0f5ff", borderRadius: 4, border: "1px solid #adc6ff" }}>
                 <Text strong style={{ fontSize: 11, color: "#2f54eb" }}>测试流程</Text>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
@@ -364,7 +432,7 @@ export function PrdViewer({ onNavigate }: { onNavigate?: (page: string) => void 
                   <span style={{ color: "#bfbfbf" }}>→</span>
                   <Tag color="purple">Full Set</Tag>
                   <span style={{ color: "#bfbfbf" }}>→</span>
-                  <Tag color="green">PASS / Publish</Tag>
+                  <Tag color="green">PASS → Publish</Tag>
                 </div>
               </div>
             </div>
