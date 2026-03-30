@@ -5,7 +5,7 @@ import { type GoldenCasesState } from "@/lib/mock-data"
 import { useRegion } from "@/lib/region-context"
 import {
   Table, Button, Tag, Typography, Input, Select, Modal, Alert,
-  Popconfirm, Progress, Tooltip, Empty,
+  Progress, Tooltip, Empty,
 } from "antd"
 import {
   PlusOutlined, SearchOutlined, WarningOutlined,
@@ -423,8 +423,7 @@ export function GoldenCaseManagement({
   const [patternFilter, setPatternFilter] = useState<string[]>([])
   const [gtFilter, setGtFilter] = useState<GroundTruth | "All">("All")
   const [addModalOpen, setAddModalOpen] = useState(false)
-  // Force recompile: touch module
-  const _v = 1
+  const [removeTarget, setRemoveTarget] = useState<GoldenCase | null>(null)
 
   function handleConfirmAdd(added: AddableCase[]) {
     const today = new Date().toISOString().slice(0, 10)
@@ -505,23 +504,15 @@ export function GoldenCaseManagement({
     {
       title: "Actions", key: "actions", width: 80,
       render: (_: unknown, record: GoldenCase) => (
-        <Popconfirm
-          title={`Remove ${record.caseId} from Golden Set for ${activeStep}?`}
-          description="This cannot be undone."
-          okText="Remove"
-          okButtonProps={{ danger: true }}
-          cancelText="Cancel"
-          onConfirm={() =>
-            setGoldenCases((prev) => ({
-              ...prev,
-              [activeStep]: prev[activeStep].filter((c) => c.key !== record.key),
-            }))
-          }
+        <Button
+          type="link"
+          danger
+          size="small"
+          style={{ padding: 0, fontSize: 12 }}
+          onClick={() => setRemoveTarget(record)}
         >
-          <Button type="link" danger size="small" style={{ padding: 0, fontSize: 12 }}>
-            Remove
-          </Button>
-        </Popconfirm>
+          Remove
+        </Button>
       ),
     },
   ]
@@ -655,6 +646,38 @@ export function GoldenCaseManagement({
         currentCount={dynamicTotal}
         limit={cfg.limit}
       />
+
+      {/* Remove Golden Case Modal */}
+      <Modal
+        title="Remove Golden Case"
+        open={!!removeTarget}
+        onCancel={() => setRemoveTarget(null)}
+        footer={[
+          <Button key="cancel" onClick={() => setRemoveTarget(null)}>
+            Cancel
+          </Button>,
+          <Button
+            key="remove"
+            type="primary"
+            danger
+            onClick={() => {
+              if (!removeTarget) return
+              setGoldenCases((prev) => ({
+                ...prev,
+                [activeStep]: prev[activeStep].filter((c) => c.key !== removeTarget.key),
+              }))
+              setRemoveTarget(null)
+            }}
+          >
+            Remove
+          </Button>,
+        ]}
+      >
+        <Text>
+          Are you sure you want to remove Case{" "}
+          <Text strong>{removeTarget?.caseId}</Text> from the Golden Set? This action cannot be undone.
+        </Text>
+      </Modal>
     </div>
   )
 }
