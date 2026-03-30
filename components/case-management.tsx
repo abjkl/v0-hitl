@@ -439,6 +439,8 @@ export function CaseManagement({
       const archivedCase: ArchivedCaseMock = {
         key: `arc-manual-${Date.now()}`,
         caseId: archiveTarget.caseId,
+        paymentRequestId: archiveTarget.paymentRequestId,
+        paymentGroupId: archiveTarget.paymentGroupId,
         invoiceNo: archiveTarget.invoiceNo,
         supplierName: archiveTarget.supplierName,
         region: archiveTarget.region,
@@ -454,6 +456,7 @@ export function CaseManagement({
         archivedAt: new Date().toISOString(),
         archiveReason: "Manual Move",
         archiveReasonText: archiveReason.trim(),
+        archivedBy: "Current User",
       }
 
       onArchive([archivedCase])

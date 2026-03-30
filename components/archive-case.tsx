@@ -83,10 +83,26 @@ export function ArchiveCase({ archivedCases, onBack }: ArchiveCaseProps) {
       sorter: (a, b) => a.caseId.localeCompare(b.caseId),
     },
     {
+      title: "Payment Request",
+      dataIndex: "paymentRequestId",
+      key: "paymentRequestId",
+      width: 140,
+      render: (v: string) => <Text style={{ fontSize: 13 }}>{v}</Text>,
+      sorter: (a, b) => a.paymentRequestId.localeCompare(b.paymentRequestId),
+    },
+    {
+      title: "Payment Group",
+      dataIndex: "paymentGroupId",
+      key: "paymentGroupId",
+      width: 130,
+      render: (v: string) => <Text style={{ fontSize: 13 }}>{v}</Text>,
+      sorter: (a, b) => a.paymentGroupId.localeCompare(b.paymentGroupId),
+    },
+    {
       title: "Invoice No.",
       dataIndex: "invoiceNo",
       key: "invoiceNo",
-      width: 150,
+      width: 140,
       render: (v: string) => <Text style={{ fontSize: 13 }}>{v}</Text>,
       sorter: (a, b) => a.invoiceNo.localeCompare(b.invoiceNo),
     },
@@ -99,40 +115,13 @@ export function ArchiveCase({ archivedCases, onBack }: ArchiveCaseProps) {
       sorter: (a, b) => a.supplierName.localeCompare(b.supplierName),
     },
     {
-      title: "Step",
-      dataIndex: "step",
-      key: "step",
-      width: 120,
-      render: (v: string) => <Text style={{ fontSize: 13 }}>{v}</Text>,
-      sorter: (a, b) => a.step.localeCompare(b.step),
-    },
-    {
-      title: "Ground Truth",
-      dataIndex: "groundTruth",
-      key: "groundTruth",
-      width: 110,
-      render: (v: string) => (
-        <Tag color={v === 'Pass' ? 'green' : 'red'} style={{ fontSize: 11 }}>
-          {v}
-        </Tag>
-      ),
-      sorter: (a, b) => a.groundTruth.localeCompare(b.groundTruth),
-    },
-    {
-      title: "Is Golden",
-      dataIndex: "isGolden",
-      key: "isGolden",
-      width: 100,
-      render: (v: string) => (
-        v === 'Golden' ? (
-          <Tooltip title="Golden cases are always retained in the active list">
-            <Tag color="blue" style={{ fontSize: 11 }}>Yes</Tag>
-          </Tooltip>
-        ) : (
-          <Tag style={{ fontSize: 11 }}>No</Tag>
-        )
-      ),
-      sorter: (a, b) => a.isGolden.localeCompare(b.isGolden),
+      title: "Invoice Amount",
+      dataIndex: "amount",
+      key: "amount",
+      width: 160,
+      render: (v: number, r: ArchivedCaseMock) => <AmountCell amount={v} currency={r.currency} />,
+      sorter: (a, b) => a.amount - b.amount,
+      defaultSortOrder: "descend",
     },
     {
       title: "Last Active",
@@ -143,10 +132,10 @@ export function ArchiveCase({ archivedCases, onBack }: ArchiveCaseProps) {
       sorter: (a, b) => a.reviewDate.localeCompare(b.reviewDate),
     },
     {
-      title: "Archived Date",
+      title: "Archive Date",
       dataIndex: "archivedAt",
       key: "archivedAt",
-      width: 140,
+      width: 130,
       render: (v: string) => {
         const date = new Date(v).toISOString().split('T')[0]
         return <Text type="secondary" style={{ fontSize: 13 }}>{date}</Text>
@@ -155,10 +144,32 @@ export function ArchiveCase({ archivedCases, onBack }: ArchiveCaseProps) {
     },
     {
       title: "Archive Reason",
-      dataIndex: "archiveReason",
-      key: "archiveReason",
+      dataIndex: "archiveReasonText",
+      key: "archiveReasonText",
       width: 200,
-      render: () => <Text style={{ fontSize: 13 }}>Invalid Payment Request Status</Text>,
+      ellipsis: true,
+      render: (v: string | undefined, record: ArchivedCaseMock) => {
+        const reasonText = v || record.archiveReason
+        return (
+          <Tooltip title={reasonText}>
+            <Text style={{ fontSize: 13 }} ellipsis>
+              {reasonText}
+            </Text>
+          </Tooltip>
+        )
+      },
+      sorter: (a, b) => (a.archiveReasonText || a.archiveReason).localeCompare(b.archiveReasonText || b.archiveReason),
+    },
+    {
+      title: "Archive By",
+      dataIndex: "archivedBy",
+      key: "archivedBy",
+      width: 180,
+      render: (v: string | undefined) => {
+        const displayValue = v || "System"
+        return <Text style={{ fontSize: 13 }}>{displayValue}</Text>
+      },
+      sorter: (a, b) => (a.archivedBy || "System").localeCompare(b.archivedBy || "System"),
     },
   ]
 
