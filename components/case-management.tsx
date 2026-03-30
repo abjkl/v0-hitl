@@ -313,8 +313,10 @@ export function CaseManagement({
   }, [region])
 
   const [search, setSearch]               = useState("")
+  const [searchField, setSearchField]     = useState<"caseId" | "paymentRequestId" | "paymentGroupId" | "invoiceNo" | "supplierName">("caseId")
   const [regionFilter, setRegionFilter]   = useState<string | null>(null)
   const [entityFilter, setEntityFilter]   = useState<string | null>(null)
+  const [stepFilter, setStepFilter]       = useState<string | null>(null)
   const [goldenFilter, setGoldenFilter]   = useState<CaseGolden | null>(null)
   const [amountMin, setAmountMin]         = useState<number | null>(null)
   const [amountMax, setAmountMax]         = useState<number | null>(null)
@@ -345,19 +347,39 @@ export function CaseManagement({
   const filtered = useMemo(() => {
     return regionPool.filter((r) => {
       const q = search.toLowerCase()
-      const matchSearch =
-        !q ||
-        r.caseId.toLowerCase().includes(q) ||
-        r.paymentRequestId.toLowerCase().includes(q) ||
-        r.supplierName.toLowerCase().includes(q)
+      
+      // Match search field
+      let matchSearch = !q
+      if (q) {
+        if (searchField === "caseId") {
+          matchSearch = r.caseId.toLowerCase().includes(q)
+        } else if (searchField === "paymentRequestId") {
+          matchSearch = r.paymentRequestId.toLowerCase().includes(q)
+        } else if (searchField === "paymentGroupId") {
+          matchSearch = r.paymentGroupId.toLowerCase().includes(q)
+        } else if (searchField === "invoiceNo") {
+          matchSearch = r.invoiceNo.toLowerCase().includes(q)
+        } else if (searchField === "supplierName") {
+          matchSearch = r.supplierName.toLowerCase().includes(q)
+        }
+      }
+      
       const matchRegion = !regionFilter || r.region === regionFilter
       const matchEntity = !entityFilter || r.entity === entityFilter
+      
+      // Step filter only applies when Golden filter is set
+      let matchStep = true
+      if (goldenFilter && stepFilter) {
+        matchStep = r.step === stepFilter
+      }
+      
       const matchGolden = !goldenFilter || r.isGolden === goldenFilter
       const matchAmountMin = amountMin === null || r.amount >= amountMin
       const matchAmountMax = amountMax === null || r.amount <= amountMax
-      return matchSearch && matchRegion && matchEntity && matchGolden && matchAmountMin && matchAmountMax
+      
+      return matchSearch && matchRegion && matchEntity && matchStep && matchGolden && matchAmountMin && matchAmountMax
     })
-  }, [regionPool, search, regionFilter, entityFilter, goldenFilter, amountMin, amountMax])
+  }, [regionPool, search, searchField, regionFilter, entityFilter, stepFilter, goldenFilter, amountMin, amountMax])
 
   function getExpanded(caseId: string): CaseExpanded {
     return expandedData[caseId] ?? getDefaultExpanded(caseId)
@@ -388,14 +410,16 @@ export function CaseManagement({
 
   function clearFilters() {
     setSearch("")
+    setSearchField("caseId")
     setRegionFilter(null)
     setEntityFilter(null)
+    setStepFilter(null)
     setGoldenFilter(null)
     setAmountMin(null)
     setAmountMax(null)
   }
 
-  const hasFilters = !!(search || regionFilter || entityFilter || goldenFilter || amountMin !== null || amountMax !== null)
+  const hasFilters = !!(search || regionFilter || entityFilter || stepFilter || goldenFilter || amountMin !== null || amountMax !== null)
 
   const columns: ColumnsType<TestCase> = [
     {
@@ -558,14 +582,29 @@ export function CaseManagement({
 
       {/* Toolbar */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
-        <Input
-          prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-          placeholder="Search by Case ID / Payment Request ID / Supplier"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: 300 }}
-          allowClear
-        />
+        {/* Search with field selector */}
+        <Input.Group compact style={{ display: "flex", width: "auto" }}>
+          <Select
+            value={searchField}
+            onChange={(v) => setSearchField(v)}
+            style={{ width: 140 }}
+            options={[
+              { label: "Case ID", value: "caseId" },
+              { label: "Payment Request ID", value: "paymentRequestId" },
+              { label: "Payment Group ID", value: "paymentGroupId" },
+              { label: "Invoice Number", value: "invoiceNo" },
+              { label: "Supplier Name", value: "supplierName" },
+            ]}
+          />
+          <Input
+            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            placeholder="Search keyword"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ width: 220, borderLeft: 0 }}
+            allowClear
+          />
+        </Input.Group>
         <Select
           placeholder={<Space size={4}><FilterOutlined style={{ fontSize: 12 }} />Region</Space>}
           value={regionFilter}
@@ -582,17 +621,38 @@ export function CaseManagement({
           style={{ width: 110 }}
           allowClear
         />
-        <Select
-          placeholder="Golden"
-          value={goldenFilter}
-          onChange={(v) => setGoldenFilter(v)}
-          options={[
-            { label: "Golden", value: "Golden" },
-            { label: "Non-Golden", value: "Non-Golden" },
-          ]}
-          style={{ width: 130 }}
-          allowClear
-        />
+        {/* Step + Golden filter */}
+        <Input.Group compact style={{ display: "flex", width: "auto" }}>
+          <Select
+            value={stepFilter}
+            onChange={(v) => setStepFilter(v)}
+            style={{ width: 130, opacity: goldenFilter ? 1 : 0.5, cursor: goldenFilter ? "pointer" : "not-allowed" }}
+            disabled={!goldenFilter}
+            options={[
+              { label: "All Steps", value: null },
+              { label: "Invoice Review", value: "INVOICE_REVIEW" },
+              { label: "Match", value: "MATCH" },
+              { label: "AP Voucher", value: "AP_VOUCHER" },
+            ]}
+            placeholder="Step"
+            allowClear
+          />
+          <Select
+            value={goldenFilter}
+            onChange={(v) => {
+              setGoldenFilter(v)
+              if (!v) setStepFilter(null) // Clear step filter when Golden is cleared
+            }}
+            style={{ width: 130, borderLeft: 0 }}
+            options={[
+              { label: "All", value: null },
+              { label: "Golden", value: "Golden" },
+              { label: "Non-Golden", value: "Non-Golden" },
+            ]}
+            placeholder="Golden Status"
+            allowClear
+          />
+        </Input.Group>
         <Space size={4} style={{ background: "#fafafa", border: "1px solid #d9d9d9", borderRadius: 6, padding: "0 8px", height: 32, display: "flex", alignItems: "center" }}>
           <Text type="secondary" style={{ fontSize: 12, whiteSpace: "nowrap" }}>Amount</Text>
           <InputNumber
