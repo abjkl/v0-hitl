@@ -160,7 +160,8 @@ function GtTag({ value }: { value: GroundTruth }) {
 }
 
 function AmountCell({ amount, currency }: { amount?: number; currency?: string }) {
-  if (amount === undefined || currency === undefined) {
+  // Handle undefined values safely
+  if (!amount || !currency) {
     return <Text style={{ fontSize: 13 }}>-</Text>
   }
   return (
