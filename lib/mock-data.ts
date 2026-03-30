@@ -311,13 +311,15 @@ export const agentListData: Agent[] = [
 
 // ── Agent Detail (AGT-002 as the selected agent) ─────────────────
 
-export interface AgentVersionInfo {
+  export interface AgentVersionInfo {
   version: string
+  state: 'LIVE' | 'TESTING' | 'ARCHIVED' | 'DEPRECATED'
   publishedAt?: string
   createdAt?: string
   publishedBy?: string
   createdBy?: string
-}
+  regressionTestPassed?: boolean
+  }
 
 export interface AgentDetailData {
   id: string
@@ -335,9 +337,7 @@ export interface AgentDetailData {
   systemPrompt: string
   userPromptTemplate: string
   versions: {
-    current: AgentVersionInfo
-    testing: AgentVersionInfo | null
-    history: Array<{ version: string; date: string; publishedBy: string }>
+    all: AgentVersionInfo[]
   }
 }
 
@@ -388,21 +388,13 @@ Supplier Profile:
 
 Please perform a complete line-item validation and return results in the specified JSON format.`,
   versions: {
-    current: {
-      version: 'v1.3.0',
-      publishedAt: '2025-03-15 10:22',
-      publishedBy: 'ops_user_01',
-    },
-    testing: {
-      version: 'v1.4.0-beta',
-      createdAt: '2025-03-18 14:05',
-      createdBy: 'ops_user_02',
-    },
-    history: [
-      { version: 'v1.2.0', date: '2025-02-20', publishedBy: 'ops_user_01' },
-      { version: 'v1.1.0', date: '2025-01-15', publishedBy: 'ops_user_03' },
-      { version: 'v1.0.1', date: '2024-12-10', publishedBy: 'ops_user_01' },
-      { version: 'v1.0.0', date: '2024-11-01', publishedBy: 'ops_user_03' },
+    all: [
+      { version: 'v1.3.0', state: 'LIVE', publishedAt: '2025-03-15 10:22', publishedBy: 'ops_user_01' },
+      { version: 'v1.4.0-beta', state: 'TESTING', createdAt: '2025-03-18 14:05', createdBy: 'ops_user_02', regressionTestPassed: false },
+      { version: 'v1.2.0', state: 'DEPRECATED', publishedAt: '2025-02-20 09:30', publishedBy: 'ops_user_01' },
+      { version: 'v1.1.0', state: 'DEPRECATED', publishedAt: '2025-01-15 14:15', publishedBy: 'ops_user_03' },
+      { version: 'v1.0.1', state: 'ARCHIVED', publishedAt: '2024-12-10 11:00', publishedBy: 'ops_user_01' },
+      { version: 'v1.0.0', state: 'DEPRECATED', publishedAt: '2024-11-01 08:45', publishedBy: 'ops_user_03' },
     ],
   },
 }
