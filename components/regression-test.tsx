@@ -1340,72 +1340,91 @@ export function RegressionTest({
           const predCfg = RESULT_TAG_CFG[selectedCaseDetail.agentPrediction as keyof typeof RESULT_TAG_CFG]
           const finalPredCfg = predCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
           return (
-            <div>
-              {/* Overall Result */}
-              <div style={{ paddingBottom: 20, borderBottom: "1px solid #f0f0f0", paddingLeft: 20, paddingRight: 20 }}>
-                <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Overall Result</Text>
-                <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontWeight: 600, fontSize: 13, padding: "4px 12px" }}>
-                  {selectedCaseDetail.agentPrediction}
-                </Tag>
-              </div>
-
-              {/* Confidence Score */}
-              <div style={{ padding: "20px", borderBottom: "1px solid #f0f0f0" }}>
-                <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Confidence Score</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Progress
-                    type="circle"
-                    percent={Math.round(selectedCaseDetail.confidence)}
-                    width={60}
-                    format={(p) => <Text style={{ fontSize: 12, fontWeight: 500 }}>{p}%</Text>}
-                  />
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 11, display: "block" }}>Model</Text>
-                    <Text style={{ fontSize: 12, fontWeight: 500 }}>{selectedCaseDetail.modelVersion}</Text>
+            <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+              {/* Top Summary Card */}
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", background: "#fafafa" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                  <div style={{ 
+                    width: 28, height: 28, borderRadius: "50%", 
+                    background: finalPredCfg.bg, 
+                    border: `1px solid ${finalPredCfg.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: finalPredCfg.color, fontSize: 14, fontWeight: 600
+                  }}>
+                    {selectedCaseDetail.agentPrediction === "Pass" || selectedCaseDetail.agentPrediction === "Matched" ? "✓" : selectedCaseDetail.agentPrediction === "Fail" ? "✗" : "—"}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontWeight: 600, fontSize: 12, marginBottom: 4 }}>
+                      {selectedCaseDetail.agentPrediction}
+                    </Tag>
+                    <Text type="secondary" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
+                      AI recommends you {"approve" in selectedCaseDetail.agentPrediction.toLowerCase() || selectedCaseDetail.agentPrediction === "Matched" ? "approve" : "reject"} this. Invoice & PO will move to next step
+                    </Text>
                   </div>
                 </div>
+                <Progress percent={Math.round(selectedCaseDetail.confidence)} size="small" status={selectedCaseDetail.confidence >= 80 ? "success" : "normal"} />
               </div>
 
-              {/* Ground Truth */}
-              <div style={{ padding: "20px", borderBottom: "1px solid #f0f0f0" }}>
-                <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Ground Truth (Human)</Text>
-                <Tag style={{ color: finalGtCfg.color, background: finalGtCfg.bg, borderColor: finalGtCfg.border, fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
-                  {selectedCaseDetail.groundTruth}
-                </Tag>
-                <Text style={{ fontSize: 12, display: "block", marginBottom: 10, color: "#434343" }}>
-                  {selectedCaseDetail.groundTruthReason}
-                </Text>
-                <div>
-                  <Text type="secondary" style={{ fontSize: 11 }}>Reviewed by {selectedCaseDetail.reviewer} on {selectedCaseDetail.reviewDate}</Text>
+              {/* Agent Name and Confidence */}
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#1890ff", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 12, fontWeight: 600 }}>
+                    {selectedCaseDetail.agentName.charAt(0)}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Text strong style={{ fontSize: 12, display: "block" }}>{selectedCaseDetail.agentName}</Text>
+                  </div>
+                  <Tag color={selectedCaseDetail.correct ? "green" : "red"} style={{ fontSize: 11, fontWeight: 500 }}>
+                    {selectedCaseDetail.correct ? "Correct" : "Incorrect"}
+                  </Tag>
                 </div>
+                <Text type="secondary" style={{ fontSize: 11, display: "block" }}>Confidence: {Math.round(selectedCaseDetail.confidence)}%</Text>
               </div>
 
-              {/* Check Items */}
-              <div style={{ padding: "20px" }}>
-                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 12 }}>Prediction Details</Text>
+              {/* Check Items List */}
+              <div style={{ padding: "16px 20px", flex: 1, overflowY: "auto" }}>
+                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 12 }}>Confidence</Text>
                 <div style={{ fontSize: 12 }}>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "flex-start" }}>
-                    <Text style={{ fontSize: 13, color: "#52c41a" }}>✓</Text>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "flex-start" }}>
+                    <Text style={{ fontSize: 13, color: "#52c41a", minWidth: 16 }}>✓</Text>
+                    <div>
+                      <Text style={{ display: "block", fontWeight: 500 }}>WIT file uploaded</Text>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "flex-start" }}>
+                    <Text style={{ fontSize: 13, color: "#52c41a", minWidth: 16 }}>✓</Text>
+                    <div>
+                      <Text style={{ display: "block", fontWeight: 500 }}>Tax invoice uploaded</Text>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "flex-start" }}>
+                    <Text style={{ fontSize: 13, color: "#52c41a", minWidth: 16 }}>✓</Text>
                     <div>
                       <Text style={{ display: "block", fontWeight: 500 }}>Invoice Amount Verified</Text>
-                      <Text type="secondary" style={{ fontSize: 11 }}>Matches PO amount within 2%</Text>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "flex-start" }}>
-                    <Text style={{ fontSize: 13, color: "#52c41a" }}>✓</Text>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "flex-start" }}>
+                    <Text style={{ fontSize: 13, color: "#cf1322", minWidth: 16 }}>✗</Text>
                     <div>
-                      <Text style={{ display: "block", fontWeight: 500 }}>Vendor Verified</Text>
-                      <Text type="secondary" style={{ fontSize: 11 }}>Vendor registered in system</Text>
+                      <Text style={{ display: "block", fontWeight: 500 }}>Vendor Registered</Text>
+                      <Text type="secondary" style={{ fontSize: 11, color: "#cf1322" }}>Vendor not found in system</Text>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <Text style={{ fontSize: 13, color: "#cf1322" }}>✗</Text>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "flex-start" }}>
+                    <Text style={{ fontSize: 13, color: "#cf1322", minWidth: 16 }}>✗</Text>
                     <div>
-                      <Text style={{ display: "block", fontWeight: 500 }}>Tax Code Mismatch</Text>
-                      <Text type="secondary" style={{ fontSize: 11 }}>Expected: TX-001, Found: TX-002</Text>
+                      <Text style={{ display: "block", fontWeight: 500 }}>Tax Code Match</Text>
+                      <Text type="secondary" style={{ fontSize: 11, color: "#cf1322" }}>Expected: TX-001, Found: TX-002</Text>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Bottom Action - Accept Button Only */}
+              <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f0f0", background: "#fafafa" }}>
+                <Button type="primary" block style={{ fontWeight: 500 }}>
+                  Accept
+                </Button>
               </div>
             </div>
           )
