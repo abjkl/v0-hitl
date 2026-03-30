@@ -210,14 +210,14 @@ const RESULT_TAG_CFG = {
   "Submitted to EBS": { color: "#389e0d", bg: "#f6ffed", border: "#b7eb8f" },
 }
 
-  function PredictionTag({ value }: { value: string }) {
-    const cfg = RESULT_TAG_CFG[value as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
-    return (
-      <Tag style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, fontWeight: 500, fontSize: 11 }}>
-        {value}
-      </Tag>
-    )
-  }
+function PredictionTag({ value }: { value: string }) {
+  const cfg = RESULT_TAG_CFG[value as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+  return (
+    <Tag style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, fontWeight: 500, fontSize: 11 }}>
+      {value}
+    </Tag>
+  )
+}
 
 // ── Verdict Banner ───────────────────────────────────────────────
 
@@ -374,10 +374,11 @@ function MetricCards({ suite }: { suite: SuiteResult }) {
 // ── Rich verdict cell ─────────────────────────────────────────────
 
 function VerdictCell({ verdict, reason }: { verdict: string; reason: string }) {
-  const cfg = RESULT_TAG_CFG[verdict as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+  const cfg = RESULT_TAG_CFG[verdict as keyof typeof RESULT_TAG_CFG]
+  const finalCfg = cfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
   return (
     <div>
-      <Tag style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, fontWeight: 500, fontSize: 11, marginBottom: 2 }}>
+      <Tag style={{ color: finalCfg.color, background: finalCfg.bg, borderColor: finalCfg.border, fontWeight: 500, fontSize: 11, marginBottom: 2 }}>
         {verdict}
       </Tag>
       <div style={{
@@ -390,11 +391,13 @@ function VerdictCell({ verdict, reason }: { verdict: string; reason: string }) {
   )
 }
 
-// ── Expandable row panel ──────────────────────────────────────────
+// ── Expandable row panel ──────────────────────────────���───────────
 
 function ExpandedRowPanel({ record }: { record: CaseResult }) {
-  const gtCfg = RESULT_TAG_CFG[record.groundTruth as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
-  const predCfg = RESULT_TAG_CFG[record.agentPrediction as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+  const gtCfg = RESULT_TAG_CFG[record.groundTruth as keyof typeof RESULT_TAG_CFG]
+  const finalGtCfg = gtCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+  const predCfg = RESULT_TAG_CFG[record.agentPrediction as keyof typeof RESULT_TAG_CFG]
+  const finalPredCfg = predCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
   return (
     <div style={{
       display: "flex", gap: 16,
@@ -404,7 +407,7 @@ function ExpandedRowPanel({ record }: { record: CaseResult }) {
       {/* Ground Truth card */}
       <div style={{ flex: 1, background: "#fff", border: "1px solid #e8e8e8", borderRadius: 4, padding: "12px 14px" }}>
         <Text strong style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 8 }}>GROUND TRUTH (HUMAN)</Text>
-        <Tag style={{ color: gtCfg.color, background: gtCfg.bg, borderColor: gtCfg.border, fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
+        <Tag style={{ color: finalGtCfg.color, background: finalGtCfg.bg, borderColor: finalGtCfg.border, fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
           {record.groundTruth}
         </Tag>
         <Text style={{ fontSize: 13, display: "block", marginBottom: 10, color: "#434343" }}>
@@ -424,7 +427,7 @@ function ExpandedRowPanel({ record }: { record: CaseResult }) {
       {/* AI Prediction card */}
       <div style={{ flex: 1, background: "#fff", border: "1px solid #e8e8e8", borderRadius: 4, padding: "12px 14px" }}>
         <Text strong style={{ fontSize: 12, color: "#8c8c8c", display: "block", marginBottom: 8 }}>AI PREDICTION</Text>
-        <Tag style={{ color: predCfg.color, background: predCfg.bg, borderColor: predCfg.border, fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
+        <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontWeight: 600, fontSize: 12, marginBottom: 8 }}>
           {record.agentPrediction}
         </Tag>
         <Text style={{ fontSize: 13, display: "block", marginBottom: 10, color: "#434343" }}>
