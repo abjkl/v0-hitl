@@ -3,7 +3,7 @@
 import { useState } from "react"
 import {
   Input, Select, InputNumber, Button, Typography,
-  Space, Tag, Modal, Table, message, Popconfirm, Tooltip,
+  Space, Tag, Modal, Table, message, Popconfirm, Tooltip, Form,
 } from "antd"
 import {
   ArrowLeftOutlined, EyeOutlined, EyeInvisibleOutlined,
@@ -119,6 +119,77 @@ function SnapshotModal({ version, open, onClose }: { version: string; open: bool
   )
 }
 
+// ── Create New Version Modal ─────────────────────────────────────
+function CreateVersionModal({
+  open,
+  onClose,
+  onConfirm,
+  availableVersions,
+}: {
+  open: boolean
+  onClose: () => void
+  onConfirm: (copyFrom: string, newVersion: string) => void
+  availableVersions: Array<{ version: string; label: string }>
+}) {
+  const [form] = Form.useForm()
+  const [copyFrom, setCopyFrom] = useState(availableVersions[0]?.version ?? "")
+
+  function handleOk() {
+    form.validateFields().then((values) => {
+      onConfirm(copyFrom, values.newVersion)
+      form.resetFields()
+      onClose()
+    })
+  }
+
+  return (
+    <Modal
+      title="Create New Version"
+      open={open}
+      onCancel={onClose}
+      onOk={handleOk}
+      okText="Create Version"
+      okButtonProps={{ style: { background: "#1890ff" } }}
+      width={480}
+    >
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          Create a new version by copying an existing version&apos;s configuration.
+          The new version will be created in TESTING status.
+        </Text>
+      </div>
+      <Form form={form} layout="vertical" initialValues={{ newVersion: "" }}>
+        <Form.Item label="Copy from Version" style={{ marginBottom: 16 }}>
+          <Select
+            value={copyFrom}
+            onChange={setCopyFrom}
+            style={{ width: "100%" }}
+            options={availableVersions.map((v) => ({
+              value: v.version,
+              label: (
+                <Space>
+                  <Text code style={{ fontSize: 12 }}>{v.version}</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>({v.label})</Text>
+                </Space>
+              ),
+            }))}
+          />
+        </Form.Item>
+        <Form.Item
+          label="New Version Number"
+          name="newVersion"
+          rules={[
+            { required: true, message: "Please enter a version number" },
+            { pattern: /^v\d+\.\d+\.\d+(-\w+)?$/, message: "Format: v1.0.0 or v1.0.0-beta" },
+          ]}
+        >
+          <Input placeholder="e.g. v1.5.0-beta" style={{ fontFamily: "monospace" }} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  )
+}
+
 // ── Version Management Panel ─────────────────────────────────────
 function VersionManagement({
   agentId,
@@ -137,7 +208,31 @@ function VersionManagement({
   const isOps = role === "AI_OPS"
   const [historyOpen, setHistoryOpen] = useState(false)
   const [snapshotVersion, setSnapshotVersion] = useState<string | null>(null)
-  const d = agentDetailData.versions
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [versions, setVersions] = useState(agentDetailData.versions)
+  const [msgApi, msgContextHolder] = message.useMessage()
+
+  // Build available versions for copy dropdown
+  const availableVersions = [
+    { version: versions.current.version, label: "Current" },
+    ...(versions.testing ? [{ version: versions.testing.version, label: "Testing" }] : []),
+    ...versions.history.map((h) => ({ version: h.version, label: "History" })),
+  ]
+
+  function handleCreateVersion(copyFrom: string, newVersion: string) {
+    // Add new testing version (replace existing if any)
+    const now = new Date()
+    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+    setVersions((prev) => ({
+      ...prev,
+      testing: {
+        version: newVersion,
+        createdAt: timestamp,
+        createdBy: "current_user",
+      },
+    }))
+    msgApi.success(`Version ${newVersion} created (copied from ${copyFrom})`)
+  }
 
   const historyColumns: ColumnsType<{ version: string; date: string; publishedBy: string }> = [
     { title: "Version", dataIndex: "version", key: "version", render: (v) => <Text code style={{ fontSize: 12 }}>{v}</Text> },
@@ -154,40 +249,117 @@ function VersionManagement({
     },
   ]
 
+  // All versions list for display
+  const allVersionsList = [
+    { version: versions.current.version, status: "ACTIVE" as const, date: versions.current.publishedAt ?? "", by: versions.current.publishedBy ?? "" },
+    ...(versions.testing ? [{ version: versions.testing.version, status: "TESTING" as const, date: versions.testing.createdAt ?? "", by: versions.testing.createdBy ?? "" }] : []),
+    ...versions.history.map((h) => ({ version: h.version, status: "DEPRECATED" as const, date: h.date, by: h.publishedBy })),
+  ]
+
+  const versionListColumns: ColumnsType<{ version: string; status: "ACTIVE" | "TESTING" | "DEPRECATED"; date: string; by: string }> = [
+    {
+      title: "Version",
+      dataIndex: "version",
+      key: "version",
+      width: 120,
+      render: (v) => <Text code style={{ fontSize: 12 }}>{v}</Text>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 100,
+      render: (s) => {
+        const cfg = s === "ACTIVE"
+          ? { color: "success", label: "ACTIVE" }
+          : s === "TESTING"
+          ? { color: "orange", label: "TESTING" }
+          : { color: "default", label: "DEPRECATED" }
+        return <Tag color={cfg.color} style={{ fontSize: 10, fontWeight: 600 }}>{cfg.label}</Tag>
+      },
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      render: (v) => <Text type="secondary" style={{ fontSize: 11 }}>{v}</Text>,
+    },
+    {
+      title: "By",
+      dataIndex: "by",
+      key: "by",
+      render: (v) => <Text style={{ fontSize: 11 }}>{v}</Text>,
+    },
+    {
+      title: "",
+      key: "action",
+      width: 90,
+      render: (_, r) => (
+        <Typography.Link style={{ fontSize: 11 }} onClick={() => setSnapshotVersion(r.version)}>
+          View Snapshot
+        </Typography.Link>
+      ),
+    },
+  ]
+
   return (
     <div>
-      <Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>
-        Version History — <Text type="secondary" style={{ fontWeight: 400, fontSize: 14 }}>{agentDetailData.agentName}</Text>
-      </Title>
+      {msgContextHolder}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <Title level={5} style={{ margin: 0 }}>Version Management</Title>
+        {isOps && (
+          <Button
+            type="primary"
+            size="small"
+            icon={<PlusOutlined />}
+            style={{ background: "#1890ff", fontSize: 12 }}
+            onClick={() => setCreateModalOpen(true)}
+          >
+            New Version
+          </Button>
+        )}
+      </div>
 
-      {/* Current Card */}
-      <div style={{ borderLeft: "4px solid #52c41a", background: "#fff", border: "1px solid #f0f0f0", borderLeftColor: "#52c41a", borderRadius: 4, padding: "14px 16px", marginBottom: 12 }}>
+      {/* All Versions Table */}
+      <div style={{ border: "1px solid #f0f0f0", borderRadius: 4, marginBottom: 16, overflow: "hidden" }}>
+        <Table
+          columns={versionListColumns}
+          dataSource={allVersionsList.map((r, i) => ({ ...r, key: i }))}
+          size="small"
+          pagination={false}
+          bordered={false}
+          rowClassName={(r) => r.status === "ACTIVE" ? "bg-green-50" : r.status === "TESTING" ? "bg-orange-50" : ""}
+        />
+      </div>
+
+      {/* Current Version Card */}
+      <div style={{ borderLeft: "4px solid #52c41a", background: "#f6ffed", border: "1px solid #b7eb8f", borderLeftColor: "#52c41a", borderRadius: 4, padding: "14px 16px", marginBottom: 12 }}>
         <div className="flex items-center justify-between mb-2">
-          <Text strong>{d.current.version}</Text>
+          <Text strong>{versions.current.version}</Text>
           <Tag color="success" style={{ fontWeight: 600, fontSize: 11 }}>CURRENT</Tag>
         </div>
         <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-          Published: {d.current.publishedAt} by {d.current.publishedBy}
+          Published: {versions.current.publishedAt} by {versions.current.publishedBy}
         </Text>
         <div style={{ marginTop: 8 }}>
-          <Typography.Link style={{ fontSize: 12 }} onClick={() => setSnapshotVersion(d.current.version)}>
+          <Typography.Link style={{ fontSize: 12 }} onClick={() => setSnapshotVersion(versions.current.version)}>
             View Snapshot
           </Typography.Link>
         </div>
       </div>
 
       {/* Testing Card */}
-      {d.testing && (
-        <div style={{ borderLeft: "4px solid #fa8c16", background: "#fff", border: "1px solid #f0f0f0", borderLeftColor: "#fa8c16", borderRadius: 4, padding: "14px 16px", marginBottom: 12 }}>
+      {versions.testing && (
+        <div style={{ borderLeft: "4px solid #fa8c16", background: "#fff7e6", border: "1px solid #ffd591", borderLeftColor: "#fa8c16", borderRadius: 4, padding: "14px 16px", marginBottom: 12 }}>
           <div className="flex items-center justify-between mb-2">
-            <Text strong>{d.testing.version}</Text>
+            <Text strong>{versions.testing.version}</Text>
             <Tag color="orange" style={{ fontWeight: 600, fontSize: 11 }}>TESTING</Tag>
           </div>
           <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-            Created: {d.testing.createdAt} by {d.testing.createdBy}
+            Created: {versions.testing.createdAt} by {versions.testing.createdBy}
           </Text>
           <div style={{ marginTop: 8 }} className="flex items-center gap-3">
-            <Typography.Link style={{ fontSize: 12 }} onClick={() => setSnapshotVersion(d.testing!.version)}>
+            <Typography.Link style={{ fontSize: 12 }} onClick={() => setSnapshotVersion(versions.testing!.version)}>
               View Snapshot
             </Typography.Link>
             {isOps && (() => {
@@ -210,8 +382,8 @@ function VersionManagement({
               }
               return (
                 <Popconfirm
-                  title={`Publish ${d.testing.version}?`}
-                  description={`This will replace ${d.current.version} as the current version.`}
+                  title={`Publish ${versions.testing.version}?`}
+                  description={`This will replace ${versions.current.version} as the current version.`}
                   okText="Yes, Publish"
                   cancelText="Cancel"
                   okButtonProps={{ style: { background: "#1890ff" } }}
@@ -258,14 +430,14 @@ function VersionManagement({
           style={{ padding: "12px 16px", background: "#fafafa", cursor: "pointer", userSelect: "none" }}
           onClick={() => setHistoryOpen((v) => !v)}
         >
-          <Text type="secondary" style={{ fontSize: 13 }}>History ({d.history.length} versions)</Text>
-          <Typography.Link style={{ fontSize: 12 }}>{historyOpen ? "Hide History" : "Show History"}</Typography.Link>
+          <Text type="secondary" style={{ fontSize: 13 }}>Deprecated Versions ({versions.history.length})</Text>
+          <Typography.Link style={{ fontSize: 12 }}>{historyOpen ? "Hide" : "Show"}</Typography.Link>
         </div>
         {historyOpen && (
           <div style={{ padding: "0 16px 12px" }}>
             <Table
               columns={historyColumns}
-              dataSource={d.history.map((r, i) => ({ ...r, key: i }))}
+              dataSource={versions.history.map((r, i) => ({ ...r, key: i }))}
               size="small"
               pagination={false}
               showHeader={false}
@@ -278,6 +450,13 @@ function VersionManagement({
       {snapshotVersion && (
         <SnapshotModal version={snapshotVersion} open={!!snapshotVersion} onClose={() => setSnapshotVersion(null)} />
       )}
+
+      <CreateVersionModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onConfirm={handleCreateVersion}
+        availableVersions={availableVersions}
+      />
     </div>
   )
 }
