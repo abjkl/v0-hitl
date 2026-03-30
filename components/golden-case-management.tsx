@@ -159,7 +159,10 @@ function GtTag({ value }: { value: GroundTruth }) {
   )
 }
 
-function AmountCell({ amount, currency }: { amount: number; currency: string }) {
+function AmountCell({ amount, currency }: { amount?: number; currency?: string }) {
+  if (amount === undefined || currency === undefined) {
+    return <Text style={{ fontSize: 13 }}>-</Text>
+  }
   return (
     <Text style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
       {currency} {amount.toLocaleString()}
