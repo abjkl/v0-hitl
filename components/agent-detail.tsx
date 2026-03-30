@@ -289,6 +289,13 @@ function VersionManagement({ agentId, passedAgentIds, onViewConfig, selectedVers
                     <Text code style={{ fontSize: 12, marginRight: 12 }}>{v.version}</Text>
                     <Tag style={{ fontSize: 11, background: '#f5f5f5', borderColor: '#d9d9d9', color: '#8c8c8c', margin: 0 }}>{v.state}</Tag>
                   </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {v.hasRegressionHistory ? (
+                      <Typography.Link style={{ fontSize: 12 }} onClick={() => msgApi.info(`Navigating to regression history for ${v.version}...`)}>View History</Typography.Link>
+                    ) : (
+                      <Text type="secondary" style={{ fontSize: 12, color: '#d9d9d9' }}>No report</Text>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
