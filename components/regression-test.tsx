@@ -800,6 +800,25 @@ function CaseResultTable({ cases }: { cases: CaseResult[] }) {
       width: 80,
       render: (v: number) => <Text type="secondary" style={{ fontSize: 12 }}>{v} ms</Text>,
     },
+    {
+      title: "AI Detail",
+      key: "aiDetail",
+      width: 90,
+      render: (_: unknown, record: CaseResult) => (
+        <Button
+          type="link"
+          size="small"
+          style={{ padding: 0, fontSize: 12 }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setSelectedCaseDetail(record)
+            setDetailDrawerOpen(true)
+          }}
+        >
+          View
+        </Button>
+      ),
+    },
   ]
 
   return (
