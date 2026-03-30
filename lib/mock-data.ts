@@ -293,7 +293,7 @@ export const agentListData: Agent[] = [
     key: '9', id: 'AGT-009',
     agentName: 'Bank Statement Reconciler',
     flowId: '', step: 'BANK_RECON',
-    liveVersion: 'v2.0.1', testingVersions: ['v2.1.0-beta', 'v2.2.0-beta'], status: 'ACTIVE',
+    liveVersion: 'v2.0.1', testingVersions: ['v2.1.0-beta', 'v2.2.0-beta', 'v2.3.0-beta'], status: 'ACTIVE',
     lastUpdated: '2025-03-08 10:15',
     description: 'Reconciles bank statements against AP ledger entries using transaction ID matching.',
     regions: ['SG', 'TH', 'VN', 'MY', 'PH', 'TW', 'ID', 'BR'],

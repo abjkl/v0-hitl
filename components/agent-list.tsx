@@ -473,19 +473,27 @@ export function AgentList({
     {
       title: "Testing Version",
       key: "testingVersions",
-      width: 200,
+      width: 220,
       render: (_: unknown, record: Agent) => {
         const versions = record.testingVersions ?? []
         if (versions.length === 0) {
           return <Text type="secondary">—</Text>
         }
+        const visible = versions.slice(0, 2)
+        const hidden = versions.slice(2)
+        const tagStyle = { margin: 0, fontSize: 12, background: "#fafafa", borderColor: "#d9d9d9", color: "#595959" }
         return (
           <Space size={4} wrap>
-            {versions.map((v) => (
-              <Tag key={v} style={{ margin: 0, fontSize: 12, background: "#fafafa", borderColor: "#d9d9d9", color: "#595959" }}>
-                {v}
-              </Tag>
+            {visible.map((v) => (
+              <Tag key={v} style={tagStyle}>{v}</Tag>
             ))}
+            {hidden.length > 0 && (
+              <Tooltip title={hidden.join(", ")}>
+                <Tag style={{ ...tagStyle, cursor: "default", color: "#8c8c8c", borderStyle: "dashed" }}>
+                  +{hidden.length} more
+                </Tag>
+              </Tooltip>
+            )}
           </Space>
         )
       },
