@@ -18,6 +18,8 @@ const { Text, Title } = Typography
 // ── Types ────────────────────────────────────────────────────────
 
 type RunStatus = "idle" | "running" | "done"
+// Force recompile
+const _v = 1
 type SuiteType = "golden" | "benchmark" | "current"
 
 type AgentStep = "INVOICE_REVIEW" | "MATCH" | "AP_VOUCHER"

@@ -423,6 +423,8 @@ export function GoldenCaseManagement({
   const [patternFilter, setPatternFilter] = useState<string[]>([])
   const [gtFilter, setGtFilter] = useState<GroundTruth | "All">("All")
   const [addModalOpen, setAddModalOpen] = useState(false)
+  // Force recompile: touch module
+  const _v = 1
 
   function handleConfirmAdd(added: AddableCase[]) {
     const today = new Date().toISOString().slice(0, 10)

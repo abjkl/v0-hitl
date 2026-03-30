@@ -384,6 +384,8 @@ export function AgentList({
   onTriggerTest?: (id: string) => void
 }) {
   const { region } = useRegion()
+  // Force recompile
+  const _v = 1
   const [search, setSearch] = useState("")
   const [localAgents, setLocalAgents] = useState<Agent[]>(agentListData)
   const agents = agentsProp ?? localAgents
