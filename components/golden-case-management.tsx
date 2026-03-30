@@ -469,9 +469,19 @@ export function GoldenCaseManagement({
 }) {
   const { region } = useRegion()
   const [activeStep, setActiveStep] = useState<StepType>("INVOICE_REVIEW")
+
+  function handleStepChange(step: StepType) {
+    setActiveStep(step)
+    setSearch("")
+    setPatternFilter([])
+    setGtFilter("All")
+    setAmountSort("none")
+  }
+  const [searchField, setSearchField] = useState<"caseId" | "invoiceNo">("caseId")
   const [search, setSearch] = useState("")
   const [patternFilter, setPatternFilter] = useState<string[]>([])
   const [gtFilter, setGtFilter] = useState<GroundTruth | "All">("All")
+  const [amountSort, setAmountSort] = useState<"none" | "desc" | "asc">("none")
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<GoldenCase | null>(null)
 
@@ -503,14 +513,17 @@ export function GoldenCaseManagement({
   const capColor = capacityColor(cfg.total, cfg.limit)
 
   const filtered = useMemo(() => {
-    return allCases.filter((c) => {
+    let result = allCases.filter((c) => {
       const q = search.toLowerCase()
-      const matchSearch = !q || c.caseId.toLowerCase().includes(q) || c.invoiceNo.toLowerCase().includes(q) || c.supplier.toLowerCase().includes(q)
-      const matchGt = gtFilter === "All" || c.groundTruth === gtFilter
+      const matchSearch = !q || c[searchField].toLowerCase().includes(q)
+      const matchGt = activeStep !== "INVOICE_REVIEW" || gtFilter === "All" || c.groundTruth === gtFilter
       const matchPattern = patternFilter.length === 0 || patternFilter.every((p) => c.patterns.includes(p))
       return matchSearch && matchGt && matchPattern
     })
-  }, [allCases, search, gtFilter, patternFilter])
+    if (amountSort === "desc") result = [...result].sort((a, b) => b.amount - a.amount)
+    if (amountSort === "asc")  result = [...result].sort((a, b) => a.amount - b.amount)
+    return result
+  }, [allCases, search, searchField, gtFilter, patternFilter, amountSort, activeStep])
 
   const columns: ColumnsType<GoldenCase> = [
     {
@@ -586,8 +599,8 @@ export function GoldenCaseManagement({
               key={step}
               role="button"
               tabIndex={0}
-              onClick={() => { setActiveStep(step); setSearch(""); setPatternFilter([]); setGtFilter("All") }}
-              onKeyDown={(e) => { if (e.key === "Enter") setActiveStep(step) }}
+onClick={() => handleStepChange(step)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleStepChange(step) }}
               style={{
                 padding: "8px 20px",
                 boxShadow: isActive ? "0 0 0 1px #1890ff" : "0 0 0 1px #d9d9d9",
@@ -619,14 +632,28 @@ export function GoldenCaseManagement({
 
       {/* Action Bar */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <Input
-          prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-          placeholder="Search by Case ID / Invoice No / Supplier"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          allowClear
-          style={{ width: 300 }}
-        />
+        {/* Search: field selector + input */}
+        <Input.Group compact style={{ display: "flex", width: 340 }}>
+          <Select
+            value={searchField}
+            onChange={(v) => { setSearchField(v); setSearch("") }}
+            style={{ width: 140, flexShrink: 0 }}
+            options={[
+              { value: "caseId",    label: "Case ID" },
+              { value: "invoiceNo", label: "Invoice No." },
+            ]}
+          />
+          <Input
+            prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+            placeholder={searchField === "caseId" ? "Search Case ID…" : "Search Invoice No…"}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            allowClear
+            style={{ flex: 1 }}
+          />
+        </Input.Group>
+
+        {/* Pattern filter */}
         <Select
           mode="multiple"
           placeholder="Pattern"
@@ -637,16 +664,32 @@ export function GoldenCaseManagement({
           maxTagCount={1}
           allowClear
         />
+
+        {/* Amount sort */}
         <Select
-          value={gtFilter}
-          onChange={(v) => setGtFilter(v as GroundTruth | "All")}
-          style={{ width: 140 }}
+          value={amountSort}
+          onChange={(v) => setAmountSort(v as "none" | "desc" | "asc")}
+          style={{ width: 160 }}
           options={[
-            { value: "All",  label: "All Ground Truth" },
-            { value: "Pass", label: "Pass" },
-            { value: "Fail", label: "Fail" },
+            { value: "none", label: "Amount" },
+            { value: "desc", label: "Amount: High to Low" },
+            { value: "asc",  label: "Amount: Low to High" },
           ]}
         />
+
+        {/* Ground Truth filter — Invoice Review only */}
+        {activeStep === "INVOICE_REVIEW" && (
+          <Select
+            value={gtFilter}
+            onChange={(v) => setGtFilter(v as GroundTruth | "All")}
+            style={{ width: 150 }}
+            options={[
+              { value: "All",  label: "All Ground Truth" },
+              { value: "Pass", label: "Pass" },
+              { value: "Fail", label: "Fail" },
+            ]}
+          />
+        )}
 
         <div style={{ flex: 1 }} />
 
