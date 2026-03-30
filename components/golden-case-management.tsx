@@ -17,7 +17,10 @@ const { Text, Title } = Typography
 // ── Types ────────────────────────────────────────────────────────
 
 type StepType = "INVOICE_REVIEW" | "MATCH" | "AP_VOUCHER"
-type GroundTruth = "Pass" | "Fail"
+type GroundTruthInvoiceReview = "Pass" | "Fail"
+type GroundTruthMatch = "Matched" | "NA"
+type GroundTruthAPVoucher = "Submitted to EBS" | "Pending"
+type GroundTruth = GroundTruthInvoiceReview | GroundTruthMatch | GroundTruthAPVoucher
 
 interface GoldenCase {
   key: string
@@ -102,17 +105,17 @@ const GOLDEN_CASES: Record<StepType, GoldenCase[]> = {
     { key: "12", caseId: "CASE-022", paymentRequestId: "PR-012", paymentGroupId: "PG-010", invoiceNo: "INV-2025-0022", supplier: "Microsoft Thailand",     region: "TH", groundTruth: "Fail", patterns: ["gst-calculation-error"],                   amount: 11200, currency: "THB", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-25" },
   ],
   MATCH: [
-    { key: "1",  caseId: "CASE-003", paymentRequestId: "PR-013", paymentGroupId: "PG-011", invoiceNo: "INV-2025-0003", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Fail", patterns: ["three-way-match-fail"],                    amount: 45600, currency: "SGD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-01-12" },
-    { key: "2",  caseId: "CASE-005", paymentRequestId: "PR-014", paymentGroupId: "PG-012", invoiceNo: "INV-2025-0005", supplier: "Deloitte Advisory SEA",  region: "VN", groundTruth: "Pass", patterns: ["line-item-qty-mismatch"],                  amount: 72300, currency: "VND", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-01-20" },
-    { key: "3",  caseId: "CASE-007", paymentRequestId: "PR-015", paymentGroupId: "PG-013", invoiceNo: "INV-2025-0007", supplier: "Tencent Cloud Intl",     region: "TW", groundTruth: "Fail", patterns: ["unit-price-discrepancy"],                  amount: 89200, currency: "TWD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-05" },
-    { key: "4",  caseId: "CASE-009", paymentRequestId: "PR-016", paymentGroupId: "PG-014", invoiceNo: "INV-2025-0009", supplier: "Shopee Philippines",     region: "PH", groundTruth: "Pass", patterns: ["line-item-qty-mismatch", "three-way-match-fail"], amount: 56700, currency: "PHP", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-14" },
-    { key: "5",  caseId: "CASE-011", paymentRequestId: "PR-017", paymentGroupId: "PG-015", invoiceNo: "INV-2025-0011", supplier: "AWS Singapore Pte Ltd",  region: "SG", groundTruth: "Pass", patterns: ["unit-price-discrepancy"],                  amount: 34500, currency: "SGD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-18" },
-    { key: "6",  caseId: "CASE-013", paymentRequestId: "PR-018", paymentGroupId: "PG-016", invoiceNo: "INV-2025-0013", supplier: "Alibaba Cloud HK",       region: "TW", groundTruth: "Fail", patterns: ["three-way-match-fail"],                    amount: 64800, currency: "TWD", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-20" },
+    { key: "1",  caseId: "CASE-003", paymentRequestId: "PR-013", paymentGroupId: "PG-011", invoiceNo: "INV-2025-0003", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Matched" as GroundTruth, patterns: ["three-way-match-fail"],                    amount: 45600, currency: "SGD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-01-12" },
+    { key: "2",  caseId: "CASE-005", paymentRequestId: "PR-014", paymentGroupId: "PG-012", invoiceNo: "INV-2025-0005", supplier: "Deloitte Advisory SEA",  region: "VN", groundTruth: "Matched" as GroundTruth, patterns: ["line-item-qty-mismatch"],                  amount: 72300, currency: "VND", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-01-20" },
+    { key: "3",  caseId: "CASE-007", paymentRequestId: "PR-015", paymentGroupId: "PG-013", invoiceNo: "INV-2025-0007", supplier: "Tencent Cloud Intl",     region: "TW", groundTruth: "NA" as GroundTruth, patterns: ["unit-price-discrepancy"],                  amount: 89200, currency: "TWD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-05" },
+    { key: "4",  caseId: "CASE-009", paymentRequestId: "PR-016", paymentGroupId: "PG-014", invoiceNo: "INV-2025-0009", supplier: "Shopee Philippines",     region: "PH", groundTruth: "Matched" as GroundTruth, patterns: ["line-item-qty-mismatch", "three-way-match-fail"], amount: 56700, currency: "PHP", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-14" },
+    { key: "5",  caseId: "CASE-011", paymentRequestId: "PR-017", paymentGroupId: "PG-015", invoiceNo: "INV-2025-0011", supplier: "AWS Singapore Pte Ltd",  region: "SG", groundTruth: "Matched" as GroundTruth, patterns: ["unit-price-discrepancy"],                  amount: 34500, currency: "SGD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-18" },
+    { key: "6",  caseId: "CASE-013", paymentRequestId: "PR-018", paymentGroupId: "PG-016", invoiceNo: "INV-2025-0013", supplier: "Alibaba Cloud HK",       region: "TW", groundTruth: "NA" as GroundTruth, patterns: ["three-way-match-fail"],                    amount: 64800, currency: "TWD", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-20" },
   ],
   AP_VOUCHER: [
-    { key: "1",  caseId: "CASE-015", paymentRequestId: "PR-019", paymentGroupId: "PG-017", invoiceNo: "INV-2025-0015", supplier: "Mercado Pago Brasil",    region: "BR", groundTruth: "Fail", patterns: ["gl-account-wrong"],                        amount: 38900, currency: "BRL", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-10" },
-    { key: "2",  caseId: "CASE-017", paymentRequestId: "PR-020", paymentGroupId: "PG-018", invoiceNo: "INV-2025-0017", supplier: "Shopee Indonesia",       region: "ID", groundTruth: "Pass", patterns: ["cost-center-mismatch"],                    amount: 21400, currency: "IDR", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-15" },
-    { key: "3",  caseId: "CASE-019", paymentRequestId: "PR-021", paymentGroupId: "PG-019", invoiceNo: "INV-2025-0019", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Fail", patterns: ["gl-account-wrong", "cost-center-mismatch"], amount: 93700, currency: "SGD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-20" },
+    { key: "1",  caseId: "CASE-015", paymentRequestId: "PR-019", paymentGroupId: "PG-017", invoiceNo: "INV-2025-0015", supplier: "Mercado Pago Brasil",    region: "BR", groundTruth: "Pending" as GroundTruth, patterns: ["gl-account-wrong"],                        amount: 38900, currency: "BRL", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-10" },
+    { key: "2",  caseId: "CASE-017", paymentRequestId: "PR-020", paymentGroupId: "PG-018", invoiceNo: "INV-2025-0017", supplier: "Shopee Indonesia",       region: "ID", groundTruth: "Submitted to EBS" as GroundTruth, patterns: ["cost-center-mismatch"],                    amount: 21400, currency: "IDR", addedBy: { name: "Li Chen", email: "lichen@shopee.com" }, addedDate: "2025-02-15" },
+    { key: "3",  caseId: "CASE-019", paymentRequestId: "PR-021", paymentGroupId: "PG-019", invoiceNo: "INV-2025-0019", supplier: "Accenture Pte Ltd",      region: "SG", groundTruth: "Pending" as GroundTruth, patterns: ["gl-account-wrong", "cost-center-mismatch"], amount: 93700, currency: "SGD", addedBy: { name: "Zhang Wei", email: "zhangwei@shopee.com" }, addedDate: "2025-02-20" },
   ],
 }
 
@@ -150,10 +153,45 @@ const GT_CFG = {
   Fail: { color: "#cf1322", bg: "#fff1f0", border: "#ffa39e" },
 }
 
-function GtTag({ value }: { value: GroundTruth }) {
-  const c = GT_CFG[value]
+function GtTag({ value, step }: { value: GroundTruth; step: StepType }) {
+  let color = "#666"
+  let bg = "#f5f5f5"
+  let border = "#d9d9d9"
+
+  if (step === "INVOICE_REVIEW") {
+    if (value === "Pass") {
+      color = "#52c41a"
+      bg = "#f6ffed"
+      border = "#b7eb8f"
+    } else if (value === "Fail") {
+      color = "#ff4d4f"
+      bg = "#fff1f0"
+      border = "#ffccc7"
+    }
+  } else if (step === "MATCH") {
+    if (value === "Matched") {
+      color = "#52c41a"
+      bg = "#f6ffed"
+      border = "#b7eb8f"
+    } else if (value === "NA") {
+      color = "#666"
+      bg = "#f5f5f5"
+      border = "#d9d9d9"
+    }
+  } else if (step === "AP_VOUCHER") {
+    if (value === "Submitted to EBS") {
+      color = "#52c41a"
+      bg = "#f6ffed"
+      border = "#b7eb8f"
+    } else if (value === "Pending") {
+      color = "#faad14"
+      bg = "#fffbe6"
+      border = "#ffe58f"
+    }
+  }
+
   return (
-    <Tag style={{ color: c.color, background: c.bg, borderColor: c.border, fontWeight: 500, fontSize: 11 }}>
+    <Tag style={{ color, background: bg, borderColor: border, fontWeight: 500, fontSize: 11, border: `1px solid ${border}` }}>
       {value}
     </Tag>
   )
@@ -427,9 +465,9 @@ function AddCaseModal({
   const STEPS: StepType[] = ["INVOICE_REVIEW", "MATCH", "AP_VOUCHER"]
 
   const STEP_LABELS: Record<StepType, string> = {
-    INVOICE_REVIEW: "Golden Set",
-    MATCH: "Benchmark Set",
-    AP_VOUCHER: "Current Set",
+    INVOICE_REVIEW: "Invoice Review",
+    MATCH: "Match",
+    AP_VOUCHER: "AP Voucher",
   }
 
 export function GoldenCaseManagement({
@@ -516,17 +554,34 @@ export function GoldenCaseManagement({
       defaultSortOrder: "descend",
     },
     {
-      title: "Actions", key: "actions", width: 80,
+      title: "Ground Truth", dataIndex: "groundTruth", key: "groundTruth", width: 140,
+      render: (v: GroundTruth) => <GtTag value={v} step={activeStep} />,
+    },
+    {
+      title: "Action", key: "actions", width: 180,
       render: (_: unknown, record: GoldenCase) => (
-        <Button
-          type="link"
-          danger
-          size="small"
-          style={{ padding: 0, fontSize: 12 }}
-          onClick={() => setRemoveTarget(record)}
-        >
-          Remove
-        </Button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button
+            type="default"
+            size="small"
+            style={{ fontSize: 12 }}
+            onClick={() => {
+              const prUrl = `https://shopee.com/payment-request/${record.paymentRequestId}`
+              window.open(prUrl, "_blank")
+            }}
+          >
+            See Detail
+          </Button>
+          <Button
+            type="default"
+            danger
+            size="small"
+            style={{ fontSize: 12 }}
+            onClick={() => setRemoveTarget(record)}
+          >
+            Remove
+          </Button>
+        </div>
       ),
     },
   ]
