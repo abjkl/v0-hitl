@@ -210,14 +210,14 @@ const RESULT_TAG_CFG = {
   "Submitted to EBS": { color: "#389e0d", bg: "#f6ffed", border: "#b7eb8f" },
 }
 
-function PredictionTag({ value }: { value: "Pass" | "Fail" }) {
-  const cfg = RESULT_TAG_CFG[value]
-  return (
-    <Tag style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, fontWeight: 500, fontSize: 11 }}>
-      {value}
-    </Tag>
-  )
-}
+  function PredictionTag({ value }: { value: string }) {
+    const cfg = RESULT_TAG_CFG[value as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+    return (
+      <Tag style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border, fontWeight: 500, fontSize: 11 }}>
+        {value}
+      </Tag>
+    )
+  }
 
 // ── Verdict Banner ───────────────────────────────────────────────
 
@@ -393,8 +393,8 @@ function VerdictCell({ verdict, reason }: { verdict: string; reason: string }) {
 // ── Expandable row panel ──────────────────────────────────────────
 
 function ExpandedRowPanel({ record }: { record: CaseResult }) {
-  const gtCfg = RESULT_TAG_CFG[record.groundTruth]
-  const predCfg = RESULT_TAG_CFG[record.agentPrediction]
+  const gtCfg = RESULT_TAG_CFG[record.groundTruth as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+  const predCfg = RESULT_TAG_CFG[record.agentPrediction as keyof typeof RESULT_TAG_CFG] ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
   return (
     <div style={{
       display: "flex", gap: 16,
