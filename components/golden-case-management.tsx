@@ -334,16 +334,15 @@ function AddCaseModal({
   limit: number
 }) {
   const [search, setSearch] = useState("")
+  const [searchField, setSearchField] = useState<"caseId" | "invoiceNo" | "paymentRequestId" | "paymentGroupId" | "supplier">("caseId")
   const [selectedKeys, setSelectedKeys] = useState<string[]>([])
 
   const addable = ADDABLE_CASES[step]
   const filtered = addable.filter((c) => {
     const q = search.toLowerCase()
-    return (
-      c.caseId.toLowerCase().includes(q) ||
-      c.invoiceNo.toLowerCase().includes(q) ||
-      c.supplier.toLowerCase().includes(q)
-    )
+    if (!q) return true
+    const searchValue = c[searchField].toString().toLowerCase()
+    return searchValue.includes(q)
   })
 
   const wouldExceed = currentCount + selectedKeys.length > limit
