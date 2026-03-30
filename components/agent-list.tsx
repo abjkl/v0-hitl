@@ -49,6 +49,7 @@ interface NewAgentFormValues {
   description: string
   flowId: string
   step: AgentStep
+  initialVersion: string
   model: string
   temperature: number
   maxTokens: number
@@ -102,7 +103,8 @@ function NewAgentDrawer({
         agentName: values.agentName,
         flowId: values.flowId,
         step: values.step,
-        currentVersion: "v0.1.0-draft",
+        liveVersion: undefined,
+        testingVersions: [values.initialVersion],
         status: "TESTING",
         lastUpdated: timestamp,
         description: values.description,
@@ -226,6 +228,20 @@ function NewAgentDrawer({
               }))}
             />
           </Form.Item>
+          <Form.Item
+            label={<span style={labelStyle}>Initial Version</span>}
+            name="initialVersion"
+            initialValue="v0.1.0"
+            rules={[
+              { required: true, message: "Initial version is required" },
+              { pattern: /^v\d+\.\d+\.\d+/, message: "Format should be e.g. v0.1.0" },
+            ]}
+          >
+            <Input placeholder="e.g. v0.1.0" />
+          </Form.Item>
+          <div style={{ background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 4, padding: "8px 12px", marginBottom: 16, fontSize: 12, color: "#8c8c8c" }}>
+            New agents are created in Testing status. Promote to Live after regression testing passes.
+          </div>
 
           <Divider style={{ margin: "4px 0 16px" }} />
 
