@@ -5,7 +5,7 @@ import { Layout, Menu, Typography, Select, Breadcrumb, Space } from "antd"
 import {
   DatabaseOutlined, RobotOutlined,
   FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
-  ApartmentOutlined,
+  ApartmentOutlined, FileTextOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -20,6 +20,7 @@ import { AgentDetail } from "@/components/agent-detail"
 import { PatternLibrary } from "@/components/pattern-library"
 import { RegressionTest } from "@/components/regression-test"
 import { SystemArchitecture } from "@/components/system-architecture"
+import { PrdViewer } from "@/components/prd-viewer"
 import { agentListData, INITIAL_GOLDEN_CASES, type Agent, type AuditCase, type GoldenCasesState } from "@/lib/mock-data"
 import { type ArchivedCase } from "@/lib/archive-utils"
 
@@ -38,6 +39,7 @@ type Page =
   | "agent-detail"
   | "regression-test"
   | "system-architecture"
+  | "prd"
 
 const BREADCRUMBS: Record<Page, string[]> = {
   "knowledge-detail":      ["Knowledge Base", "Knowledge Detail"],
@@ -51,6 +53,7 @@ const BREADCRUMBS: Record<Page, string[]> = {
   "agent-detail":          ["Agent Management", "Agent List", "Agent Detail"],
   "regression-test":       ["Regression Test"],
   "system-architecture":   ["System Architecture"],
+  "prd":                   ["Documentation", "PRD"],
 }
 
 function AppShell() {
@@ -107,6 +110,7 @@ function AppShell() {
       setPage("regression-test")
     }
     if (key === "system-architecture") setPage("system-architecture")
+    if (key === "prd") setPage("prd")
   }
 
   function goToCaseDetail(record: AuditCase) {
@@ -199,6 +203,7 @@ function AppShell() {
             },
             { key: "regression-test", icon: <ExperimentOutlined />, label: "Regression Test" },
             { key: "system-architecture", icon: <ApartmentOutlined />, label: "System Architecture" },
+            { key: "prd", icon: <FileTextOutlined />, label: "PRD" },
           ]}
         />
       </Sider>
@@ -263,6 +268,7 @@ function AppShell() {
           {page === "pattern-library"    && <PatternLibrary />}
           {page === "agent-detail"       && <AgentDetail agentId="AGT-002" passedAgentIds={passedAgentIds} onBack={goToAgentList} onPublish={handlePublish} onGoToRegressionTest={goToRegressionTest} />}
           {page === "system-architecture" && <SystemArchitecture />}
+          {page === "prd"                 && <PrdViewer />}
         </Content>
       </Layout>
     </Layout>
