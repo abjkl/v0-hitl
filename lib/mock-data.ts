@@ -105,16 +105,6 @@ export const auditCaseData: TestCase[] = [
   { key: '11', caseId: 'Case-MY-20250301-000011', paymentRequestId: 'PR-011', paymentGroupId: 'PG-008', invoiceNo: 'INV-2025-0011', supplierName: 'AWS Singapore Pte Ltd', region: 'SEA', entity: 'MY', amount: 62000, currency: 'MYR', invoiceDate: '2025-03-01', updateTime: '2025-03-06 16:00', invoiceReviewGroundTruth: 'Pass', matchGroundTruth: 'Matched', apVoucherGroundTruth: 'Submit to EBS', status: 'Active', isGolden: 'Non-Golden', tags: ['header-check'] },
   { key: '12', caseId: 'Case-SG-20250305-000012', paymentRequestId: 'PR-012', paymentGroupId: 'PG-009', invoiceNo: 'INV-2025-0012', supplierName: 'Accenture Pte Ltd', region: 'SEA', entity: 'SG', amount: 210000, currency: 'SGD', invoiceDate: '2025-03-05', updateTime: '2025-03-15 11:20', invoiceReviewGroundTruth: 'Pass', matchGroundTruth: 'Matched', apVoucherGroundTruth: 'Submit to EBS', status: 'Active', isGolden: 'Golden', tags: ['golden', 'under-review'] },
 ]
-  // ── Older cases (reviewDate > 365 days ago, eligible for archiving) ──
-  { key: '13', caseId: 'CASE-013', invoiceNo: 'INV-2024-0041', supplierName: 'Accenture Pte Ltd',             region: 'SEA',   entity: 'SG', amount: 132000, currency: 'SGD', invoiceDate: '2024-01-10', reviewDate: '2024-01-12', isGolden: 'Non-Golden', groundTruth: 'Pass',    tags: ['three-way-match'] },
-  { key: '14', caseId: 'CASE-014', invoiceNo: 'INV-2024-0042', supplierName: 'AWS Singapore Pte Ltd',         region: 'SEA',   entity: 'SG', amount: 73400,  currency: 'SGD', invoiceDate: '2024-01-18', reviewDate: '2024-01-20', isGolden: 'Non-Golden', groundTruth: 'Fail',    tags: ['amount-mismatch'] },
-  { key: '15', caseId: 'CASE-015', invoiceNo: 'INV-2024-0043', supplierName: 'Google Asia Pacific Pte Ltd',   region: 'SEA',   entity: 'SG', amount: 98500,  currency: 'SGD', invoiceDate: '2024-02-05', reviewDate: '2024-02-07', isGolden: 'Non-Golden', groundTruth: 'Pass',    tags: ['header-check'] },
-  { key: '16', caseId: 'CASE-016', invoiceNo: 'INV-2024-0044', supplierName: 'Tencent Cloud International',   region: 'EA',    entity: 'TW', amount: 120000, currency: 'TWD', invoiceDate: '2024-02-14', reviewDate: '2024-02-16', isGolden: 'Non-Golden', groundTruth: 'Fail',    tags: ['bank-mismatch'] },
-  { key: '17', caseId: 'CASE-017', invoiceNo: 'INV-2024-0045', supplierName: 'Mercado Pago Brasil',           region: 'LATAM', entity: 'BR', amount: 38000,  currency: 'BRL', invoiceDate: '2024-03-02', reviewDate: '2024-03-04', isGolden: 'Non-Golden', groundTruth: 'Pass',    tags: ['three-way-match'] },
-  { key: '18', caseId: 'CASE-018', invoiceNo: 'INV-2024-0046', supplierName: 'Microsoft Thailand Co Ltd',     region: 'SEA',   entity: 'TH', amount: 190000, currency: 'THB', invoiceDate: '2024-03-10', reviewDate: '2024-03-12', isGolden: 'Non-Golden', groundTruth: 'Pass',    tags: ['line-item'] },
-  // Golden case older than 365 days — retained in active list (not archivable)
-  { key: '19', caseId: 'CASE-019', invoiceNo: 'INV-2024-0047', supplierName: 'Accenture Pte Ltd',             region: 'SEA',   entity: 'SG', amount: 175000, currency: 'SGD', invoiceDate: '2024-01-25', reviewDate: '2024-01-27', isGolden: 'Golden',     groundTruth: 'Pass',    tags: ['golden', 'three-way-match'] },
-]
 
 // ── Agent Management ─────────────────────────────────────────────
 
