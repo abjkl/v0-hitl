@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import {
-  Select, Cascader, Button, Table, Tag, Typography, Space, Progress,
+  Select, Button, Table, Tag, Typography, Space, Progress,
   Statistic, Card, Divider, Empty, Switch, Tooltip,
   type EmptyProps,
 } from "antd"
@@ -592,9 +592,8 @@ export function RegressionTest({
     (a) => (a.testingVersions ?? []).length > 0
   )
 
-  const [cascaderValue, setCascaderValue] = useState<[string, string] | []>([])
-  const selectedId = cascaderValue.length === 2 ? cascaderValue[0] : ""
-  const selectedVersion = cascaderValue.length === 2 ? cascaderValue[1] : ""
+  const [selectedId, setSelectedId] = useState<string>("")
+  const [selectedVersion, setSelectedVersion] = useState<string>("")
 
   const [runStatus, setRunStatus] = useState<RunStatus>("idle")
   const [progress, setProgress] = useState(0)
@@ -608,7 +607,10 @@ export function RegressionTest({
     if (preselectedAgentId) {
       const agent = agentsWithTestingVersions.find(a => a.id === preselectedAgentId)
       const firstVersion = agent?.testingVersions?.[0]
-      if (agent && firstVersion) setCascaderValue([preselectedAgentId, firstVersion])
+      if (agent && firstVersion) {
+        setSelectedId(preselectedAgentId)
+        setSelectedVersion(firstVersion)
+      }
     }
   }, [preselectedAgentId])
 
@@ -661,19 +663,46 @@ export function RegressionTest({
   const allPass = suites.length > 0 && suites.every((s) => s.goldenPassRate >= 85)
   const canPublish = runStatus === "done" && allPass
 
-  const cascaderOptions = agentsWithTestingVersions.map((a) => ({
+  const agentSelectOptions = agentsWithTestingVersions.map((a) => ({
     value: a.id,
     label: a.agentName,
-    children: (a.testingVersions ?? []).map((v) => ({
-      value: v,
-      label: (
-        <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Text code style={{ fontSize: 12 }}>{v}</Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>{a.lastUpdated}</Text>
-        </span>
-      ),
-    })),
   }))
+
+  const selectedAgentData = agentsWithTestingVersions.find(a => a.id === selectedId)
+  const versionSelectOptions = selectedAgentData
+    ? [
+        ...(selectedAgentData.testingVersions ?? []).map((v) => ({
+          value: v,
+          label: (
+            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Text code style={{ fontSize: 12 }}>{v}</Text>
+              <Text type="secondary" style={{ fontSize: 11 }}>{selectedAgentData.lastUpdated}</Text>
+              <Tag style={{ fontSize: 10, padding: "0 4px", lineHeight: "16px", margin: 0, color: "#faad14", background: "#fff7e6", borderColor: "#ffe58f" }}>Testing</Tag>
+            </span>
+          ),
+        })),
+        ...(selectedAgentData.liveVersion ? [{
+          value: selectedAgentData.liveVersion,
+          label: (
+            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Text code style={{ fontSize: 12 }}>{selectedAgentData.liveVersion}</Text>
+              <Text type="secondary" style={{ fontSize: 11 }}>{selectedAgentData.lastUpdated}</Text>
+              <Tag style={{ fontSize: 10, padding: "0 4px", lineHeight: "16px", margin: 0, color: "#389e0d", background: "#f6ffed", borderColor: "#b7eb8f" }}>Live</Tag>
+            </span>
+          ),
+        }] : []),
+      ]
+    : []
+
+  function handleAgentChange(id: string) {
+    setSelectedId(id)
+    const agent = agentsWithTestingVersions.find(a => a.id === id)
+    setSelectedVersion(agent?.testingVersions?.[0] ?? "")
+    setSuites([])
+    setRunStatus("idle")
+    setProgress(0)
+    setPublished(false)
+  }
 
   return (
     <div>
@@ -704,15 +733,27 @@ export function RegressionTest({
             <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
               Select Agent
             </Text>
-            <Cascader
-              value={cascaderValue.length === 2 ? cascaderValue : undefined}
-              onChange={(val) => setCascaderValue((val as [string, string]) ?? [])}
-              options={cascaderOptions}
-              style={{ width: 360 }}
-              placeholder="Select agent and version"
+            <Select
+              value={selectedId || undefined}
+              onChange={handleAgentChange}
+              options={agentSelectOptions}
+              style={{ width: 220 }}
+              placeholder="Select Agent"
               disabled={runStatus === "running"}
-              displayRender={(labels) => labels.join("  /  ")}
-              expandTrigger="hover"
+            />
+          </div>
+
+          <div>
+            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
+              Select Version
+            </Text>
+            <Select
+              value={selectedVersion || undefined}
+              onChange={(val) => setSelectedVersion(val)}
+              options={versionSelectOptions}
+              style={{ width: 280 }}
+              placeholder="Select Version"
+              disabled={!selectedId || runStatus === "running"}
             />
           </div>
 
