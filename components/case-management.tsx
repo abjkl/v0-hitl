@@ -327,6 +327,12 @@ export function CaseManagement({
   const [expandedData, setExpandedData]   = useState<Record<string, CaseExpanded>>({})
   const [msgApi, contextHolder]           = message.useMessage()
 
+  // Archive modal state
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false)
+  const [archiveTarget, setArchiveTarget]       = useState<TestCase | null>(null)
+  const [archiveReason, setArchiveReason]       = useState("")
+  const [archiveSubmitting, setArchiveSubmitting] = useState(false)
+
   const archivedIds = useMemo(
     () => new Set(archivedCases.map((c) => c.caseId)),
     [archivedCases],
@@ -413,6 +419,50 @@ export function CaseManagement({
     setGoldenFilter(null)
     setAmountMin(null)
     setAmountMax(null)
+  }
+
+  // Open archive modal
+  function openArchiveModal(record: TestCase) {
+    setArchiveTarget(record)
+    setArchiveReason("")
+    setArchiveModalOpen(true)
+  }
+
+  // Handle archive confirm
+  function handleArchiveConfirm() {
+    if (!archiveTarget || !archiveReason.trim()) return
+
+    setArchiveSubmitting(true)
+
+    // Simulate async operation
+    setTimeout(() => {
+      const archivedCase: ArchivedCaseMock = {
+        key: `arc-manual-${Date.now()}`,
+        caseId: archiveTarget.caseId,
+        invoiceNo: archiveTarget.invoiceNo,
+        supplierName: archiveTarget.supplierName,
+        region: archiveTarget.region,
+        entity: archiveTarget.entity,
+        amount: archiveTarget.amount,
+        currency: archiveTarget.currency,
+        invoiceDate: archiveTarget.invoiceDate,
+        reviewDate: archiveTarget.updateTime.split(" ")[0],
+        isGolden: archiveTarget.isGolden,
+        groundTruth: archiveTarget.invoiceReviewGroundTruth === "Pass" ? "Pass" : "Fail",
+        tags: archiveTarget.tags,
+        step: "INVOICE_REVIEW",
+        archivedAt: new Date().toISOString(),
+        archiveReason: "Manual Move",
+        archiveReasonText: archiveReason.trim(),
+      }
+
+      onArchive([archivedCase])
+      setArchiveSubmitting(false)
+      setArchiveModalOpen(false)
+      setArchiveTarget(null)
+      setArchiveReason("")
+      msgApi.success(`Case ${archiveTarget.caseId} archived successfully`)
+    }, 500)
   }
 
   const hasFilters = !!(search || regionFilter || entityFilter || stepFilter || goldenFilter || amountMin !== null || amountMax !== null)
@@ -508,14 +558,12 @@ export function CaseManagement({
               Detail
             </Button>
           </Tooltip>
-          <Tooltip title="Archive this case">
+          <Tooltip title="Move to Archive">
             <Button
               type="link"
               danger
               size="small"
-              onClick={() => {
-                message.info(`Archived case: ${record.caseId}`)
-              }}
+              onClick={() => openArchiveModal(record)}
             >
               Archive
             </Button>
@@ -717,6 +765,63 @@ export function CaseManagement({
       )}
 
       <CaseDrawer record={detail} onClose={() => setDetail(null)} />
+
+      {/* Archive Confirmation Modal */}
+      <Modal
+        title="Move to Archive"
+        open={archiveModalOpen}
+        onCancel={() => {
+          setArchiveModalOpen(false)
+          setArchiveTarget(null)
+          setArchiveReason("")
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setArchiveModalOpen(false)
+              setArchiveTarget(null)
+              setArchiveReason("")
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            loading={archiveSubmitting}
+            disabled={!archiveReason.trim()}
+            onClick={handleArchiveConfirm}
+          >
+            Confirm
+          </Button>,
+        ]}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text>
+            This action will move case <Text strong>{archiveTarget?.caseId}</Text> to the Archive Case list.
+            Once archived, it will no longer appear in the active Case List.
+          </Text>
+        </div>
+        <div>
+          <Text strong style={{ display: "block", marginBottom: 8 }}>
+            Reason <Text type="danger">*</Text>
+          </Text>
+          <Input.TextArea
+            placeholder="Please enter the reason for archiving this case..."
+            value={archiveReason}
+            onChange={(e) => setArchiveReason(e.target.value)}
+            rows={3}
+            status={archiveReason.trim() === "" ? "error" : undefined}
+          />
+          {archiveReason.trim() === "" && (
+            <Text type="danger" style={{ fontSize: 12, marginTop: 4, display: "block" }}>
+              Reason is required
+            </Text>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }

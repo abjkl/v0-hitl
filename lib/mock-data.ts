@@ -425,6 +425,7 @@ Please perform a complete line-item validation and return results in the specifi
 // ── Archived Cases Mock Data ─────────────────────────────────────
 export type CaseStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 export type ArchivedGroundTruth = 'Pass' | 'Fail' | 'Matched' | 'Rejected' | 'Submitted'
+export type ArchiveReasonType = 'Auto Archive' | 'Manual Move'
 
 export interface ArchivedCaseMock {
   key: string
@@ -442,6 +443,8 @@ export interface ArchivedCaseMock {
   tags: string[]
   step: CaseStep
   archivedAt: string
+  archiveReason: ArchiveReasonType
+  archiveReasonText?: string
 }
 
 export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
@@ -461,6 +464,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['three-way-match'],
     step: 'INVOICE_REVIEW',
     archivedAt: '2024-08-15T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
   {
     key: 'arc-2',
@@ -478,6 +482,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['golden', 'line-item'],
     step: 'MATCH',
     archivedAt: '2024-09-01T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
   {
     key: 'arc-3',
@@ -495,6 +500,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['amount-mismatch'],
     step: 'INVOICE_REVIEW',
     archivedAt: '2024-10-05T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
   {
     key: 'arc-4',
@@ -512,6 +518,8 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['header-check'],
     step: 'AP_VOUCHER',
     archivedAt: '2024-10-18T00:00:00.000Z',
+    archiveReason: 'Manual Move',
+    archiveReasonText: 'Duplicate case - merged with PR-2023-10234',
   },
   {
     key: 'arc-5',
@@ -529,6 +537,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['bank-mismatch'],
     step: 'MATCH',
     archivedAt: '2024-11-08T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
   {
     key: 'arc-6',
@@ -546,6 +555,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['golden', 'three-way-match'],
     step: 'INVOICE_REVIEW',
     archivedAt: '2024-12-01T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
   {
     key: 'arc-7',
@@ -563,6 +573,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['line-item'],
     step: 'MATCH',
     archivedAt: '2025-01-10T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
   {
     key: 'arc-8',
@@ -580,5 +591,6 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
     tags: ['tax-check'],
     step: 'AP_VOUCHER',
     archivedAt: '2025-02-05T00:00:00.000Z',
+    archiveReason: 'Auto Archive',
   },
 ]
