@@ -326,21 +326,16 @@ export function SystemArchitecture() {
 
   // Agent state machine data
   const agentStates = [
-    { id: "DRAFT", label: "DRAFT", color: "#d9d9d9", textColor: "#595959", desc: "Initial state when agent is created" },
-    { id: "TESTING", label: "TESTING", color: "#1890ff", textColor: "#fff", desc: "Agent is under development and testing" },
-    { id: "ACTIVE", label: "ACTIVE", color: "#52c41a", textColor: "#fff", desc: "Agent is live in production" },
-    { id: "DEPRECATED", label: "DEPRECATED", color: "#faad14", textColor: "#fff", desc: "Old version, replaced by newer agent" },
-    { id: "DISABLED", label: "DISABLED", color: "#ff4d4f", textColor: "#fff", desc: "Agent is disabled, not processing cases" },
+    { id: "TESTING", label: "TESTING", color: "#1890ff", textColor: "#fff", desc: "Agent is under development and testing phase" },
+    { id: "ACTIVE", label: "ACTIVE", color: "#52c41a", textColor: "#fff", desc: "Agent is live in production, processing cases" },
+    { id: "DEPRECATED", label: "DEPRECATED", color: "#faad14", textColor: "#fff", desc: "Previous version, replaced by newer ACTIVE agent" },
   ]
 
   const agentTransitions = [
-    { from: "DRAFT", to: "TESTING", trigger: "Start Testing", condition: "Agent config complete" },
-    { from: "TESTING", to: "ACTIVE", trigger: "Publish", condition: "Regression test pass rate >= 85%" },
-    { from: "TESTING", to: "DRAFT", trigger: "Back to Draft", condition: "Test failed or changes needed" },
-    { from: "ACTIVE", to: "DEPRECATED", trigger: "New Version Published", condition: "Newer version becomes ACTIVE" },
-    { from: "ACTIVE", to: "DISABLED", trigger: "Emergency Stop", condition: "Manual disable by AI_OPS" },
-    { from: "DEPRECATED", to: "DISABLED", trigger: "Retire", condition: "No longer needed" },
-    { from: "DISABLED", to: "TESTING", trigger: "Re-enable", condition: "Re-activate for testing" },
+    { from: "TESTING", to: "ACTIVE", trigger: "Publish", condition: "Regression test pass rate >= 85% (all sets)" },
+    { from: "TESTING", to: "TESTING", trigger: "Re-test", condition: "Changes made, run tests again" },
+    { from: "ACTIVE", to: "DEPRECATED", trigger: "New Version Published", condition: "Newer ACTIVE version replaces it" },
+    { from: "DEPRECATED", to: "TESTING", trigger: "Re-activate", condition: "Rollback or revert to previous version" },
   ]
 
   const tabItems = [
@@ -735,15 +730,15 @@ export function SystemArchitecture() {
             <Card size="small">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <CheckCircleFilled style={{ color: "#52c41a" }} />
-                <Text strong>Publishing Requirements</Text>
+                <Text strong>Publishing Promotion Path</Text>
               </div>
               <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
-                <li>Agent must be in TESTING status</li>
-                <li>Regression test must be run against all 3 sets</li>
-                <li>Golden Set pass rate must be &ge; 85%</li>
-                <li>Benchmark Set pass rate must be &ge; 85%</li>
-                <li>Full Set pass rate must be &ge; 85%</li>
-                <li>Only AI_OPS role can trigger publish</li>
+                <li>Agents start in TESTING status</li>
+                <li>Regression tests must be run against all 3 sets (Golden, Benchmark, Full)</li>
+                <li>All three sets must achieve ≥ 85% pass rate</li>
+                <li>Only AI_OPS role can publish</li>
+                <li>Publishing creates new currentVersion snapshot</li>
+                <li>Existing ACTIVE agent becomes DEPRECATED</li>
               </ul>
             </Card>
 
@@ -753,40 +748,42 @@ export function SystemArchitecture() {
                 <Text strong>Version Management</Text>
               </div>
               <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
-                <li>Each agent has a currentVersion (e.g., v1.2.0)</li>
-                <li>Publishing creates a new version snapshot</li>
-                <li>Old ACTIVE version becomes DEPRECATED</li>
-                <li>Version history is preserved indefinitely</li>
-                <li>Rollback requires re-running regression tests</li>
-                <li>Multiple agents can share the same flowId</li>
+                <li>Semantic versioning: v1.2.0 (major.minor.patch)</li>
+                <li>Each publish increments currentVersion</li>
+                <li>Version history preserved indefinitely</li>
+                <li>Rollback: DEPRECATED → TESTING with re-testing</li>
+                <li>Multiple agents can use same flowId (different steps)</li>
+                <li>Region filtering: agents.regions array membership</li>
               </ul>
             </Card>
 
             <Card size="small">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <ClockCircleOutlined style={{ color: "#faad14" }} />
-                <Text strong>DEPRECATED Handling</Text>
+                <Text strong>DEPRECATED State Lifecycle</Text>
               </div>
               <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
-                <li>DEPRECATED agents are read-only</li>
+                <li>Automatically set when new version published</li>
+                <li>Read-only: no updates or re-testing</li>
                 <li>No new cases routed to DEPRECATED agents</li>
                 <li>Historical case associations preserved</li>
-                <li>Can be manually DISABLED by AI_OPS</li>
-                <li>Useful for audit trail and comparison</li>
+                <li>Useful for audit trail and performance comparison</li>
+                <li>Can revert to TESTING if rollback needed</li>
               </ul>
             </Card>
 
             <Card size="small">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <SafetyCertificateOutlined style={{ color: "#ff4d4f" }} />
-                <Text strong>Emergency Controls</Text>
+                <BranchesOutlined style={{ color: "#1890ff" }} />
+                <Text strong>Agent Lifecycle</Text>
               </div>
               <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
-                <li>ACTIVE agents can be immediately DISABLED</li>
-                <li>DISABLED stops all case processing</li>
-                <li>Does not affect in-flight cases</li>
-                <li>Can be re-enabled after fixing issues</li>
-                <li>All state changes are audit-logged</li>
+                <li>TESTING: Dev, config, pre-deployment phase</li>
+                <li>ACTIVE: Currently live, processing cases</li>
+                <li>DEPRECATED: Replaced by newer version</li>
+                <li>Only 1 ACTIVE per flowId + step combo</li>
+                <li>Multiple TESTING agents possible per flowId</li>
+                <li>All state changes: audit-logged with timestamp</li>
               </ul>
             </Card>
           </div>
