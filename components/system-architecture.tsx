@@ -324,6 +324,25 @@ export function SystemArchitecture() {
     { name: "Turbopack", color: "#F7421E" },
   ]
 
+  // Agent state machine data
+  const agentStates = [
+    { id: "DRAFT", label: "DRAFT", color: "#d9d9d9", textColor: "#595959", desc: "Initial state when agent is created" },
+    { id: "TESTING", label: "TESTING", color: "#1890ff", textColor: "#fff", desc: "Agent is under development and testing" },
+    { id: "ACTIVE", label: "ACTIVE", color: "#52c41a", textColor: "#fff", desc: "Agent is live in production" },
+    { id: "DEPRECATED", label: "DEPRECATED", color: "#faad14", textColor: "#fff", desc: "Old version, replaced by newer agent" },
+    { id: "DISABLED", label: "DISABLED", color: "#ff4d4f", textColor: "#fff", desc: "Agent is disabled, not processing cases" },
+  ]
+
+  const agentTransitions = [
+    { from: "DRAFT", to: "TESTING", trigger: "Start Testing", condition: "Agent config complete" },
+    { from: "TESTING", to: "ACTIVE", trigger: "Publish", condition: "Regression test pass rate >= 85%" },
+    { from: "TESTING", to: "DRAFT", trigger: "Back to Draft", condition: "Test failed or changes needed" },
+    { from: "ACTIVE", to: "DEPRECATED", trigger: "New Version Published", condition: "Newer version becomes ACTIVE" },
+    { from: "ACTIVE", to: "DISABLED", trigger: "Emergency Stop", condition: "Manual disable by AI_OPS" },
+    { from: "DEPRECATED", to: "DISABLED", trigger: "Retire", condition: "No longer needed" },
+    { from: "DISABLED", to: "TESTING", trigger: "Re-enable", condition: "Re-activate for testing" },
+  ]
+
   const tabItems = [
     {
       key: "overview",
@@ -591,6 +610,184 @@ export function SystemArchitecture() {
                   <li>Failure simulation mode</li>
                 </ul>
               </div>
+            </Card>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "state-machine",
+      label: "Agent State Machine",
+      children: (
+        <div style={{ padding: "24px 0" }}>
+          {/* State Diagram */}
+          <Card style={{ marginBottom: 24 }}>
+            <Title level={5}>Agent Lifecycle States</Title>
+            <Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 24 }}>
+              Agents follow a strict state machine lifecycle. Each state determines the agent&apos;s
+              capabilities and visibility in the system. State transitions require specific conditions to be met.
+            </Paragraph>
+
+            {/* Visual State Nodes */}
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 24,
+              flexWrap: "wrap",
+              marginBottom: 32,
+              padding: "24px 0",
+              background: "#fafafa",
+              borderRadius: 8,
+            }}>
+              {agentStates.map((state, idx) => (
+                <React.Fragment key={state.id}>
+                  <Tooltip title={state.desc}>
+                    <div style={{
+                      background: state.color,
+                      color: state.textColor,
+                      padding: "12px 24px",
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      fontSize: 14,
+                      cursor: "help",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      minWidth: 100,
+                      textAlign: "center",
+                    }}>
+                      {state.label}
+                    </div>
+                  </Tooltip>
+                  {idx < agentStates.length - 1 && (
+                    <div style={{ color: "#bfbfbf", fontSize: 18 }}>→</div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* State Descriptions */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+              {agentStates.map((state) => (
+                <div key={state.id} style={{
+                  padding: 12,
+                  background: `${state.color}10`,
+                  borderRadius: 6,
+                  borderLeft: `3px solid ${state.color}`,
+                }}>
+                  <Text strong style={{ fontSize: 12, display: "block", marginBottom: 4 }}>{state.label}</Text>
+                  <Text type="secondary" style={{ fontSize: 11 }}>{state.desc}</Text>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Transition Rules */}
+          <Card style={{ marginBottom: 24 }}>
+            <Title level={5}>State Transitions</Title>
+            <Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 16 }}>
+              Each transition requires specific triggers and conditions. Only AI_OPS users can trigger state changes.
+            </Paragraph>
+
+            <div style={{ display: "grid", gap: 12 }}>
+              {agentTransitions.map((t, idx) => {
+                const fromState = agentStates.find((s) => s.id === t.from)!
+                const toState = agentStates.find((s) => s.id === t.to)!
+                return (
+                  <div key={idx} style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    padding: "12px 16px",
+                    background: "#fafafa",
+                    borderRadius: 6,
+                  }}>
+                    <Tag style={{ background: fromState.color, color: fromState.textColor, border: "none", fontWeight: 600 }}>
+                      {t.from}
+                    </Tag>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+                      <div style={{ height: 1, flex: 1, background: "#d9d9d9" }} />
+                      <Text style={{ fontSize: 12, color: "#1890ff", fontWeight: 500, whiteSpace: "nowrap" }}>
+                        {t.trigger}
+                      </Text>
+                      <div style={{ height: 1, flex: 1, background: "#d9d9d9" }} />
+                      <div style={{
+                        width: 0,
+                        height: 0,
+                        borderTop: "5px solid transparent",
+                        borderBottom: "5px solid transparent",
+                        borderLeft: "8px solid #1890ff",
+                      }} />
+                    </div>
+                    <Tag style={{ background: toState.color, color: toState.textColor, border: "none", fontWeight: 600 }}>
+                      {t.to}
+                    </Tag>
+                    <Text type="secondary" style={{ fontSize: 11, minWidth: 200 }}>
+                      Condition: {t.condition}
+                    </Text>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+
+          {/* State Machine Rules */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+            <Card size="small">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <CheckCircleFilled style={{ color: "#52c41a" }} />
+                <Text strong>Publishing Requirements</Text>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                <li>Agent must be in TESTING status</li>
+                <li>Regression test must be run against all 3 sets</li>
+                <li>Golden Set pass rate must be &ge; 85%</li>
+                <li>Benchmark Set pass rate must be &ge; 85%</li>
+                <li>Full Set pass rate must be &ge; 85%</li>
+                <li>Only AI_OPS role can trigger publish</li>
+              </ul>
+            </Card>
+
+            <Card size="small">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <SyncOutlined style={{ color: "#1890ff" }} />
+                <Text strong>Version Management</Text>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                <li>Each agent has a currentVersion (e.g., v1.2.0)</li>
+                <li>Publishing creates a new version snapshot</li>
+                <li>Old ACTIVE version becomes DEPRECATED</li>
+                <li>Version history is preserved indefinitely</li>
+                <li>Rollback requires re-running regression tests</li>
+                <li>Multiple agents can share the same flowId</li>
+              </ul>
+            </Card>
+
+            <Card size="small">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <ClockCircleOutlined style={{ color: "#faad14" }} />
+                <Text strong>DEPRECATED Handling</Text>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                <li>DEPRECATED agents are read-only</li>
+                <li>No new cases routed to DEPRECATED agents</li>
+                <li>Historical case associations preserved</li>
+                <li>Can be manually DISABLED by AI_OPS</li>
+                <li>Useful for audit trail and comparison</li>
+              </ul>
+            </Card>
+
+            <Card size="small">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <SafetyCertificateOutlined style={{ color: "#ff4d4f" }} />
+                <Text strong>Emergency Controls</Text>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                <li>ACTIVE agents can be immediately DISABLED</li>
+                <li>DISABLED stops all case processing</li>
+                <li>Does not affect in-flight cases</li>
+                <li>Can be re-enabled after fixing issues</li>
+                <li>All state changes are audit-logged</li>
+              </ul>
             </Card>
           </div>
         </div>
