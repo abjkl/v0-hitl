@@ -361,9 +361,6 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   const [selectedVersion, setSelectedVersion] = useState("v1.3.0")
   const [versionConfigs, setVersionConfigs] = useState(initialVersionConfigs)
 
-  // Per-version mutable basic info and prompts
-  const [basicInfoMap, setBasicInfoMap] = useState<Record<string, { agentName: string; description: string }>>({})
-
   // Prompt list item type
   interface PromptItem { id: string; name: string; content: string }
   const defaultPrompts: PromptItem[] = [
@@ -376,13 +373,11 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   const [editingSection, setEditingSection] = useState<"basic" | "platform" | "prompt" | null>(null)
 
   // Draft states
-  const [draftBasic, setDraftBasic] = useState({ agentName: "", description: "" })
   const [draftPlatform, setDraftPlatform] = useState<VersionConfig>({ agentPlatform: "", hashId: "", hashKey: "", agentLink: "" })
   const [draftPrompts, setDraftPrompts] = useState<PromptItem[]>([])
 
   const d = agentDetailData
   const cfg = versionConfigs[selectedVersion] || initialVersionConfigs["v1.3.0"]
-  const basicInfo = basicInfoMap[selectedVersion] ?? { agentName: d.agentName, description: d.description }
   const prompts = promptMap[selectedVersion] ?? defaultPrompts
 
   // Is the currently viewed version in TESTING state?
@@ -401,17 +396,6 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   }
 
   const banner = getVersionBanner()
-
-  // ── Basic Info handlers ──────────────────────────────────────
-  function startEditBasic() {
-    setDraftBasic({ agentName: basicInfo.agentName, description: basicInfo.description })
-    setEditingSection("basic")
-  }
-  function saveBasic() {
-    setBasicInfoMap(prev => ({ ...prev, [selectedVersion]: { ...draftBasic } }))
-    setEditingSection(null)
-    msgApi.success("Basic info saved")
-  }
 
   // ── Platform Integration handlers ───────────────────────────
   function startEditPlatform() {
@@ -478,51 +462,20 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
             {isTesting && <Text style={{ marginLeft: 12, fontSize: 12, color: "#faad14" }}>— Click <EditOutlined /> to edit each section</Text>}
           </div>
 
-          {/* ── Basic Info ─────────────────────────────────── */}
-          <SectionCard
-            title={<Text strong style={{ fontSize: 13 }}>Basic Info</Text>}
-            canEdit={isTesting}
-            editing={editingSection === "basic"}
-            onEdit={startEditBasic}
-            onSave={saveBasic}
-            onCancel={cancelEdit}
-          >
-            {editingSection === "basic" ? (
-              <>
-                <div style={{ marginBottom: 16 }}>
-                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 500 }}>AGENT NAME</Text>
-                  <Input value={draftBasic.agentName} onChange={e => setDraftBasic(p => ({ ...p, agentName: e.target.value }))} />
-                </div>
-                <div style={{ marginBottom: 16 }}>
-                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 500 }}>DESCRIPTION</Text>
-                  <TextArea rows={3} value={draftBasic.description} onChange={e => setDraftBasic(p => ({ ...p, description: e.target.value }))} />
-                </div>
-                {/* Flow & Step always read-only */}
-                <div style={{ display: "flex", gap: 16 }}>
-                  <div style={{ flex: 1 }}>
-                    <ReadOnlyField label="BELONGS TO FLOW" value={<Tag style={{ background: "#f0f5ff", borderColor: "#adc6ff", color: "#2f54eb", fontSize: 11 }}>{flowData.find((f) => f.id === d.flowId)?.name ?? d.flowId}</Tag>} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <ReadOnlyField label="BELONGS TO STEP" value={<Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{d.step}</Tag>} />
-                  </div>
-                </div>
-                <Text type="secondary" style={{ fontSize: 12 }}>Flow and Step cannot be changed.</Text>
-              </>
-            ) : (
-              <>
-                <ReadOnlyField label="AGENT NAME" value={basicInfo.agentName} />
-                <ReadOnlyField label="DESCRIPTION" value={basicInfo.description} />
-                <div style={{ display: "flex", gap: 16, marginBottom: 0 }}>
-                  <div style={{ flex: 1 }}>
-                    <ReadOnlyField label="BELONGS TO FLOW" value={<Tag style={{ background: "#f0f5ff", borderColor: "#adc6ff", color: "#2f54eb", fontSize: 11 }}>{flowData.find((f) => f.id === d.flowId)?.name ?? d.flowId}</Tag>} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <ReadOnlyField label="BELONGS TO STEP" value={<Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{d.step}</Tag>} monospace />
-                  </div>
-                </div>
-              </>
-            )}
-          </SectionCard>
+          {/* ── Basic Info (Read-only) ─────────────────────────────────── */}
+          <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px", marginBottom: 12 }}>
+            <Title level={5} style={{ margin: "0 0 16px 0" }}>Basic Info</Title>
+            <ReadOnlyField label="AGENT NAME" value={d.agentName} />
+            <ReadOnlyField label="DESCRIPTION" value={d.description} />
+            <div style={{ display: "flex", gap: 16, marginBottom: 0 }}>
+              <div style={{ flex: 1 }}>
+                <ReadOnlyField label="BELONGS TO FLOW" value={<Tag style={{ background: "#f0f5ff", borderColor: "#adc6ff", color: "#2f54eb", fontSize: 11 }}>{flowData.find((f) => f.id === d.flowId)?.name ?? d.flowId}</Tag>} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <ReadOnlyField label="BELONGS TO STEP" value={<Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{d.step}</Tag>} monospace />
+              </div>
+            </div>
+          </div>
 
           {/* ── Platform Integration Info ──────────────────── */}
           <SectionCard
