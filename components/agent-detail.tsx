@@ -363,7 +363,14 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
 
   // Per-version mutable basic info and prompts
   const [basicInfoMap, setBasicInfoMap] = useState<Record<string, { agentName: string; description: string }>>({})
-  const [promptMap, setPromptMap] = useState<Record<string, { prompt1: string; prompt2: string }>>({})
+
+  // Prompt list item type
+  interface PromptItem { id: string; name: string; content: string }
+  const defaultPrompts: PromptItem[] = [
+    { id: "p1", name: "INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT", content: agentDetailData.systemPrompt },
+    { id: "p2", name: "INVOICE_KEY_INFO_CHECK_PROMPT",         content: agentDetailData.userPromptTemplate },
+  ]
+  const [promptMap, setPromptMap] = useState<Record<string, PromptItem[]>>({})
 
   // Which section is currently being edited
   const [editingSection, setEditingSection] = useState<"basic" | "platform" | "prompt" | null>(null)
@@ -371,12 +378,12 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   // Draft states
   const [draftBasic, setDraftBasic] = useState({ agentName: "", description: "" })
   const [draftPlatform, setDraftPlatform] = useState<VersionConfig>({ agentPlatform: "", hashId: "", hashKey: "", agentLink: "" })
-  const [draftPrompt, setDraftPrompt] = useState({ prompt1: "", prompt2: "" })
+  const [draftPrompts, setDraftPrompts] = useState<PromptItem[]>([])
 
   const d = agentDetailData
   const cfg = versionConfigs[selectedVersion] || initialVersionConfigs["v1.3.0"]
   const basicInfo = basicInfoMap[selectedVersion] ?? { agentName: d.agentName, description: d.description }
-  const prompts = promptMap[selectedVersion] ?? { prompt1: d.systemPrompt, prompt2: d.userPromptTemplate }
+  const prompts = promptMap[selectedVersion] ?? defaultPrompts
 
   // Is the currently viewed version in TESTING state?
   const isTesting = agentDetailData.versions.all.find(v => v.version === selectedVersion)?.state === "TESTING"
@@ -419,13 +426,23 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
 
   // ── Prompt Config handlers ──────────────────────────────────
   function startEditPrompt() {
-    setDraftPrompt({ prompt1: prompts.prompt1, prompt2: prompts.prompt2 })
+    setDraftPrompts(prompts.map(p => ({ ...p })))
     setEditingSection("prompt")
   }
   function savePrompt() {
-    setPromptMap(prev => ({ ...prev, [selectedVersion]: { ...draftPrompt } }))
+    setPromptMap(prev => ({ ...prev, [selectedVersion]: draftPrompts }))
     setEditingSection(null)
     msgApi.success("Prompt Config saved")
+  }
+  function addDraftPrompt() {
+    const newId = `p${Date.now()}`
+    setDraftPrompts(prev => [...prev, { id: newId, name: "NEW_PROMPT", content: "" }])
+  }
+  function removeDraftPrompt(id: string) {
+    setDraftPrompts(prev => prev.filter(p => p.id !== id))
+  }
+  function updateDraftPrompt(id: string, field: "name" | "content", value: string) {
+    setDraftPrompts(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p))
   }
 
   function cancelEdit() {
@@ -570,39 +587,61 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
 
             {editingSection === "prompt" ? (
               <>
-                <div style={{ marginBottom: 16 }}>
-                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 500 }}>#1  INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT</Text>
-                  <TextArea
-                    rows={6}
-                    value={draftPrompt.prompt1}
-                    onChange={e => setDraftPrompt(p => ({ ...p, prompt1: e.target.value }))}
-                    style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.6 }}
-                  />
-                </div>
-                <div>
-                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 500 }}>#2  INVOICE_KEY_INFO_CHECK_PROMPT</Text>
-                  <TextArea
-                    rows={6}
-                    value={draftPrompt.prompt2}
-                    onChange={e => setDraftPrompt(p => ({ ...p, prompt2: e.target.value }))}
-                    style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.6 }}
-                  />
-                </div>
+                {draftPrompts.map((p, idx) => (
+                  <div key={p.id} style={{ marginBottom: 16, border: "1px solid #e8e8e8", borderRadius: 6, overflow: "hidden" }}>
+                    {/* Prompt header row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fafafa", borderBottom: "1px solid #e8e8e8" }}>
+                      <Text style={{ fontSize: 12, color: "#8c8c8c", fontWeight: 600, flexShrink: 0 }}>#{idx + 1}</Text>
+                      <Input
+                        value={p.name}
+                        onChange={e => updateDraftPrompt(p.id, "name", e.target.value.toUpperCase().replace(/ /g, "_"))}
+                        style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 500, color: "#595959", flex: 1 }}
+                        variant="borderless"
+                      />
+                      {draftPrompts.length > 1 && (
+                        <Button
+                          type="text"
+                          size="small"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => removeDraftPrompt(p.id)}
+                        />
+                      )}
+                    </div>
+                    {/* Prompt content */}
+                    <div style={{ padding: 12 }}>
+                      <TextArea
+                        rows={5}
+                        value={p.content}
+                        onChange={e => updateDraftPrompt(p.id, "content", e.target.value)}
+                        placeholder="Type your prompt here..."
+                        style={{ fontFamily: "monospace", fontSize: 12, lineHeight: 1.6 }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {/* Add Prompt button */}
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={addDraftPrompt}
+                  style={{ width: "100%", marginTop: 4 }}
+                >
+                  Add Prompt
+                </Button>
               </>
             ) : (
               <>
-                <div style={{ marginBottom: 16 }}>
-                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 500 }}>#1  INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT</Text>
-                  <pre style={{ background: "#f5f5f5", border: "1px solid #e8e8e8", borderRadius: 4, padding: "12px", fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", fontFamily: "monospace", color: "#262626", margin: 0 }}>
-                    {prompts.prompt1}
-                  </pre>
-                </div>
-                <div>
-                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 500 }}>#2  INVOICE_KEY_INFO_CHECK_PROMPT</Text>
-                  <pre style={{ background: "#f5f5f5", border: "1px solid #e8e8e8", borderRadius: 4, padding: "12px", fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", fontFamily: "monospace", color: "#262626", margin: 0 }}>
-                    {prompts.prompt2}
-                  </pre>
-                </div>
+                {prompts.map((p, idx) => (
+                  <div key={p.id} style={{ marginBottom: idx < prompts.length - 1 ? 16 : 0 }}>
+                    <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 8, fontWeight: 500 }}>
+                      #{idx + 1}{"  "}{p.name}
+                    </Text>
+                    <pre style={{ background: "#f5f5f5", border: "1px solid #e8e8e8", borderRadius: 4, padding: "12px", fontSize: 12, lineHeight: 1.6, whiteSpace: "pre-wrap", fontFamily: "monospace", color: "#262626", margin: 0 }}>
+                      {p.content}
+                    </pre>
+                  </div>
+                ))}
               </>
             )}
           </SectionCard>
