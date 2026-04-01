@@ -9,7 +9,7 @@ import {
 import { SearchOutlined, HistoryOutlined } from "@ant-design/icons"
 import {
   PlayCircleOutlined, CheckCircleOutlined, CloseCircleOutlined,
-  ExperimentOutlined, TrophyOutlined, WarningOutlined,
+  ExperimentOutlined, TrophyOutlined, WarningOutlined, EyeOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import { agentListData, auditCaseData, INITIAL_GOLDEN_CASES, type Agent, type AgentStatus, type GoldenCasesState } from "@/lib/mock-data"
@@ -50,92 +50,80 @@ interface CaseResult {
 // ── Version config mock data (for publish diff check) ────────────
 
 interface VersionConfig {
-  model: string
-  temperature: number
-  maxTokens: number
-  additionalParams: string
-  apiEndpoint: string
-  authMethod: string
-  systemPrompt: string
-  userPromptTemplate: string
+  // Platform Integration Info
+  agentPlatform: string
+  hashId: string
+  hashKey: string
+  agentLink: string
+  // Prompts
+  prompts: Array<{ name: string; content: string }>
 }
 
 const VERSION_CONFIGS: Record<string, VersionConfig> = {
   // keyed by "agentId::version"
   "AGT-001::v1.3.0": {
-    model: "gpt-4o",
-    temperature: 0.7,
-    maxTokens: 2048,
-    additionalParams: "top_p=0.9",
-    apiEndpoint: "https://api.openai.com/v1/chat/completions",
-    authMethod: "Bearer Token",
-    systemPrompt: "You are a helpful invoice review assistant...",
-    userPromptTemplate: "Review the following invoice: {{invoice_data}}",
+    agentPlatform: "Smart",
+    hashId: "HASH-A1B2C3D4",
+    hashKey: "sk-hash-xK8mN2pQrT5vW9zA",
+    agentLink: "https://agent.internal.shopee.com/invoice-review",
+    prompts: [
+      { name: "INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT", content: "You are a helpful invoice review assistant. Check document titles and formats..." },
+      { name: "INVOICE_KEY_INFO_CHECK_PROMPT", content: "Review the following invoice: {{invoice_data}}" },
+    ],
   },
   "AGT-001::v1.4.0-beta": {
-    model: "gpt-4o-mini",  // DIFF: model changed
-    temperature: 0.7,
-    maxTokens: 2048,
-    additionalParams: "top_p=0.9",
-    apiEndpoint: "https://api.openai.com/v1/chat/completions",
-    authMethod: "Bearer Token",
-    systemPrompt: "You are a helpful invoice review assistant. Be concise and accurate...",  // DIFF: system prompt changed
-    userPromptTemplate: "Review the following invoice: {{invoice_data}}",
+    agentPlatform: "Claude",
+    hashId: "HASH-E5F6G7H8",
+    hashKey: "sk-hash-yL9nO3qSu6wX0zB",
+    agentLink: "https://agent.internal.shopee.com/invoice-review-v2",
+    prompts: [
+      { name: "INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT", content: "You are a helpful invoice review assistant. Be concise and accurate. Check document titles..." },
+      { name: "INVOICE_KEY_INFO_CHECK_PROMPT", content: "Review the following invoice with detailed analysis: {{invoice_data}}" },
+    ],
   },
   "AGT-001::v1.5.0-beta": {
-    model: "gpt-4o-mini",
-    temperature: 0.5,  // DIFF: temperature changed
-    maxTokens: 4096,   // DIFF: maxTokens changed
-    additionalParams: "top_p=0.95",  // DIFF: additionalParams changed
-    apiEndpoint: "https://api.openai.com/v1/chat/completions",
-    authMethod: "Bearer Token",
-    systemPrompt: "You are a helpful invoice review assistant. Be concise and accurate...",
-    userPromptTemplate: "Review the following invoice: {{invoice_data}}",
+    agentPlatform: "GPT",
+    hashId: "HASH-I9J0K1L2",
+    hashKey: "sk-hash-zM0pP4rTv7xY1aC",
+    agentLink: "https://agent.internal.shopee.com/invoice-review-v3",
+    prompts: [
+      { name: "INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT", content: "You are a helpful invoice review assistant. Be concise and accurate..." },
+      { name: "INVOICE_KEY_INFO_CHECK_PROMPT", content: "Review the following invoice: {{invoice_data}}" },
+      { name: "INVOICE_AMOUNT_VALIDATION_PROMPT", content: "Validate the invoice amounts and calculations..." },
+    ],
   },
   "AGT-002::v1.2.0": {
-    model: "claude-3-sonnet",
-    temperature: 0.6,
-    maxTokens: 1024,
-    additionalParams: "",
-    apiEndpoint: "https://api.anthropic.com/v1/messages",
-    authMethod: "API Key",
-    systemPrompt: "You are a PO matching assistant...",
-    userPromptTemplate: "Match the PO: {{po_data}}",
+    agentPlatform: "Smart",
+    hashId: "HASH-M3N4O5P6",
+    hashKey: "sk-hash-aB1cD2eF3gH4iJ",
+    agentLink: "https://agent.internal.shopee.com/po-match",
+    prompts: [
+      { name: "PO_MATCHING_PROMPT", content: "You are a PO matching assistant. Match purchase orders accurately..." },
+      { name: "PO_VALIDATION_PROMPT", content: "Match the PO: {{po_data}}" },
+    ],
   },
   "AGT-002::v1.3.0-beta": {
-    model: "claude-3-sonnet",
-    temperature: 0.6,
-    maxTokens: 1024,
-    additionalParams: "",
-    apiEndpoint: "https://api.anthropic.com/v1/messages",
-    authMethod: "API Key",
-    systemPrompt: "You are a PO matching assistant. Follow strict matching rules...",  // DIFF
-    userPromptTemplate: "Match the PO: {{po_data}}",
+    agentPlatform: "Claude",
+    hashId: "HASH-Q7R8S9T0",
+    hashKey: "sk-hash-eF5gH6iJ7kL8mN",
+    agentLink: "https://agent.internal.shopee.com/po-match-v2",
+    prompts: [
+      { name: "PO_MATCHING_PROMPT", content: "You are a PO matching assistant. Follow strict matching rules..." },
+      { name: "PO_VALIDATION_PROMPT", content: "Match the PO: {{po_data}}" },
+    ],
   },
   "AGT-002::v1.4.0-beta": {
-    model: "claude-3-opus",  // DIFF
-    temperature: 0.4,        // DIFF
-    maxTokens: 2048,         // DIFF
-    additionalParams: "top_k=40",  // DIFF
-    apiEndpoint: "https://api.anthropic.com/v1/messages",
-    authMethod: "API Key",
-    systemPrompt: "You are a PO matching assistant...",
-    userPromptTemplate: "Match the PO with detailed analysis: {{po_data}}",  // DIFF
+    agentPlatform: "GPT",
+    hashId: "HASH-U1V2W3X4",
+    hashKey: "sk-hash-oP9qR0sT1uV2wX",
+    agentLink: "https://agent.internal.shopee.com/po-match-v3",
+    prompts: [
+      { name: "PO_MATCHING_PROMPT", content: "You are a PO matching assistant..." },
+      { name: "PO_VALIDATION_PROMPT", content: "Match the PO with detailed analysis: {{po_data}}" },
+      { name: "PO_DISCREPANCY_PROMPT", content: "Identify any discrepancies in the PO matching..." },
+    ],
   },
 }
-
-const CONFIG_FIELD_LABELS: Record<keyof VersionConfig, string> = {
-  model: "Model",
-  temperature: "Temperature",
-  maxTokens: "Max Tokens",
-  additionalParams: "Additional Params",
-  apiEndpoint: "API Endpoint",
-  authMethod: "Auth Method",
-  systemPrompt: "System Prompt",
-  userPromptTemplate: "User Prompt Template",
-}
-
-const LONG_TEXT_FIELDS: (keyof VersionConfig)[] = ["systemPrompt", "userPromptTemplate"]
 
 interface ConfigDiffRow {
   field: string
@@ -153,16 +141,42 @@ function compareVersionConfigs(
 ): ConfigDiffRow[] {
   if (!testingConfig || !liveConfig) return []
   const rows: ConfigDiffRow[] = []
-  for (const key of Object.keys(testingConfig) as (keyof VersionConfig)[]) {
-    if (String(testingConfig[key]) !== String(liveConfig[key])) {
-      const isLong = LONG_TEXT_FIELDS.includes(key)
-      rows.push({
-        field: CONFIG_FIELD_LABELS[key],
-        testingValue: isLong ? truncate(String(testingConfig[key])) : String(testingConfig[key]),
-        liveValue: isLong ? truncate(String(liveConfig[key])) : String(liveConfig[key]),
-      })
+  
+  // Compare platform fields
+  if (testingConfig.agentPlatform !== liveConfig.agentPlatform) {
+    rows.push({ field: "Agent Platform", testingValue: testingConfig.agentPlatform, liveValue: liveConfig.agentPlatform })
+  }
+  if (testingConfig.hashId !== liveConfig.hashId) {
+    rows.push({ field: "Hash ID", testingValue: testingConfig.hashId, liveValue: liveConfig.hashId })
+  }
+  if (testingConfig.agentLink !== liveConfig.agentLink) {
+    rows.push({ field: "Agent Link", testingValue: truncate(testingConfig.agentLink), liveValue: truncate(liveConfig.agentLink) })
+  }
+  
+  // Compare prompts count
+  if (testingConfig.prompts.length !== liveConfig.prompts.length) {
+    rows.push({ field: "Prompts Count", testingValue: String(testingConfig.prompts.length), liveValue: String(liveConfig.prompts.length) })
+  }
+  
+  // Compare individual prompts
+  const maxLen = Math.max(testingConfig.prompts.length, liveConfig.prompts.length)
+  for (let i = 0; i < maxLen; i++) {
+    const tp = testingConfig.prompts[i]
+    const lp = liveConfig.prompts[i]
+    if (tp && lp) {
+      if (tp.name !== lp.name) {
+        rows.push({ field: `Prompt #${i + 1} Name`, testingValue: tp.name, liveValue: lp.name })
+      }
+      if (tp.content !== lp.content) {
+        rows.push({ field: `Prompt #${i + 1} Content`, testingValue: truncate(tp.content), liveValue: truncate(lp.content) })
+      }
+    } else if (tp && !lp) {
+      rows.push({ field: `Prompt #${i + 1}`, testingValue: tp.name, liveValue: "(none)" })
+    } else if (!tp && lp) {
+      rows.push({ field: `Prompt #${i + 1}`, testingValue: "(none)", liveValue: lp.name })
     }
   }
+  
   return rows
 }
 
@@ -547,7 +561,7 @@ function PredictionTag({ value }: { value: string }) {
   )
 }
 
-// ── Verdict Banner ───────────────────────────────────────────────
+// ── Verdict Banner ───────────────────���───────────────────────────
 
 interface SuiteSummary {
   label: string
@@ -1183,6 +1197,7 @@ export function RegressionTest({
   const [selectedHistoryRunId, setSelectedHistoryRunId] = useState<string | null>(null)
   const [viewingHistoryRun, setViewingHistoryRun] = useState<RegressionRunRecord | null>(null)
   const [aiResultDrawerRun, setAiResultDrawerRun] = useState<RegressionRunRecord | null>(null)
+  const [versionConfigModalOpen, setVersionConfigModalOpen] = useState(false)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<CaseResult | null>(null)
   const [configMismatchModalOpen, setConfigMismatchModalOpen] = useState(false)
@@ -1381,6 +1396,16 @@ export function RegressionTest({
               onClick={() => setHistoryPanelOpen(v => !v)}
             >
               {historyPanelOpen ? "Hide History" : "View Regression History"}
+            </Button>
+          </div>
+
+          <div style={{ paddingTop: 20 }}>
+            <Button
+              disabled={!selectedId || !selectedVersion}
+              onClick={() => setVersionConfigModalOpen(true)}
+              icon={<EyeOutlined />}
+            >
+              View Version Config
             </Button>
           </div>
 
@@ -2049,6 +2074,74 @@ export function RegressionTest({
           )
         })()}
       </Drawer>
+
+      {/* Version Config Modal */}
+      <Modal
+        open={versionConfigModalOpen}
+        onCancel={() => setVersionConfigModalOpen(false)}
+        title={
+          <Space>
+            <Text strong>Version Configuration</Text>
+            {selectedVersion && <Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{selectedVersion}</Tag>}
+          </Space>
+        }
+        footer={<Button onClick={() => setVersionConfigModalOpen(false)}>Close</Button>}
+        width={680}
+      >
+        {(() => {
+          const configKey = `${selectedId}::${selectedVersion}`
+          const config = VERSION_CONFIGS[configKey]
+          const agent = agentsWithTestingVersions.find(a => a.id === selectedId)
+          
+          if (!config) {
+            return <Empty description="No configuration found for this version" />
+          }
+          
+          return (
+            <div style={{ marginTop: 8 }}>
+              {/* Agent Info */}
+              <div style={{ display: "flex", gap: 24, marginBottom: 20, padding: "12px 16px", background: "#fafafa", borderRadius: 6, border: "1px solid #f0f0f0" }}>
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Agent</Text>
+                  <Text style={{ fontSize: 13 }}>{agent?.agentName ?? selectedId}</Text>
+                </div>
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Version</Text>
+                  <Tag style={{ fontFamily: "monospace", fontSize: 11, margin: 0 }}>{selectedVersion}</Tag>
+                </div>
+                <div>
+                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Step</Text>
+                  <Text style={{ fontSize: 13 }}>{agent?.step}</Text>
+                </div>
+              </div>
+
+              {/* Platform Integration Info */}
+              <Title level={5} style={{ marginBottom: 12 }}>Platform Integration Info</Title>
+              <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse", marginBottom: 20 }}>
+                <tbody>
+                  <tr><td style={{ padding: "6px 0", color: "#8c8c8c", width: 140 }}>Agent Platform</td><td>{config.agentPlatform}</td></tr>
+                  <tr><td style={{ padding: "6px 0", color: "#8c8c8c" }}>Hash ID</td><td><Text code style={{ fontSize: 12 }}>{config.hashId}</Text></td></tr>
+                  <tr><td style={{ padding: "6px 0", color: "#8c8c8c" }}>Hash Key</td><td><Text code style={{ fontSize: 12 }}>••••••••••••••••</Text></td></tr>
+                  <tr><td style={{ padding: "6px 0", color: "#8c8c8c" }}>Agent Link</td><td style={{ wordBreak: "break-all", fontSize: 12 }}>{config.agentLink}</td></tr>
+                </tbody>
+              </table>
+
+              {/* Prompt Config */}
+              <Title level={5} style={{ marginBottom: 12 }}>Prompt Config</Title>
+              {config.prompts.map((p: { name: string; content: string }, idx: number) => (
+                <div key={idx} style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 500 }}>
+                    #{idx + 1}{"  "}{p.name}
+                  </Text>
+                  <pre style={{ background: "#f5f5f5", border: "1px solid #e8e8e8", borderRadius: 4, padding: "10px 12px", fontSize: 12, lineHeight: 1.5, whiteSpace: "pre-wrap", fontFamily: "monospace", color: "#262626", margin: 0 }}>
+                    {p.content}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+      </Modal>
       </>
       )}
     </div>
