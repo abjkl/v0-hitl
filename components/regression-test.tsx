@@ -749,7 +749,7 @@ function ExpandedRowPanel({ record }: { record: CaseResult }) {
   )
 }
 
-// ── Case Result Table ──��──���───────────────────────────────────────
+// ── Case Result Table ──��─������───────────────────────────────────────
 
 function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewDetail?: (c: CaseResult) => void }) {
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
@@ -1119,8 +1119,8 @@ export function RegressionTest({
   useEffect(() => {
     if (runStatus === "done" && selectedId) {
       const metrics = simulateFailure ? SUITE_METRICS_FAILURE : SUITE_METRICS_NORMAL
-      const rebuilt: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
-        label: type === "golden" ? "Golden Set" : type === "benchmark" ? "Benchmark Set" : "Full Set",
+  const rebuilt: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
+    label: type === "golden" ? "Golden Case" : type === "benchmark" ? "Benchmark Case" : "Original Source Case",
         type,
         ...metrics[type],
         cases: buildSuiteCases(selectedId, type, metrics[type].goldenPassRate, sharedGoldenCases, selectedAgentStep),
@@ -1143,8 +1143,8 @@ export function RegressionTest({
       if (pct >= 100) {
         clearInterval(timerRef.current!)
         const metrics = simulateFailure ? SUITE_METRICS_FAILURE : SUITE_METRICS_NORMAL
-        const results: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
-          label: type === "golden" ? "Golden Set" : type === "benchmark" ? "Benchmark Set" : "Full Set",
+  const results: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
+    label: type === "golden" ? "Golden Case" : type === "benchmark" ? "Benchmark Case" : "Original Source Case",
           type,
           ...metrics[type],
           cases: buildSuiteCases(selectedId, type, metrics[type].goldenPassRate, sharedGoldenCases, selectedAgentStep),
@@ -1347,7 +1347,7 @@ export function RegressionTest({
         {runStatus === "running" && (
           <div style={{ marginTop: 16 }}>
             <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
-              Running test sets: Golden Set → Benchmark Set → Full Set...
+              Running test sets: Golden Case → Benchmark Case → Original Source Case...
             </Text>
             <Progress
               percent={progress}
@@ -1424,7 +1424,7 @@ export function RegressionTest({
                               const passRate = r.passRate
                               const cases = buildSuiteCases(r.agentId, type, passRate, sharedGoldenCases, histAgentStep)
                               const passed = cases.filter(c => c.correct).length
-                              const label = type === "golden" ? "Golden Set" : type === "benchmark" ? "Benchmark Set" : "Full Set"
+                              const label = type === "golden" ? "Golden Case" : type === "benchmark" ? "Benchmark Case" : "Original Source Case"
                               return { type, label, total: cases.length, passed, failed: cases.length - passed, cases }
                             })
                             console.log("[v0] builtSuites:", builtSuites)
