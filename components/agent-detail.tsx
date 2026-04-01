@@ -149,12 +149,11 @@ function CreateVersionModal({ open, onClose, onConfirm, availableVersions }: { o
 }
 
 // Version Management (Right Panel)
-function VersionManagement({ agentId, passedAgentIds, onViewConfig, selectedVersion }: { agentId: string; passedAgentIds: string[]; onViewConfig: (version: string) => void; selectedVersion: string }) {
+function VersionManagement({ agentId, passedAgentIds, onViewConfig, selectedVersion, versions, setVersions }: { agentId: string; passedAgentIds: string[]; onViewConfig: (version: string) => void; selectedVersion: string; versions: typeof agentDetailData.versions.all; setVersions: React.Dispatch<React.SetStateAction<typeof agentDetailData.versions.all>> }) {
   const { role } = useRole()
   const isOps = role === "AI_OPS"
   const [historyOpen, setHistoryOpen] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [versions, setVersions] = useState(agentDetailData.versions.all)
   const [msgApi, msgContextHolder] = message.useMessage()
   const [releaseModalOpen, setReleaseModalOpen] = useState(false)
   const [releaseWarningOpen, setReleaseWarningOpen] = useState(false)
@@ -361,6 +360,9 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   const [selectedVersion, setSelectedVersion] = useState("v1.3.0")
   const [versionConfigs, setVersionConfigs] = useState(initialVersionConfigs)
 
+  // Track all versions (including dynamically created ones)
+  const [versions, setVersions] = useState(agentDetailData.versions.all)
+
   // Prompt list item type
   interface PromptItem { id: string; name: string; content: string }
   const defaultPrompts: PromptItem[] = [
@@ -381,11 +383,11 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   const prompts = promptMap[selectedVersion] ?? defaultPrompts
 
   // Is the currently viewed version in TESTING state?
-  const isTesting = agentDetailData.versions.all.find(v => v.version === selectedVersion)?.state === "TESTING"
+  const isTesting = versions.find(v => v.version === selectedVersion)?.state === "TESTING"
 
   const getVersionBanner = () => {
-    const versionInfo = agentDetailData.versions.all.find(v => v.version === selectedVersion)
-    if (!versionInfo) return { color: "#bfbfbf", label: "Viewing: " + selectedVersion }
+    const versionInfo = versions.find(v => v.version === selectedVersion)
+    if (!versionInfo) return { color: "#faad14", label: "Viewing: " + selectedVersion + " (TESTING)" }
     const stateColors: Record<string, string> = {
       LIVE: "#52c41a",
       TESTING: "#faad14",
@@ -603,7 +605,7 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
         {/* Right column: Version Management */}
         <div style={{ flex: "0 0 38%", minWidth: 0 }}>
           <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px", position: "sticky", top: 16 }}>
-            <VersionManagement agentId={agentId} passedAgentIds={passedAgentIds} onViewConfig={(v) => { setSelectedVersion(v); setEditingSection(null) }} selectedVersion={selectedVersion} />
+            <VersionManagement agentId={agentId} passedAgentIds={passedAgentIds} onViewConfig={(v) => { setSelectedVersion(v); setEditingSection(null) }} selectedVersion={selectedVersion} versions={versions} setVersions={setVersions} />
           </div>
         </div>
       </div>
