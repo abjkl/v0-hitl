@@ -75,7 +75,7 @@ const EXPANDED_DEFAULTS: Record<string, CaseExpanded> = {
   },
   "CASE-003": {
     INVOICE_REVIEW: { golden: false, patterns: ["gst-calculation-error"],           status: "Pass" },
-    MATCH:          { golden: false, patterns: [],                                  status: "NA" },
+    MATCH:          { golden: false, patterns: [],                                  status: "Matched" },
     AP_VOUCHER:     { golden: false, patterns: ["gl-account-wrong"],               status: "Submit to EBS" },
   },
 }
@@ -83,8 +83,8 @@ const EXPANDED_DEFAULTS: Record<string, CaseExpanded> = {
 function getDefaultExpanded(caseId: string): CaseExpanded {
   return EXPANDED_DEFAULTS[caseId] ?? {
     INVOICE_REVIEW: { golden: false, patterns: [], status: "Pass" },
-    MATCH:          { golden: false, patterns: [], status: "NA" },
-    AP_VOUCHER:     { golden: false, patterns: [], status: "NA" },
+    MATCH:          { golden: false, patterns: [], status: "Matched" },
+    AP_VOUCHER:     { golden: false, patterns: [], status: "Submit to EBS" },
   }
 }
 
@@ -150,6 +150,7 @@ function EditStepModal({
   caseId,
   step,
   state,
+  invoiceReviewStatus,
   onCancel,
   onSave,
 }: {
@@ -157,6 +158,7 @@ function EditStepModal({
   caseId: string
   step: Step
   state: InvoiceReviewState | MatchState | APVoucherState
+  invoiceReviewStatus: InvoiceReviewStatus
   onCancel: () => void
   onSave: (next: InvoiceReviewState | MatchState | APVoucherState) => void
 }) {
@@ -166,6 +168,23 @@ function EditStepModal({
     form.validateFields().then((vals) => {
       onSave({ golden: vals.golden, patterns: vals.patterns ?? [], status: vals.status })
     })
+  }
+
+  // When Invoice Review is Pass, Match and AP Voucher cannot be NA
+  function getStatusOptions() {
+    if (step === "INVOICE_REVIEW") {
+      return STATUS_OPTIONS_BY_STEP.INVOICE_REVIEW
+    }
+    if (invoiceReviewStatus === "Pass") {
+      // Remove NA option when Invoice Review is Pass
+      if (step === "MATCH") {
+        return [{ value: "Matched", label: "Matched" }]
+      }
+      if (step === "AP_VOUCHER") {
+        return [{ value: "Submit to EBS", label: "Submit to EBS" }]
+      }
+    }
+    return STATUS_OPTIONS_BY_STEP[step]
   }
 
   return (
@@ -187,7 +206,7 @@ function EditStepModal({
       >
         <Form.Item name="status" label="Status">
           <Select
-            options={STATUS_OPTIONS_BY_STEP[step]}
+            options={getStatusOptions()}
             style={{ width: "100%" }}
           />
         </Form.Item>
@@ -291,6 +310,7 @@ function ExpandedRow({
           caseId={record.caseId}
           step={editStep}
           state={expanded[editStep]}
+          invoiceReviewStatus={expanded.INVOICE_REVIEW.status}
           onCancel={() => setEditStep(null)}
           onSave={(next) => { onEdit(editStep, next); setEditStep(null) }}
         />
