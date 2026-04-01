@@ -304,37 +304,56 @@ interface PRRunRecord {
   correct: boolean
   confidence: number
   latencyMs: number
+  // Version snapshot data
+  snapshot: {
+    agentPlatform: string
+    hashId: string
+    hashKey: string
+    agentLink: string
+    prompts: Array<{ name: string; content: string }>
+  }
+}
+
+const defaultSnapshot = {
+  agentPlatform: "Smart",
+  hashId: "HASH-A1B2C3D4",
+  hashKey: "sk-hash-xK8mN2pQrT5vW9zA",
+  agentLink: "https://agent.internal.shopee.com/invoice-review",
+  prompts: [
+    { name: "INVOICE_DOCUMENT_TITLE_CHECKER_PROMPT", content: "You are an invoice validation assistant. Check if the document title matches expected invoice format..." },
+    { name: "INVOICE_KEY_INFO_CHECK_PROMPT", content: "Validate the following key information in the invoice: supplier name, invoice number, amount, date..." },
+  ],
 }
 
 const PR_RUN_HISTORY: Record<string, Record<AgentStep, PRRunRecord[]>> = {
   "PR-2025-0041": {
     INVOICE_REVIEW: [
-      { runId: "RUN-2043", runAt: "2025-03-20 11:30", version: "v1.4.0-beta", agentName: "Invoice Review Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.95, latencyMs: 312 },
-      { runId: "RUN-2038", runAt: "2025-03-19 16:15", version: "v1.3.0", agentName: "Invoice Review Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.92, latencyMs: 287 },
-      { runId: "RUN-2031", runAt: "2025-03-12 10:05", version: "v1.3.0", agentName: "Invoice Review Agent", groundTruth: "Pass", aiResult: "Fail", correct: false, confidence: 0.61, latencyMs: 445 },
+      { runId: "RUN-2043", runAt: "2025-03-20 11:30", version: "v1.4.0-beta", agentName: "Invoice Review Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.95, latencyMs: 312, snapshot: { ...defaultSnapshot, agentPlatform: "Claude", hashId: "HASH-E5F6G7H8" } },
+      { runId: "RUN-2038", runAt: "2025-03-19 16:15", version: "v1.3.0", agentName: "Invoice Review Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.92, latencyMs: 287, snapshot: defaultSnapshot },
+      { runId: "RUN-2031", runAt: "2025-03-12 10:05", version: "v1.3.0", agentName: "Invoice Review Agent", groundTruth: "Pass", aiResult: "Fail", correct: false, confidence: 0.61, latencyMs: 445, snapshot: defaultSnapshot },
     ],
     MATCH: [
-      { runId: "RUN-2044", runAt: "2025-03-21 09:00", version: "v1.2.0", agentName: "PO Matching Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.88, latencyMs: 256 },
-      { runId: "RUN-2039", runAt: "2025-03-19 14:20", version: "v1.2.0", agentName: "PO Matching Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.91, latencyMs: 234 },
+      { runId: "RUN-2044", runAt: "2025-03-21 09:00", version: "v1.2.0", agentName: "PO Matching Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.88, latencyMs: 256, snapshot: { ...defaultSnapshot, agentLink: "https://agent.internal.shopee.com/po-match" } },
+      { runId: "RUN-2039", runAt: "2025-03-19 14:20", version: "v1.2.0", agentName: "PO Matching Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.91, latencyMs: 234, snapshot: { ...defaultSnapshot, agentLink: "https://agent.internal.shopee.com/po-match" } },
     ],
     AP_VOUCHER: [
-      { runId: "RUN-2045", runAt: "2025-03-22 08:30", version: "v1.1.0", agentName: "AP Voucher Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.93, latencyMs: 198 },
+      { runId: "RUN-2045", runAt: "2025-03-22 08:30", version: "v1.1.0", agentName: "AP Voucher Agent", groundTruth: "Pass", aiResult: "Pass", correct: true, confidence: 0.93, latencyMs: 198, snapshot: { ...defaultSnapshot, agentLink: "https://agent.internal.shopee.com/ap-voucher" } },
     ],
   },
   "PR-2025-0042": {
     INVOICE_REVIEW: [
-      { runId: "RUN-2042", runAt: "2025-03-21 09:10", version: "v1.5.0-beta", agentName: "Invoice Review Agent", groundTruth: "Fail", aiResult: "Fail", correct: true, confidence: 0.91, latencyMs: 298 },
-      { runId: "RUN-2035", runAt: "2025-03-15 13:00", version: "v1.3.0", agentName: "Invoice Review Agent", groundTruth: "Fail", aiResult: "Pass", correct: false, confidence: 0.58, latencyMs: 412 },
+      { runId: "RUN-2042", runAt: "2025-03-21 09:10", version: "v1.5.0-beta", agentName: "Invoice Review Agent", groundTruth: "Fail", aiResult: "Fail", correct: true, confidence: 0.91, latencyMs: 298, snapshot: { ...defaultSnapshot, agentPlatform: "GPT", hashId: "HASH-I9J0K1L2" } },
+      { runId: "RUN-2035", runAt: "2025-03-15 13:00", version: "v1.3.0", agentName: "Invoice Review Agent", groundTruth: "Fail", aiResult: "Pass", correct: false, confidence: 0.58, latencyMs: 412, snapshot: defaultSnapshot },
     ],
     MATCH: [],
     AP_VOUCHER: [],
   },
   "PR-2025-0043": {
     INVOICE_REVIEW: [
-      { runId: "RUN-2040", runAt: "2025-03-20 14:30", version: "v1.4.0-beta", agentName: "Invoice Review Agent", groundTruth: "Fail", aiResult: "Pass", correct: false, confidence: 0.61, latencyMs: 445 },
+      { runId: "RUN-2040", runAt: "2025-03-20 14:30", version: "v1.4.0-beta", agentName: "Invoice Review Agent", groundTruth: "Fail", aiResult: "Pass", correct: false, confidence: 0.61, latencyMs: 445, snapshot: { ...defaultSnapshot, agentPlatform: "Claude" } },
     ],
     MATCH: [
-      { runId: "RUN-2041", runAt: "2025-03-20 15:00", version: "v1.3.0-beta", agentName: "PO Matching Agent", groundTruth: "Fail", aiResult: "Fail", correct: true, confidence: 0.85, latencyMs: 267 },
+      { runId: "RUN-2041", runAt: "2025-03-20 15:00", version: "v1.3.0-beta", agentName: "PO Matching Agent", groundTruth: "Fail", aiResult: "Fail", correct: true, confidence: 0.85, latencyMs: 267, snapshot: { ...defaultSnapshot, agentLink: "https://agent.internal.shopee.com/po-match" } },
     ],
     AP_VOUCHER: [],
   },
@@ -885,6 +904,7 @@ function PRRecordPanel() {
   const [prNumber, setPrNumber] = useState("PR-2025-0041")
   const [selectedStep, setSelectedStep] = useState<AgentStep>("INVOICE_REVIEW")
   const [searchedPR, setSearchedPR] = useState<string | null>("PR-2025-0041")
+  const [snapshotRecord, setSnapshotRecord] = useState<PRRunRecord | null>(null)
 
   const stepOptions: { value: AgentStep; label: string }[] = [
     { value: "INVOICE_REVIEW", label: "Invoice Review" },
@@ -970,6 +990,16 @@ function PRRecordPanel() {
       width: 100,
       render: (val) => <Text type="secondary" style={{ fontSize: 12 }}>{val}ms</Text>,
     },
+    {
+      title: "Version Snapshot",
+      key: "snapshot",
+      width: 130,
+      render: (_, record) => (
+        <Typography.Link style={{ fontSize: 12 }} onClick={() => setSnapshotRecord(record)}>
+          View Snapshot
+        </Typography.Link>
+      ),
+    },
   ]
 
   return (
@@ -1042,6 +1072,64 @@ function PRRecordPanel() {
           </>
         )}
       </div>
+
+      {/* Version Snapshot Modal */}
+      <Modal
+        open={!!snapshotRecord}
+        onCancel={() => setSnapshotRecord(null)}
+        title={
+          <Space>
+            <Text strong>Version Snapshot</Text>
+            {snapshotRecord && <Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{snapshotRecord.version}</Tag>}
+          </Space>
+        }
+        footer={<Button onClick={() => setSnapshotRecord(null)}>Close</Button>}
+        width={680}
+      >
+        {snapshotRecord && (
+          <div style={{ marginTop: 8 }}>
+            {/* Run Info */}
+            <div style={{ display: "flex", gap: 24, marginBottom: 20, padding: "12px 16px", background: "#fafafa", borderRadius: 6, border: "1px solid #f0f0f0" }}>
+              <div>
+                <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Run ID</Text>
+                <Text code style={{ fontSize: 12 }}>{snapshotRecord.runId}</Text>
+              </div>
+              <div>
+                <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Run Time</Text>
+                <Text style={{ fontSize: 12 }}>{snapshotRecord.runAt}</Text>
+              </div>
+              <div>
+                <Text type="secondary" style={{ fontSize: 12, display: "block" }}>Agent</Text>
+                <Text style={{ fontSize: 12 }}>{snapshotRecord.agentName}</Text>
+              </div>
+            </div>
+
+            {/* Platform Integration Info */}
+            <Title level={5} style={{ marginBottom: 12 }}>Platform Integration Info</Title>
+            <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse", marginBottom: 20 }}>
+              <tbody>
+                <tr><td style={{ padding: "6px 0", color: "#8c8c8c", width: 140 }}>Agent Platform</td><td>{snapshotRecord.snapshot.agentPlatform}</td></tr>
+                <tr><td style={{ padding: "6px 0", color: "#8c8c8c" }}>Hash ID</td><td><Text code style={{ fontSize: 12 }}>{snapshotRecord.snapshot.hashId}</Text></td></tr>
+                <tr><td style={{ padding: "6px 0", color: "#8c8c8c" }}>Hash Key</td><td><Text code style={{ fontSize: 12 }}>••••••••••••••••</Text></td></tr>
+                <tr><td style={{ padding: "6px 0", color: "#8c8c8c" }}>Agent Link</td><td style={{ wordBreak: "break-all", fontSize: 12 }}>{snapshotRecord.snapshot.agentLink}</td></tr>
+              </tbody>
+            </table>
+
+            {/* Prompt Config */}
+            <Title level={5} style={{ marginBottom: 12 }}>Prompt Config</Title>
+            {snapshotRecord.snapshot.prompts.map((p, idx) => (
+              <div key={idx} style={{ marginBottom: 12 }}>
+                <Text style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", display: "block", marginBottom: 6, fontWeight: 500 }}>
+                  #{idx + 1}{"  "}{p.name}
+                </Text>
+                <pre style={{ background: "#f5f5f5", border: "1px solid #e8e8e8", borderRadius: 4, padding: "10px 12px", fontSize: 12, lineHeight: 1.5, whiteSpace: "pre-wrap", fontFamily: "monospace", color: "#262626", margin: 0 }}>
+                  {p.content}
+                </pre>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
