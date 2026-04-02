@@ -7,7 +7,7 @@ import {
 } from "antd"
 import {
   SearchOutlined, FilterOutlined, EyeOutlined,
-  CheckOutlined, CloseOutlined, ExclamationCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -20,7 +20,9 @@ const { Text, Title } = Typography
 // ── Status Badge ──────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: FeedbackStatus }) {
-  if (status === "Pending") return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Pending</span>} />
+  if (status === "Pending") return <Badge status="default" text={<span style={{ fontSize: 13 }}>Pending</span>} />
+  if (status === "Running") return <Badge status="processing" text={<span style={{ fontSize: 13 }}>Running</span>} />
+  if (status === "Suggestion Ready") return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Suggestion Ready</span>} />
   if (status === "Accepted") return <Badge status="success" text={<span style={{ fontSize: 13 }}>Accepted</span>} />
   if (status === "Rejected") return <Badge status="error" text={<span style={{ fontSize: 13 }}>Rejected</span>} />
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
@@ -126,7 +128,6 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [data, setData] = useState<FeedbackItem[]>(feedbackData)
-  const [msgApi, contextHolder] = message.useMessage()
 
   // Filter data
   const filtered = useMemo(() => {
@@ -150,12 +151,14 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
 
   // Count pending items
   const pendingCount = useMemo(() => {
-    return data.filter(item => item.status === "Pending").length
+    return data.filter(item => item.status === "Suggestion Ready").length
   }, [data])
 
   const stepOptions = uniqueOptions(data.map((r) => r.step))
   const statusOptions: { label: string; value: FeedbackStatus }[] = [
     { label: "Pending", value: "Pending" },
+    { label: "Running", value: "Running" },
+    { label: "Suggestion Ready", value: "Suggestion Ready" },
     { label: "Accepted", value: "Accepted" },
     { label: "Rejected", value: "Rejected" },
   ]
@@ -169,32 +172,13 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
 
   const hasFilters = !!(search || stepFilter || statusFilter)
 
-  // Handle individual accept/reject
-  function handleAccept(record: FeedbackItem) {
-    setData(prev => prev.map(item => 
-      item.key === record.key 
-        ? { ...item, status: "Accepted" as FeedbackStatus, updatedAt: new Date().toISOString().slice(0, 16).replace("T", " ") }
-        : item
-    ))
-    msgApi.success(`Feedback ${record.feedbackId} accepted`)
-  }
-
-  function handleReject(record: FeedbackItem) {
-    setData(prev => prev.map(item => 
-      item.key === record.key 
-        ? { ...item, status: "Rejected" as FeedbackStatus, updatedAt: new Date().toISOString().slice(0, 16).replace("T", " ") }
-        : item
-    ))
-    msgApi.success(`Feedback ${record.feedbackId} rejected`)
-  }
-
   // Handle batch confirmation
   function handleBatchConfirm() {
     setConfirmModalOpen(false)
-    // Navigate to first pending item's run detail
-    const firstPending = selectedItems.find(item => item.status === "Pending")
-    if (firstPending) {
-      onViewRunDetail(firstPending.agentBRunId)
+    // Navigate to first "Suggestion Ready" item's run detail
+    const firstReady = selectedItems.find(item => item.status === "Suggestion Ready")
+    if (firstReady) {
+      onViewRunDetail(firstReady.agentBRunId)
     }
   }
 
@@ -268,10 +252,11 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
     {
       title: "Actions",
       key: "actions",
-      width: 160,
+      width: 100,
       fixed: "right",
-      render: (_: unknown, record: FeedbackItem) => (
-        <Space size={4}>
+      render: (_: unknown, record: FeedbackItem) => {
+        const showView = ["Suggestion Ready", "Accepted", "Rejected"].includes(record.status)
+        return showView ? (
           <Tooltip title="View Agent B Run">
             <Button
               type="text"
@@ -281,30 +266,8 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
               style={{ color: "#1890ff" }}
             />
           </Tooltip>
-          {record.status === "Pending" && (
-            <>
-              <Tooltip title="Accept">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CheckOutlined />}
-                  onClick={() => handleAccept(record)}
-                  style={{ color: "#52c41a" }}
-                />
-              </Tooltip>
-              <Tooltip title="Reject">
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CloseOutlined />}
-                  onClick={() => handleReject(record)}
-                  style={{ color: "#ff4d4f" }}
-                />
-              </Tooltip>
-            </>
-          )}
-        </Space>
-      ),
+        ) : null
+      },
     },
   ]
 
@@ -313,14 +276,12 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
     selectedRowKeys,
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
     getCheckboxProps: (record: FeedbackItem) => ({
-      disabled: record.status !== "Pending",
+      disabled: record.status !== "Suggestion Ready",
     }),
   }
 
   return (
     <div>
-      {contextHolder}
-      
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
