@@ -98,13 +98,14 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | null>(null)
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
-  const [activeStep, setActiveStep] = useState<FeedbackStep | null>(null)
   const [data, setData] = useState<FeedbackItem[]>(feedbackData)
 
   // Get all unique steps for tabs
   const allSteps = useMemo(() => {
     return [...new Set(data.map(r => r.step))] as FeedbackStep[]
   }, [data])
+
+  const [activeStep, setActiveStep] = useState<FeedbackStep | null>(() => allSteps[0] || null)
 
   // Filter data
   const filtered = useMemo(() => {
@@ -115,7 +116,7 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
         r.caseId.toLowerCase().includes(q) ||
         r.invoiceNo.toLowerCase().includes(q) ||
         r.supplierName.toLowerCase().includes(q)
-      const matchStep = !activeStep || r.step === activeStep
+      const matchStep = r.step === activeStep
       const matchStatus = !statusFilter || r.status === statusFilter
       return matchSearch && matchStep && matchStatus
     })
@@ -294,18 +295,12 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
       {/* Tabs for Steps */}
       <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #f0f0f0", overflow: "hidden" }}>
         <Tabs
-          activeKey={activeStep || "all"}
-          onChange={(key) => setActiveStep(key === "all" ? null : (key as FeedbackStep))}
-          items={[
-            {
-              key: "all",
-              label: `All (${data.length})`,
-            },
-            ...allSteps.map(step => ({
-              key: step,
-              label: `${step} (${stepCounts[step]})`,
-            })),
-          ]}
+          activeKey={activeStep || ""}
+          onChange={(key) => setActiveStep(key as FeedbackStep)}
+          items={allSteps.map(step => ({
+            key: step,
+            label: `${step} (${stepCounts[step]})`,
+          }))}
           style={{ padding: 16 }}
         />
 
