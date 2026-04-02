@@ -11,7 +11,7 @@ import {
 import type { ColumnsType } from "antd/es/table"
 import {
   suggestionRunData,
-  type SuggestionRun, type SuggestionRunStatus, type FeedbackStep,
+  type SuggestionRun, type SuggestionRunStatus,
 } from "@/lib/mock-data"
 
 const { Text, Title } = Typography
@@ -27,31 +27,6 @@ function StatusBadge({ status }: { status: SuggestionRunStatus }) {
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
 }
 
-// ── Step Tag ──────────────────────────────────────────────────────
-
-const STEP_COLORS: Record<FeedbackStep, { bg: string; border: string; text: string }> = {
-  INVOICE_REVIEW: { bg: "#e6f4ff", border: "#91caff", text: "#0958d9" },
-  MATCH: { bg: "#f9f0ff", border: "#d3adf7", text: "#7c3aed" },
-  AP_VOUCHER: { bg: "#fff7e6", border: "#ffd591", text: "#c05621" },
-}
-
-function StepTag({ step }: { step: FeedbackStep }) {
-  const colors = STEP_COLORS[step]
-  return (
-    <span style={{
-      background: colors.bg,
-      border: `1px solid ${colors.border}`,
-      color: colors.text,
-      fontSize: 11,
-      fontWeight: 500,
-      padding: "2px 8px",
-      borderRadius: 4,
-    }}>
-      {step}
-    </span>
-  )
-}
-
 // ── Main Component ────────────────────────────────────────────────
 
 interface FeedbackSuggestionListProps {
@@ -61,8 +36,6 @@ interface FeedbackSuggestionListProps {
 export function FeedbackSuggestionList({ onViewRunDetail }: FeedbackSuggestionListProps) {
   const [search, setSearch] = useState("")
   const [dateRange, setDateRange] = useState<[Date | null, Date | null] | null>(null)
-  const [agentFilter, setAgentFilter] = useState<string | null>(null)
-  const [stepFilter, setStepFilter] = useState<FeedbackStep | null>(null)
   const [statusFilter, setStatusFilter] = useState<SuggestionRunStatus | null>(null)
   const [data, setData] = useState<SuggestionRun[]>(suggestionRunData)
   const [msgApi, contextHolder] = message.useMessage()
@@ -71,36 +44,21 @@ export function FeedbackSuggestionList({ onViewRunDetail }: FeedbackSuggestionLi
   const filtered = useMemo(() => {
     return data.filter((r) => {
       const q = search.toLowerCase()
-      const matchSearch = !q || r.runId.toLowerCase().includes(q)
-      const matchAgent = !agentFilter || r.agent === agentFilter
-      const matchStep = !stepFilter || r.step === stepFilter
+      const matchSearch = !q || r.runId.toLowerCase().includes(q) || r.triggeredBy.toLowerCase().includes(q)
       const matchStatus = !statusFilter || r.status === statusFilter
       
       let matchDate = true
       if (dateRange && dateRange[0] && dateRange[1]) {
         const [startDate, endDate] = dateRange
         const runDate = new Date(r.triggeredAt)
-        // Set end date to end of day for comparison
         const endDateWithTime = new Date(endDate)
         endDateWithTime.setHours(23, 59, 59, 999)
         matchDate = runDate >= startDate && runDate <= endDateWithTime
       }
       
-      return matchSearch && matchAgent && matchStep && matchStatus && matchDate
+      return matchSearch && matchStatus && matchDate
     })
-  }, [data, search, dateRange, agentFilter, stepFilter, statusFilter])
-
-  // Get unique agents
-  const agentOptions = useMemo(() => {
-    const agents = [...new Set(data.map(r => r.agent))]
-    return agents.map(a => ({ label: a, value: a }))
-  }, [data])
-
-  const stepOptions: { label: string; value: FeedbackStep }[] = [
-    { label: "INVOICE_REVIEW", value: "INVOICE_REVIEW" },
-    { label: "MATCH", value: "MATCH" },
-    { label: "AP_VOUCHER", value: "AP_VOUCHER" },
-  ]
+  }, [data, search, dateRange, statusFilter])
 
   const statusOptions: { label: string; value: SuggestionRunStatus }[] = [
     { label: "Pending Review", value: "Pending Review" },
@@ -113,12 +71,10 @@ export function FeedbackSuggestionList({ onViewRunDetail }: FeedbackSuggestionLi
   function clearFilters() {
     setSearch("")
     setDateRange(null)
-    setAgentFilter(null)
-    setStepFilter(null)
     setStatusFilter(null)
   }
 
-  const hasFilters = !!(search || dateRange || agentFilter || stepFilter || statusFilter)
+  const hasFilters = !!(search || dateRange || statusFilter)
 
   // Handle Accept
   function handleAccept(record: SuggestionRun) {
@@ -146,36 +102,37 @@ export function FeedbackSuggestionList({ onViewRunDetail }: FeedbackSuggestionLi
       title: "Run ID",
       dataIndex: "runId",
       key: "runId",
-      width: 120,
+      width: 130,
       render: (text: string) => <Text code style={{ fontSize: 12 }}>{text}</Text>,
     },
     {
       title: "Triggered At",
       dataIndex: "triggeredAt",
       key: "triggeredAt",
-      width: 150,
+      width: 160,
       sorter: (a, b) => new Date(a.triggeredAt).getTime() - new Date(b.triggeredAt).getTime(),
       render: (text: string) => <Text style={{ fontSize: 13 }}>{text}</Text>,
     },
     {
-      title: "Agent",
-      dataIndex: "agent",
-      key: "agent",
-      width: 140,
+      title: "Triggered By",
+      dataIndex: "triggeredBy",
+      key: "triggeredBy",
+      width: 120,
       render: (text: string) => <Text style={{ fontSize: 13 }}>{text}</Text>,
     },
     {
-      title: "Step",
-      dataIndex: "step",
-      key: "step",
-      width: 140,
-      render: (step: FeedbackStep) => <StepTag step={step} />,
+      title: "Agents",
+      dataIndex: "agentCount",
+      key: "agentCount",
+      width: 80,
+      align: "center",
+      render: (count: number) => <Text style={{ fontSize: 13 }}>{count}</Text>,
     },
     {
-      title: "Cases",
-      dataIndex: "caseCount",
-      key: "caseCount",
-      width: 80,
+      title: "Feedback",
+      dataIndex: "feedbackCount",
+      key: "feedbackCount",
+      width: 90,
       align: "center",
       render: (count: number) => <Text style={{ fontSize: 13 }}>{count}</Text>,
     },
@@ -274,11 +231,11 @@ export function FeedbackSuggestionList({ onViewRunDetail }: FeedbackSuggestionLi
       <div style={{ background: "#fff", padding: 16, borderRadius: 6, marginBottom: 16, border: "1px solid #f0f0f0" }}>
         <Space wrap size={12}>
           <Input
-            placeholder="Search Run ID..."
+            placeholder="Search Run ID or Triggered By..."
             prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: 180 }}
+            style={{ width: 240 }}
             allowClear
           />
           <RangePicker
@@ -286,22 +243,6 @@ export function FeedbackSuggestionList({ onViewRunDetail }: FeedbackSuggestionLi
             onChange={(dates) => setDateRange(dates)}
             style={{ width: 240 }}
             placeholder={["Start Date", "End Date"]}
-          />
-          <Select
-            placeholder="Agent"
-            value={agentFilter}
-            onChange={setAgentFilter}
-            options={agentOptions}
-            style={{ width: 160 }}
-            allowClear
-          />
-          <Select
-            placeholder="Step"
-            value={stepFilter}
-            onChange={setStepFilter}
-            options={stepOptions}
-            style={{ width: 150 }}
-            allowClear
           />
           <Select
             placeholder="Status"

@@ -713,7 +713,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Suggestion Ready',
-    agentBRunId: 'RUN-B-001',
+    agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Update ground truth from Pass to Fail due to amount mismatch',
     createdAt: '2025-03-20 10:30',
     updatedAt: '2025-03-20 10:30',
@@ -728,7 +728,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Pending',
-    agentBRunId: 'RUN-B-001',
+    agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Add pattern "duplicate-invoice" to detection list',
     createdAt: '2025-03-20 10:32',
     updatedAt: '2025-03-20 10:32',
@@ -743,7 +743,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Accepted',
-    agentBRunId: 'RUN-B-002',
+    agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Update match status from N/A to Matched after PO data correction',
     createdAt: '2025-03-19 14:20',
     updatedAt: '2025-03-19 16:45',
@@ -758,7 +758,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Rejected',
-    agentBRunId: 'RUN-B-002',
+    agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Remove pattern "line-item-qty-mismatch" - false positive',
     createdAt: '2025-03-19 14:25',
     updatedAt: '2025-03-19 17:10',
@@ -773,7 +773,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Suggestion Ready',
-    agentBRunId: 'RUN-B-003',
+    agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Update GL account mapping from 5100 to 5200',
     createdAt: '2025-03-21 09:15',
     updatedAt: '2025-03-21 09:15',
@@ -788,7 +788,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Running',
-    agentBRunId: 'RUN-B-003',
+    agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Change cost center from CC-1001 to CC-1002',
     createdAt: '2025-03-21 09:20',
     updatedAt: '2025-03-21 09:20',
@@ -803,7 +803,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Pending',
-    agentBRunId: 'RUN-B-004',
+    agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Add pattern "header-check" based on missing vendor code',
     createdAt: '2025-03-22 11:00',
     updatedAt: '2025-03-22 11:00',
@@ -818,7 +818,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Accepted',
-    agentBRunId: 'RUN-B-004',
+    agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Confirm amount mismatch pattern - tolerance exceeded by 5%',
     createdAt: '2025-03-22 11:05',
     updatedAt: '2025-03-22 14:30',
@@ -833,7 +833,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Suggestion Ready',
-    agentBRunId: 'RUN-B-005',
+    agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Flag unit price discrepancy - USD to SGD conversion error',
     createdAt: '2025-03-23 08:45',
     updatedAt: '2025-03-23 08:45',
@@ -848,7 +848,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Rejected',
-    agentBRunId: 'RUN-B-005',
+    agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Remove GST calculation error flag - tax rate is correct',
     createdAt: '2025-03-23 08:50',
     updatedAt: '2025-03-23 10:15',
@@ -863,7 +863,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Suggestion Ready',
-    agentBRunId: 'RUN-B-006',
+    agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Update three-way match status - GR confirmed',
     createdAt: '2025-03-24 15:30',
     updatedAt: '2025-03-24 15:30',
@@ -878,7 +878,7 @@ export const feedbackData: FeedbackItem[] = [
     region: 'SEA',
     entity: 'SG',
     status: 'Accepted',
-    agentBRunId: 'RUN-B-006',
+    agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Correct GL account from 4100 to 4200 for consulting services',
     createdAt: '2025-03-24 15:35',
     updatedAt: '2025-03-24 17:00',
@@ -1007,11 +1007,11 @@ export type SuggestionRunStatus = 'Pending Review' | 'Accepted' | 'Rejected' | '
 
 export interface SuggestionRun {
   key: string
-  runId: string
+  runId: string           // Overview Run ID (e.g. RUN-OV-001)
   triggeredAt: string
-  agent: string
-  step: FeedbackStep
-  caseCount: number
+  triggeredBy: string
+  agentCount: number
+  feedbackCount: number
   suggestionCount: number
   status: SuggestionRunStatus
   acceptedCount: number
@@ -1022,11 +1022,11 @@ export interface SuggestionRun {
 export const suggestionRunData: SuggestionRun[] = [
   {
     key: 'run-1',
-    runId: 'RUN-B-001',
+    runId: 'RUN-OV-001',
     triggeredAt: '2025-03-20 10:28',
-    agent: 'Agent B v2.1.0',
-    step: 'INVOICE_REVIEW',
-    caseCount: 3,
+    triggeredBy: 'Li Wei',
+    agentCount: 2,
+    feedbackCount: 3,
     suggestionCount: 5,
     status: 'Pending Review',
     acceptedCount: 0,
@@ -1035,72 +1035,20 @@ export const suggestionRunData: SuggestionRun[] = [
   },
   {
     key: 'run-2',
-    runId: 'RUN-B-002',
+    runId: 'RUN-OV-002',
     triggeredAt: '2025-03-19 14:18',
-    agent: 'Agent B v2.1.0',
-    step: 'MATCH',
-    caseCount: 2,
+    triggeredBy: 'Zhang Min',
+    agentCount: 1,
+    feedbackCount: 2,
     suggestionCount: 4,
     status: 'Accepted',
     acceptedCount: 3,
     rejectedCount: 1,
     pendingCount: 0,
   },
-  {
-    key: 'run-3',
-    runId: 'RUN-B-003',
-    triggeredAt: '2025-03-21 09:12',
-    agent: 'Agent B v2.1.0',
-    step: 'AP_VOUCHER',
-    caseCount: 2,
-    suggestionCount: 4,
-    status: 'Pending Review',
-    acceptedCount: 1,
-    rejectedCount: 0,
-    pendingCount: 3,
-  },
-  {
-    key: 'run-4',
-    runId: 'RUN-B-004',
-    triggeredAt: '2025-03-22 10:58',
-    agent: 'Agent B v2.1.0',
-    step: 'INVOICE_REVIEW',
-    caseCount: 2,
-    suggestionCount: 3,
-    status: 'Rejected',
-    acceptedCount: 1,
-    rejectedCount: 2,
-    pendingCount: 0,
-  },
-  {
-    key: 'run-5',
-    runId: 'RUN-B-005',
-    triggeredAt: '2025-03-23 08:42',
-    agent: 'Agent B v2.1.0',
-    step: 'MATCH',
-    caseCount: 2,
-    suggestionCount: 3,
-    status: 'Running',
-    acceptedCount: 0,
-    rejectedCount: 0,
-    pendingCount: 3,
-  },
-  {
-    key: 'run-6',
-    runId: 'RUN-B-006',
-    triggeredAt: '2025-03-24 15:28',
-    agent: 'Agent B v2.1.0',
-    step: 'MATCH',
-    caseCount: 1,
-    suggestionCount: 2,
-    status: 'Pending Review',
-    acceptedCount: 1,
-    rejectedCount: 0,
-    pendingCount: 1,
-  },
 ]
 
-// ── Statistics ──────────────────────────────────────�����───────────────
+// ── Statistics ──────────────────────────────────────�������───────────────
 export type StatisticsStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 
 export interface DailyMetrics {
@@ -1187,8 +1135,8 @@ export interface AgentBRunOverview {
 }
 
 export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
-  'RUN-B-001': {
-    runId: 'RUN-B-001',
+  'RUN-OV-001': {
+    runId: 'RUN-OV-001',
     triggeredBy: 'Li Wei',
     triggeredAt: '2025-03-20 10:28',
     feedbackCount: 3,
@@ -1213,8 +1161,8 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
       },
     ],
   },
-  'RUN-B-002': {
-    runId: 'RUN-B-002',
+  'RUN-OV-002': {
+    runId: 'RUN-OV-002',
     triggeredBy: 'Zhang Min',
     triggeredAt: '2025-03-19 14:18',
     feedbackCount: 2,
@@ -1228,25 +1176,6 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
         status: 'Completed',
         feedbackCount: 2,
         suggestionCount: 4,
-        runDetailId: 'RUN-B-001',
-      },
-    ],
-  },
-  'RUN-B-003': {
-    runId: 'RUN-B-003',
-    triggeredBy: 'Wang Fang',
-    triggeredAt: '2025-03-21 09:12',
-    feedbackCount: 2,
-    agentCount: 1,
-    completedCount: 1,
-    overallStatus: 'Completed',
-    agentCards: [
-      {
-        agentName: 'AP Voucher Agent',
-        step: 'AP_VOUCHER',
-        status: 'Completed',
-        feedbackCount: 2,
-        suggestionCount: 3,
         runDetailId: 'RUN-B-001',
       },
     ],
