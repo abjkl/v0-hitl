@@ -430,6 +430,7 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   const [editingSection, setEditingSection] = useState<"basic" | "platform" | "prompt" | null>(null)
 
   // Draft states
+  const [draftBasic, setDraftBasic] = useState({ agentName: "", description: "" })
   const [draftPlatform, setDraftPlatform] = useState<VersionConfig>({ agentPlatform: "", hashId: "", hashKey: "", agentLink: "" })
   const [draftPrompts, setDraftPrompts] = useState<PromptItem[]>([])
 
@@ -458,6 +459,17 @@ export function AgentDetail({ agentId, passedAgentIds, onBack, onPublish: onPubl
   }
 
   const banner = getVersionBanner()
+
+  // ── Basic Info handlers ─────────────────────────────────────
+  function startEditBasic() {
+    setDraftBasic({ agentName: d.agentName, description: d.description })
+    setEditingSection("basic")
+  }
+  function saveBasic() {
+    // In a real app, persist to server. Here we just close editing.
+    setEditingSection(null)
+    msgApi.success("Basic Info saved")
+  }
 
   // ── Platform Integration handlers ───────────────────────────
   function startEditPlatform() {
@@ -542,24 +554,57 @@ ${type === "run" ? `[${new Date().toLocaleTimeString()}] Executing full workflow
         ) : null
       })()}
 
-      {/* ── Basic Info (full-width, always visible) ───────────────── */}
-      <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px", marginBottom: 16 }}>
-        <Title level={5} style={{ margin: "0 0 16px 0" }}>Basic Info</Title>
+      {/* ── Basic Info (full-width, always visible, editable) ────── */}
+      <SectionCard
+        title={<Text strong style={{ fontSize: 13 }}>Basic Info</Text>}
+        canEdit
+        editing={editingSection === "basic"}
+        onEdit={startEditBasic}
+        onSave={saveBasic}
+        onCancel={cancelEdit}
+      >
         <div style={{ display: "flex", gap: 32 }}>
-          <div style={{ flex: "0 0 30%" }}>
-            <ReadOnlyField label="AGENT NAME" value={d.agentName} />
+          {/* Agent Name */}
+          <div style={{ flex: "0 0 28%" }}>
+            <div style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", marginBottom: 6, fontWeight: 500 }}>AGENT NAME</div>
+            {editingSection === "basic" ? (
+              <Input
+                value={draftBasic.agentName}
+                onChange={e => setDraftBasic(p => ({ ...p, agentName: e.target.value }))}
+              />
+            ) : (
+              <Text style={{ fontSize: 14, color: "#262626" }}>{d.agentName}</Text>
+            )}
           </div>
+          {/* Description */}
           <div style={{ flex: 1 }}>
-            <ReadOnlyField label="DESCRIPTION" value={d.description} />
+            <div style={{ fontSize: 12, color: "#8c8c8c", textTransform: "uppercase", marginBottom: 6, fontWeight: 500 }}>DESCRIPTION</div>
+            {editingSection === "basic" ? (
+              <TextArea
+                value={draftBasic.description}
+                onChange={e => setDraftBasic(p => ({ ...p, description: e.target.value }))}
+                autoSize={{ minRows: 1, maxRows: 4 }}
+              />
+            ) : (
+              <Text style={{ fontSize: 14, color: "#262626" }}>{d.description}</Text>
+            )}
           </div>
+          {/* Flow — always read-only */}
           <div style={{ flex: "0 0 160px" }}>
-            <ReadOnlyField label="BELONGS TO FLOW" value={<Tag style={{ background: "#f0f5ff", borderColor: "#adc6ff", color: "#2f54eb", fontSize: 11 }}>{flowData.find((f) => f.id === d.flowId)?.name ?? d.flowId}</Tag>} />
+            <ReadOnlyField
+              label="BELONGS TO FLOW"
+              value={<Tag style={{ background: "#f0f5ff", borderColor: "#adc6ff", color: "#2f54eb", fontSize: 11 }}>{flowData.find((f) => f.id === d.flowId)?.name ?? d.flowId}</Tag>}
+            />
           </div>
+          {/* Step — always read-only */}
           <div style={{ flex: "0 0 160px" }}>
-            <ReadOnlyField label="BELONGS TO STEP" value={<Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{d.step}</Tag>} />
+            <ReadOnlyField
+              label="BELONGS TO STEP"
+              value={<Tag style={{ fontFamily: "monospace", fontSize: 11 }}>{d.step}</Tag>}
+            />
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         {/* Left column: Version-specific config */}
