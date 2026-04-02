@@ -1007,11 +1007,11 @@ export type SuggestionRunStatus = 'Pending Review' | 'Accepted' | 'Rejected' | '
 
 export interface SuggestionRun {
   key: string
-  runId: string           // Overview Run ID (e.g. RUN-OV-001)
+  runId: string           // Agent Run ID (e.g RUN-B-001)
   triggeredAt: string
-  triggeredBy: string
-  agentCount: number
-  feedbackCount: number
+  agentName: string
+  step: FeedbackStep
+  caseCount: number
   suggestionCount: number
   status: SuggestionRunStatus
   acceptedCount: number
@@ -1022,29 +1022,42 @@ export interface SuggestionRun {
 export const suggestionRunData: SuggestionRun[] = [
   {
     key: 'run-1',
-    runId: 'RUN-OV-001',
+    runId: 'RUN-B-001',
     triggeredAt: '2025-03-20 10:28',
-    triggeredBy: 'Li Wei',
-    agentCount: 2,
-    feedbackCount: 3,
-    suggestionCount: 5,
+    agentName: 'Invoice Format Check Agent',
+    step: 'INVOICE_REVIEW',
+    caseCount: 1,
+    suggestionCount: 2,
     status: 'Pending Review',
     acceptedCount: 0,
     rejectedCount: 0,
-    pendingCount: 5,
+    pendingCount: 2,
   },
   {
     key: 'run-2',
-    runId: 'RUN-OV-002',
+    runId: 'RUN-B-002',
     triggeredAt: '2025-03-19 14:18',
-    triggeredBy: 'Zhang Min',
-    agentCount: 1,
-    feedbackCount: 2,
-    suggestionCount: 4,
+    agentName: 'PO Match Agent',
+    step: 'MATCH',
+    caseCount: 1,
+    suggestionCount: 1,
     status: 'Accepted',
-    acceptedCount: 3,
-    rejectedCount: 1,
+    acceptedCount: 1,
+    rejectedCount: 0,
     pendingCount: 0,
+  },
+  {
+    key: 'run-3',
+    runId: 'RUN-B-003',
+    triggeredAt: '2025-03-21 09:12',
+    agentName: 'AP Voucher Agent',
+    step: 'AP_VOUCHER',
+    caseCount: 1,
+    suggestionCount: 1,
+    status: 'Pending Review',
+    acceptedCount: 0,
+    rejectedCount: 0,
+    pendingCount: 1,
   },
 ]
 
