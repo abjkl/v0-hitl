@@ -23,6 +23,7 @@ import { SystemArchitecture } from "@/components/system-architecture"
 import { PrdViewer } from "@/components/prd-viewer"
 import { FeedbackList } from "@/components/feedback-list"
 import { FeedbackSuggestionList } from "@/components/feedback-suggestion-list"
+import { AgentBRunDetail } from "@/components/agent-b-run-detail"
 import { Statistics } from "@/components/statistics"
 import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock } from "@/lib/mock-data"
 
