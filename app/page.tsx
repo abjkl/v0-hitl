@@ -24,6 +24,7 @@ import { PrdViewer } from "@/components/prd-viewer"
 import { FeedbackList } from "@/components/feedback-list"
 import { FeedbackSuggestionList } from "@/components/feedback-suggestion-list"
 import { AgentBRunDetail } from "@/components/agent-b-run-detail"
+import { AgentBRunOverview } from "@/components/agent-b-run-overview"
 import { Statistics } from "@/components/statistics"
 import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock } from "@/lib/mock-data"
 
@@ -45,6 +46,7 @@ type Page =
   | "prd"
   | "feedback-list"
   | "feedback-suggestion-list"
+  | "agent-b-run-overview"
   | "agent-b-run-detail"
   | "statistics"
 
@@ -63,7 +65,8 @@ const BREADCRUMBS: Record<Page, string[]> = {
   "prd":                     ["Documentation", "PRD"],
   "feedback-list":           ["Feedback Management", "Feedback List"],
   "feedback-suggestion-list":["Feedback Management", "Feedback Suggestion List"],
-  "agent-b-run-detail":      ["Feedback Management", "Feedback Suggestion List", "Run Detail"],
+  "agent-b-run-overview":    ["Feedback Management", "Feedback Suggestion List", "Run Overview"],
+  "agent-b-run-detail":      ["Feedback Management", "Feedback Suggestion List", "Run Overview", "Run Detail"],
   "statistics":              ["Statistics"],
 }
 
@@ -72,6 +75,7 @@ function AppShell() {
   const [selectedKey, setSelectedKey] = useState("knowledge-detail")
   const [openKeys, setOpenKeys] = useState<string[]>(["knowledge-base", "case-management-menu", "agent-management", "feedback-management-menu"])
   const [regressionAgentId, setRegressionAgentId] = useState<string | undefined>(undefined)
+  const [selectedAgentBRunOverviewId, setSelectedAgentBRunOverviewId] = useState<string | null>(null)
   const [selectedAgentBRunId, setSelectedAgentBRunId] = useState<string | null>(null)
   const [selectedCase, setSelectedCase] = useState<AuditCase | null>(null)
   const [agents, setAgents] = useState<Agent[]>(agentListData)
@@ -144,8 +148,13 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     setOpenKeys((prev) => prev.includes("feedback-management-menu") ? prev : [...prev, "feedback-management-menu"])
   }
 
-  function goToAgentBRunDetail(runId: string) {
-    setSelectedAgentBRunId(runId)
+  function goToAgentBRunOverview(runId: string) {
+    setSelectedAgentBRunOverviewId(runId)
+    setPage("agent-b-run-overview")
+  }
+
+  function goToAgentBRunDetail(runDetailId: string) {
+    setSelectedAgentBRunId(runDetailId)
     setPage("agent-b-run-detail")
   }
 
@@ -324,9 +333,10 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "system-architecture" && <SystemArchitecture />}
           {page === "prd"                     && <PrdViewer onNavigate={(p) => { setPage(p as Page); setSelectedKey(p); }} />}
           {page === "statistics"              && <Statistics />}
-          {page === "feedback-list"           && <FeedbackList onViewRunDetail={goToAgentBRunDetail} />}
-          {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
-          {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} />}
+          {page === "feedback-list"           && <FeedbackList onViewRunDetail={goToAgentBRunOverview} />}
+          {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunOverview} />}
+          {page === "agent-b-run-overview"    && selectedAgentBRunOverviewId && <AgentBRunOverview runId={selectedAgentBRunOverviewId} onBack={goToFeedbackSuggestionList} onViewSuggestions={goToAgentBRunDetail} />}
+          {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={() => { setPage("agent-b-run-overview"); }} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
         </Content>
       </Layout>
     </Layout>

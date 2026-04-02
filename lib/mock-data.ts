@@ -1100,7 +1100,7 @@ export const suggestionRunData: SuggestionRun[] = [
   },
 ]
 
-// ── Statistics ──────────────────────────────────────────────────────
+// ── Statistics ──────────────────────────────────────���───────────────
 export type StatisticsStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 
 export interface DailyMetrics {
@@ -1162,3 +1162,55 @@ export const statisticsData: StepStatistics[] = [
   { step: 'MATCH', dailyMetrics: generateDailyMetrics('MATCH') },
   { step: 'AP_VOUCHER', dailyMetrics: generateDailyMetrics('AP_VOUCHER') },
 ]
+
+// ── Agent B Run Overview ────────────────────────────────────────────
+export type AgentRunCardStatus = 'Analyzing' | 'Completed' | 'Failed'
+
+export interface AgentRunCard {
+  agentName: string
+  step: FeedbackStep
+  status: AgentRunCardStatus
+  feedbackCount: number
+  suggestionCount?: number
+  runDetailId: string // Links to agentBRunData key
+}
+
+export interface AgentBRunOverview {
+  runId: string
+  triggeredBy: string
+  triggeredAt: string
+  feedbackCount: number
+  agentCount: number
+  completedCount: number
+  overallStatus: 'In Progress' | 'Completed' | 'Failed'
+  agentCards: AgentRunCard[]
+}
+
+export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
+  'RUN-20260402-001': {
+    runId: 'RUN-20260402-001',
+    triggeredBy: 'Li Wei',
+    triggeredAt: '2026-04-02 15:41',
+    feedbackCount: 3,
+    agentCount: 2,
+    completedCount: 1,
+    overallStatus: 'In Progress',
+    agentCards: [
+      {
+        agentName: 'Invoice Format Check Agent',
+        step: 'INVOICE_REVIEW',
+        status: 'Completed',
+        feedbackCount: 2,
+        suggestionCount: 2,
+        runDetailId: 'RUN-B-001',
+      },
+      {
+        agentName: 'Duplicate Invoice Agent',
+        step: 'INVOICE_REVIEW',
+        status: 'Analyzing',
+        feedbackCount: 1,
+        runDetailId: 'RUN-B-002',
+      },
+    ],
+  },
+}

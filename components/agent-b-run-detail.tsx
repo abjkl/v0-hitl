@@ -293,9 +293,10 @@ function RuleSuggestionCard({
 interface AgentBRunDetailProps {
   runId: string
   onBack: () => void
+  onViewAgentDetail?: () => void
 }
 
-export function AgentBRunDetail({ runId, onBack }: AgentBRunDetailProps) {
+export function AgentBRunDetail({ runId, onBack, onViewAgentDetail }: AgentBRunDetailProps) {
   const runData = agentBRunData[runId]
   const [suggestions, setSuggestions] = useState<AgentBSuggestion[]>(runData?.suggestions ?? [])
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
@@ -366,7 +367,16 @@ export function AgentBRunDetail({ runId, onBack }: AgentBRunDetailProps) {
       {/* Success Banner */}
       {showSuccessBanner && (
         <Alert
-          message={`✓ Version v1.3 successfully created for ${runData.agentName} — incorporating ${selectedSuggestions.length} suggestions.`}
+          message={
+            <span>
+              ✓ Version v1.3 successfully created for {runData.agentName} — incorporating {selectedSuggestions.length} suggestions.{" "}
+              {onViewAgentDetail && (
+                <a onClick={onViewAgentDetail} style={{ cursor: "pointer", fontWeight: 500 }}>
+                  View in Agent Detail →
+                </a>
+              )}
+            </span>
+          }
           type="success"
           showIcon
           closable
