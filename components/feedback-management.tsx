@@ -254,20 +254,17 @@ export function FeedbackManagement({ onViewRunDetail }: FeedbackManagementProps)
       key: "actions",
       width: 100,
       fixed: "right",
-      render: (_: unknown, record: FeedbackItem) => {
-        const showView = ["Suggestion Ready", "Accepted", "Rejected"].includes(record.status)
-        return showView ? (
-          <Tooltip title="View Agent B Run">
-            <Button
-              type="text"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => onViewRunDetail(record.agentBRunId)}
-              style={{ color: "#1890ff" }}
-            />
-          </Tooltip>
-        ) : null
-      },
+      render: (_: unknown, record: FeedbackItem) => (
+        <Tooltip title="View Detail">
+          <Button
+            type="text"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => onViewRunDetail(record.agentBRunId)}
+            style={{ color: "#1890ff" }}
+          />
+        </Tooltip>
+      ),
     },
   ]
 
