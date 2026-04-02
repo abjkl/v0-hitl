@@ -1,24 +1,25 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect } from "react"
 import {
-  Card, Button, Typography, Progress, Space, Tag, Spin, Empty,
-  Badge, Tooltip,
+  Card, Button, Typography, Progress, Space, Tag, Empty,
+  Badge, Modal,
 } from "antd"
 import {
-  ArrowLeftOutlined, CheckCircleOutlined, CloseCircleOutlined,
+  CheckCircleOutlined, CloseCircleOutlined,
   LoadingOutlined, ArrowRightOutlined,
 } from "@ant-design/icons"
 import {
   agentBRunOverviewData,
-  type AgentBRunOverview, type AgentRunCardStatus, type AgentRunCard,
+  type AgentRunCardStatus, type AgentRunCard,
 } from "@/lib/mock-data"
 
-const { Text, Title, Paragraph } = Typography
+const { Text, Title } = Typography
 
 interface AgentBRunOverviewProps {
-  runId: string
-  onBack: () => void
+  open: boolean
+  runId: string | null
+  onClose: () => void
   onViewSuggestions: (runDetailId: string) => void
 }
 
@@ -137,18 +138,26 @@ function AgentProgressCard({
 // ── Main Component ────────────────────────────────────────────
 
 export function AgentBRunOverview({
+  open,
   runId,
-  onBack,
+  onClose,
   onViewSuggestions,
 }: AgentBRunOverviewProps) {
-  const runData = agentBRunOverviewData[runId]
-  const [agentCards, setAgentCards] = useState<AgentRunCard[]>(runData?.agentCards ?? [])
-  const [overallStatus, setOverallStatus] = useState<"In Progress" | "Completed" | "Failed">(
-    runData?.overallStatus ?? "In Progress"
-  )
+  const runData = runId ? agentBRunOverviewData[runId] : null
+  const [agentCards, setAgentCards] = useState<AgentRunCard[]>([])
+  const [overallStatus, setOverallStatus] = useState<"In Progress" | "Completed" | "Failed">("In Progress")
 
-  // Auto-simulate Card 2 completion after 3 seconds
+  // Reset state whenever the modal opens with a new runId
   useEffect(() => {
+    if (open && runData) {
+      setAgentCards(runData.agentCards)
+      setOverallStatus(runData.overallStatus)
+    }
+  }, [open, runId])
+
+  // Auto-simulate Card 2 completion after 3 seconds when modal is open
+  useEffect(() => {
+    if (!open) return
     const timer = setTimeout(() => {
       setAgentCards((prev) =>
         prev.map((card, idx) =>
@@ -159,83 +168,72 @@ export function AgentBRunOverview({
       )
       setOverallStatus("Completed")
     }, 3000)
-
     return () => clearTimeout(timer)
-  }, [])
+  }, [open])
 
-  if (!runData) {
-    return (
-      <div>
-        <Button icon={<ArrowLeftOutlined />} onClick={onBack} style={{ marginBottom: 16 }}>
-          Back to Feedback List
-        </Button>
-        <Empty description="Run not found" />
-      </div>
-    )
-  }
-
-  // Calculate completion percentage
   const completedCount = agentCards.filter((c) => c.status === "Completed").length
-  const progressPercent = (completedCount / agentCards.length) * 100
+  const progressPercent = agentCards.length > 0 ? (completedCount / agentCards.length) * 100 : 0
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-        <Button icon={<ArrowLeftOutlined />} onClick={onBack}>
-          Back
-        </Button>
-        <div style={{ flex: 1 }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Agent B Run #{runData.runId}
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            Triggered by {runData.triggeredBy} · {runData.triggeredAt} · {runData.feedbackCount}{" "}
-            feedback items across {runData.agentCount} agents
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={680}
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 16, fontWeight: 600 }}>Agent B Run Overview</span>
+          {runData && (
+            <Badge
+              status={overallStatus === "Completed" ? "success" : "processing"}
+              text={
+                <span style={{ fontSize: 13, fontWeight: 500 }}>
+                  {overallStatus}
+                </span>
+              }
+            />
+          )}
+        </div>
+      }
+    >
+      {!runData ? (
+        <Empty description="Run data not found" style={{ padding: "32px 0" }} />
+      ) : (
+        <div style={{ padding: "8px 0" }}>
+          {/* Run Meta */}
+          <Text type="secondary" style={{ fontSize: 13, display: "block", marginBottom: 20 }}>
+            Triggered by <strong>{runData.triggeredBy}</strong> · {runData.triggeredAt} · {runData.feedbackCount} feedback item{runData.feedbackCount !== 1 ? "s" : ""} across {runData.agentCount} agent{runData.agentCount !== 1 ? "s" : ""}
           </Text>
-        </div>
-        <div>
-          <Badge
-            status={overallStatus === "Completed" ? "success" : "processing"}
-            text={
-              <span style={{ fontSize: 13, fontWeight: 500 }}>
-                {overallStatus === "In Progress" ? "In Progress" : "Completed"}
-              </span>
-            }
-          />
-        </div>
-      </div>
 
-      {/* Overall Progress Bar */}
-      <Card
-        size="small"
-        style={{ marginBottom: 20, border: "1px solid #f0f0f0", borderRadius: 8 }}
-        styles={{ body: { padding: 16 } }}
-      >
-        <div style={{ marginBottom: 8 }}>
-          <Text type="secondary" style={{ fontSize: 12, fontWeight: 500 }}>
-            Overall Progress
-          </Text>
-        </div>
-        <Progress
-          percent={progressPercent}
-          format={() => `${completedCount} / ${agentCards.length} agents completed`}
-        />
-      </Card>
+          {/* Overall Progress */}
+          <Card
+            size="small"
+            style={{ marginBottom: 20, border: "1px solid #f0f0f0", borderRadius: 8 }}
+            styles={{ body: { padding: 16 } }}
+          >
+            <Text type="secondary" style={{ fontSize: 12, fontWeight: 500, display: "block", marginBottom: 8 }}>
+              Overall Progress
+            </Text>
+            <Progress
+              percent={progressPercent}
+              format={() => `${completedCount} / ${agentCards.length} agents completed`}
+            />
+          </Card>
 
-      {/* Agent Progress Cards */}
-      <div style={{ marginBottom: 16 }}>
-        <Title level={5} style={{ marginBottom: 12 }}>
-          Agent Status
-        </Title>
-        {agentCards.map((card, idx) => (
-          <AgentProgressCard
-            key={idx}
-            card={card}
-            onViewSuggestions={onViewSuggestions}
-          />
-        ))}
-      </div>
-    </div>
+          {/* Agent Cards */}
+          <Title level={5} style={{ marginBottom: 12 }}>Agent Status</Title>
+          {agentCards.map((card, idx) => (
+            <AgentProgressCard
+              key={idx}
+              card={card}
+              onViewSuggestions={(detailId) => {
+                onClose()
+                onViewSuggestions(detailId)
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </Modal>
   )
 }

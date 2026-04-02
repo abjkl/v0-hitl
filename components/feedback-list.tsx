@@ -14,6 +14,7 @@ import {
   feedbackData,
   type FeedbackItem, type FeedbackStatus, type FeedbackStep,
 } from "@/lib/mock-data"
+import { AgentBRunOverview } from "@/components/agent-b-run-overview"
 
 const { Text, Title } = Typography
 
@@ -98,6 +99,8 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | null>(null)
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [runOverviewOpen, setRunOverviewOpen] = useState(false)
+  const [activeRunId, setActiveRunId] = useState<string | null>(null)
   const [data, setData] = useState<FeedbackItem[]>(feedbackData)
   const [msgApi, contextHolder] = message.useMessage()
 
@@ -158,12 +161,13 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
 
   const hasFilters = !!(search || statusFilter)
 
-  // Handle batch confirmation
+  // Handle batch confirmation — close confirm modal, open run overview modal
   function handleBatchConfirm() {
     setConfirmModalOpen(false)
     const firstItem = selectedItems[0]
     if (firstItem) {
-      onViewRunDetail(firstItem.agentBRunId)
+      setActiveRunId(firstItem.agentBRunId)
+      setRunOverviewOpen(true)
     }
   }
 
@@ -343,6 +347,17 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
         selectedItems={selectedItems}
         onCancel={() => setConfirmModalOpen(false)}
         onConfirm={handleBatchConfirm}
+      />
+
+      {/* Run Overview Modal */}
+      <AgentBRunOverview
+        open={runOverviewOpen}
+        runId={activeRunId}
+        onClose={() => setRunOverviewOpen(false)}
+        onViewSuggestions={(runDetailId) => {
+          setRunOverviewOpen(false)
+          onViewRunDetail(runDetailId)
+        }}
       />
     </div>
   )
