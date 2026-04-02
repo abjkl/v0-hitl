@@ -498,6 +498,10 @@ export function AgentList({
   // All unique steps present in this region
   const allSteps = [...new Set(regionAgents.map((a) => a.step))] as AgentStep[]
 
+  // Only show these steps as tabs
+  const primarySteps = ["INVOICE_REVIEW", "MATCH", "AP_VOUCHER"] as AgentStep[]
+  const tabSteps = allSteps.filter((s) => primarySteps.includes(s))
+
   // Apply search + tab filter
   const filtered = regionAgents.filter((a) => {
     const matchStep = activeTab === "all" || a.step === activeTab
@@ -588,7 +592,7 @@ export function AgentList({
           onChange={(key) => { setActiveTab(key as AgentStep | "all"); setCurrentPage(1) }}
           items={[
             { key: "all", label: `All (${regionAgents.length})` },
-            ...allSteps.map((step) => ({
+            ...tabSteps.map((step) => ({
               key: step,
               label: `${STEP_CONFIG[step]?.label ?? step} (${regionAgents.filter((a) => a.step === step).length})`,
             })),
