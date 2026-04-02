@@ -237,13 +237,13 @@ function NewAgentDrawer({
           <Form.Item
             label={<span style={labelStyle}>Initial Version</span>}
             name="initialVersion"
-            initialValue="v0.1.0"
+            initialValue="v1.0.0-beta"
             rules={[
               { required: true, message: "Initial version is required" },
-              { pattern: /^v\d+\.\d+\.\d+/, message: "Format should be e.g. v0.1.0" },
+              { pattern: /^v\d+\.\d+\.\d+/, message: "Format should be e.g. v1.0.0-beta" },
             ]}
           >
-            <Input placeholder="e.g. v0.1.0" />
+            <Input placeholder="v1.0.0-beta" disabled />
           </Form.Item>
           <div style={{ background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 4, padding: "8px 12px", marginBottom: 16, fontSize: 12, color: "#8c8c8c" }}>
             New agents are created in Testing status. Promote to Live after regression testing passes.
@@ -559,7 +559,7 @@ export function AgentList({
         {/* Search bar */}
         <div style={{ display: "grid", gridTemplateColumns: "240px 200px auto", gap: 16, alignItems: "end", marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 13, color: "#595959", marginBottom: 4 }}>Supplier Name</div>
+            <div style={{ fontSize: 13, color: "#595959", marginBottom: 4 }}>Agent Name</div>
             <Input
               placeholder="Search"
               suffix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
