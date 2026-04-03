@@ -955,13 +955,6 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
           : <CloseCircleOutlined style={{ color: "#f5222d", fontSize: 16 }} />,
     },
     {
-      title: "Latency",
-      dataIndex: "latencyMs",
-      key: "latencyMs",
-      width: 80,
-      render: (v: number) => <Text type="secondary" style={{ fontSize: 12 }}>{v} ms</Text>,
-    },
-    {
       title: "AI Detail",
       key: "aiDetail",
       width: 90,
@@ -1088,13 +1081,6 @@ function PRRecordPanel() {
           {(val * 100).toFixed(0)}%
         </Text>
       ),
-    },
-    {
-      title: "Latency",
-      dataIndex: "latencyMs",
-      key: "latencyMs",
-      width: 100,
-      render: (val) => <Text type="secondary" style={{ fontSize: 12 }}>{val}ms</Text>,
     },
     {
       title: "Version Snapshot",
