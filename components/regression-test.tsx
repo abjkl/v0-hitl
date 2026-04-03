@@ -1339,6 +1339,7 @@ export function RegressionTest({
   const [simulateFailure, setSimulateFailure] = useState(false)
   const [simulateCaseRunning, setSimulateCaseRunning] = useState(false)
   const [published, setPublished] = useState(false)
+  const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [selectedHistoryRunId, setSelectedHistoryRunId] = useState<string | null>(null)
   const [viewingHistoryRun, setViewingHistoryRun] = useState<RegressionRunRecord | null>(null)
@@ -1605,7 +1606,10 @@ export function RegressionTest({
               disabled={!selectedId || !selectedVersion}
               onClick={() => {
                 if (selectedId && selectedVersion) {
-                  onViewVersionDetail?.(selectedId, selectedVersion)
+                  window.open(
+                    `?page=agent-detail&agentId=${selectedId}&version=${selectedVersion}`,
+                    "_blank"
+                  )
                 }
               }}
               icon={<EyeOutlined />}
@@ -1616,38 +1620,47 @@ export function RegressionTest({
 
           {runStatus === "done" && (
             <div style={{ paddingTop: 20 }}>
-              <Tooltip title={!canPublish ? "Publishing thresholds not met" : published ? "Already published" : ""}>
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  disabled={!canPublish || published}
-                  style={
-                    published
-                      ? { background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default" }
-                      : canPublish
-                        ? { background: "#52c41a", borderColor: "#52c41a" }
-                        : {}
-                  }
-                  onClick={() => {
-                    if (!selectedId || published) return
-                    // Get live version for the selected agent
-                    const agent = agentsWithTestingVersions.find(a => a.id === selectedId)
-                    const liveVersion = agent?.liveVersion
-                    // Compare configs
-                    const testingConfigKey = `${selectedId}::${selectedVersion}`
-                    const liveConfigKey = liveVersion ? `${selectedId}::${liveVersion}` : null
-                    const testingConfig = VERSION_CONFIGS[testingConfigKey]
-                    const liveConfig = liveConfigKey ? VERSION_CONFIGS[liveConfigKey] : undefined
-                    const diffRows = compareVersionConfigs(testingConfig, liveConfig)
-
-                  // Directly publish without showing comparison
-                  setPublished(true)
-                  onPublish?.(selectedId)
-                  }}
-                >
-                  {published ? "Published" : "Publish Version"}
-                </Button>
-              </Tooltip>
+              {(() => {
+                const agent = agentsWithTestingVersions.find(a => a.id === selectedId)
+                const isLiveVersion = agent?.liveVersion === selectedVersion
+                
+                if (isLiveVersion) {
+                  // Live version - show Published button (disabled)
+                  return (
+                    <Button
+                      disabled
+                      style={{ background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default", color: "#fff" }}
+                      icon={<CheckCircleOutlined />}
+                    >
+                      Published
+                    </Button>
+                  )
+                } else {
+                  // Testing version - show Publish Version button
+                  return (
+                    <Tooltip title={!canPublish ? "Publishing thresholds not met" : published ? "Already published" : ""}>
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        disabled={!canPublish || published}
+                        style={
+                          published
+                            ? { background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default" }
+                            : canPublish
+                              ? { background: "#52c41a", borderColor: "#52c41a" }
+                              : {}
+                        }
+                        onClick={() => {
+                          if (!selectedId || published) return
+                          setPublishModalOpen(true)
+                        }}
+                      >
+                        {published ? "Published" : "Publish Version"}
+                      </Button>
+                    </Tooltip>
+                  )
+                }
+              })()}
             </div>
           )}
         </div>
@@ -2116,6 +2129,42 @@ export function RegressionTest({
           </div>
         </div>
       )}
+
+      {/* Publish Confirmation Modal */}
+      <Modal
+        title="Confirm Publishing"
+        open={publishModalOpen}
+        onCancel={() => setPublishModalOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setPublishModalOpen(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            onClick={() => {
+              setPublishModalOpen(false)
+              setPublished(true)
+              onPublish?.(selectedId)
+              msgApi.success("Version published successfully")
+            }}
+            style={{ background: "#52c41a", borderColor: "#52c41a" }}
+          >
+            Confirm
+          </Button>,
+        ]}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Text>
+            Are you sure you want to publish <Text code>{selectedVersion}</Text> to Live?
+          </Text>
+          <div style={{ padding: "8px 12px", background: "#fffbe6", border: "1px dashed #ffe58f", borderRadius: 4 }}>
+            <Text style={{ fontSize: 12, color: "#874d00" }}>
+              This will replace the current Live version with the Testing version.
+            </Text>
+          </div>
+        </div>
+      </Modal>
 
       {/* AI Prediction Detail Drawer */}
       <Drawer
