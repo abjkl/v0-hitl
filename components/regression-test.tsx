@@ -955,13 +955,6 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
           : <CloseCircleOutlined style={{ color: "#f5222d", fontSize: 16 }} />,
     },
     {
-      title: "Latency",
-      dataIndex: "latencyMs",
-      key: "latencyMs",
-      width: 80,
-      render: (v: number) => <Text type="secondary" style={{ fontSize: 12 }}>{v} ms</Text>,
-    },
-    {
       title: "AI Detail",
       key: "aiDetail",
       width: 90,
@@ -1088,13 +1081,6 @@ function PRRecordPanel() {
           {(val * 100).toFixed(0)}%
         </Text>
       ),
-    },
-    {
-      title: "Latency",
-      dataIndex: "latencyMs",
-      key: "latencyMs",
-      width: 100,
-      render: (val) => <Text type="secondary" style={{ fontSize: 12 }}>{val}ms</Text>,
     },
     {
       title: "Version Snapshot",
@@ -1345,10 +1331,11 @@ export function RegressionTest({
   const [selectedVersion, setSelectedVersion] = useState<string>("")
 
   const [runStatus, setRunStatus] = useState<RunStatus>("idle")
-  const [progress, setProgress] = useState(0)
+
   const [suites, setSuites] = useState<SuiteResult[]>([])
   const [activeSuite, setActiveSuite] = useState<SuiteType>("golden")
   const [simulateFailure, setSimulateFailure] = useState(false)
+  const [simulateCaseRunning, setSimulateCaseRunning] = useState(false)
   const [published, setPublished] = useState(false)
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [selectedHistoryRunId, setSelectedHistoryRunId] = useState<string | null>(null)
@@ -1389,6 +1376,28 @@ export function RegressionTest({
     }
   }, [simulateFailure, runStatus, selectedId, sharedGoldenCases, selectedAgentStep])
 
+  // When simulateCaseRunning toggles, mark some cases as Running
+  useEffect(() => {
+    if (runStatus === "done" && suites.length > 0) {
+      setSuites((prevSuites) =>
+        prevSuites.map((suite) => ({
+          ...suite,
+          cases: suite.cases.map((c, idx) =>
+            simulateCaseRunning && idx < 2
+              ? { ...c, status: "Running" as const }
+              : { ...c, status: "Completed" as const }
+          ),
+        }))
+      )
+      // Also update runStatus to "running" when simulating
+      if (simulateCaseRunning) {
+        setRunStatus("running")
+      } else {
+        setRunStatus("done")
+      }
+    }
+  }, [simulateCaseRunning])
+
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -1401,7 +1410,6 @@ export function RegressionTest({
   function handleRun() {
     if (!selectedId) return
     setSuites([])
-    setProgress(0)
     setPublished(false)
     setRunStatus("running")
 
@@ -1440,11 +1448,9 @@ export function RegressionTest({
             )
           )
           completedCount++
-          setProgress((completedCount / totalCases) * 100)
 
           // When all cases complete, finish the run
           if (completedCount === totalCases) {
-            setProgress(100)
             setRunStatus("done")
             const allPassed = results.every((s) => s.goldenPassRate >= 85)
             if (allPassed && selectedId) onPassedRun?.(selectedId)
@@ -1499,7 +1505,6 @@ export function RegressionTest({
     setSelectedVersion(agent?.testingVersions?.[0] ?? "")
     setSuites([])
     setRunStatus("idle")
-    setProgress(0)
     setPublished(false)
     setHistoryPanelOpen(false)
   }
@@ -1654,18 +1659,7 @@ export function RegressionTest({
           )}
         </div>
 
-        {runStatus === "running" && (
-          <div style={{ marginTop: 16 }}>
-            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
-              Running test sets: Golden Case → Benchmark Case → Original Source Case...
-            </Text>
-            <Progress
-              percent={progress}
-              strokeColor={{ "0%": "#1890ff", "100%": "#52c41a" }}
-              size="small"
-            />
-          </div>
-        )}
+
       </div>
 
       {/* Regression History Panel */}
@@ -1916,7 +1910,7 @@ export function RegressionTest({
       })()}
 
       {/* Results */}
-      {runStatus === "done" && suites.length > 0 && (
+      {(runStatus === "running" || runStatus === "done") && suites.length > 0 && (
         <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px" }}>
 
           {/* History run banner */}
@@ -2074,13 +2068,6 @@ export function RegressionTest({
                             </div>
                           </div>
                         </div>
-
-                        {/* Bottom Action - Accept Button Only */}
-                        <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f0f0", background: "#fafafa" }}>
-                          <Button type="primary" block style={{ fontWeight: 500 }}>
-                            Accept
-                          </Button>
-                        </div>
                       </div>
                     )
                   })()}
@@ -2089,28 +2076,51 @@ export function RegressionTest({
             </div>
           )}
 
-          {/* Simulate Failure toggle (demo only) */}
+          {/* Demo toggles */}
           <Divider style={{ margin: "20px 0 12px" }} />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "8px 12px",
-              background: "#fffbe6",
-              border: "1px dashed #ffe58f",
-              borderRadius: 4,
-            }}
-          >
-            <Switch
-              size="small"
-              checked={simulateFailure}
-              onChange={setSimulateFailure}
-              style={simulateFailure ? { background: "#ff4d4f" } : {}}
-            />
-            <Text style={{ fontSize: 12, color: "#874d00" }}>
-              Simulate Failure (demo only) — toggles Full Set Golden Pass Rate to 78.2%
-            </Text>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 12px",
+                background: "#fffbe6",
+                border: "1px dashed #ffe58f",
+                borderRadius: 4,
+              }}
+            >
+              <Switch
+                size="small"
+                checked={simulateFailure}
+                onChange={setSimulateFailure}
+                style={simulateFailure ? { background: "#ff4d4f" } : {}}
+              />
+              <Text style={{ fontSize: 12, color: "#874d00" }}>
+                Simulate Failure (demo only) — toggles Full Set Golden Pass Rate to 78.2%
+              </Text>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 12px",
+                background: "#e6f7ff",
+                border: "1px dashed #91d5ff",
+                borderRadius: 4,
+              }}
+            >
+              <Switch
+                size="small"
+                checked={simulateCaseRunning}
+                onChange={setSimulateCaseRunning}
+                style={simulateCaseRunning ? { background: "#1890ff" } : {}}
+              />
+              <Text style={{ fontSize: 12, color: "#0050b3" }}>
+                Simulate Case Running (demo only) — shows per-case running state in table
+              </Text>
+            </div>
           </div>
         </div>
       )}
@@ -2272,13 +2282,6 @@ export function RegressionTest({
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Bottom Action - Accept Button Only */}
-              <div style={{ padding: "16px 20px", borderTop: "1px solid #f0f0f0", background: "#fafafa" }}>
-                <Button type="primary" block style={{ fontWeight: 500 }}>
-                  Accept
-                </Button>
               </div>
             </div>
           )
