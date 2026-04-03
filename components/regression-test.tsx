@@ -1349,6 +1349,7 @@ export function RegressionTest({
   const [suites, setSuites] = useState<SuiteResult[]>([])
   const [activeSuite, setActiveSuite] = useState<SuiteType>("golden")
   const [simulateFailure, setSimulateFailure] = useState(false)
+  const [simulateCaseRunning, setSimulateCaseRunning] = useState(false)
   const [published, setPublished] = useState(false)
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [selectedHistoryRunId, setSelectedHistoryRunId] = useState<string | null>(null)
@@ -1388,6 +1389,28 @@ export function RegressionTest({
       setSuites(rebuilt)
     }
   }, [simulateFailure, runStatus, selectedId, sharedGoldenCases, selectedAgentStep])
+
+  // When simulateCaseRunning toggles, mark some cases as Running
+  useEffect(() => {
+    if (runStatus === "done" && suites.length > 0) {
+      setSuites((prevSuites) =>
+        prevSuites.map((suite) => ({
+          ...suite,
+          cases: suite.cases.map((c, idx) =>
+            simulateCaseRunning && idx < 2
+              ? { ...c, status: "Running" as const }
+              : { ...c, status: "Completed" as const }
+          ),
+        }))
+      )
+      // Also update runStatus to "running" when simulating
+      if (simulateCaseRunning) {
+        setRunStatus("running")
+      } else {
+        setRunStatus("done")
+      }
+    }
+  }, [simulateCaseRunning])
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -2089,28 +2112,51 @@ export function RegressionTest({
             </div>
           )}
 
-          {/* Simulate Failure toggle (demo only) */}
+          {/* Demo toggles */}
           <Divider style={{ margin: "20px 0 12px" }} />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "8px 12px",
-              background: "#fffbe6",
-              border: "1px dashed #ffe58f",
-              borderRadius: 4,
-            }}
-          >
-            <Switch
-              size="small"
-              checked={simulateFailure}
-              onChange={setSimulateFailure}
-              style={simulateFailure ? { background: "#ff4d4f" } : {}}
-            />
-            <Text style={{ fontSize: 12, color: "#874d00" }}>
-              Simulate Failure (demo only) — toggles Full Set Golden Pass Rate to 78.2%
-            </Text>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 12px",
+                background: "#fffbe6",
+                border: "1px dashed #ffe58f",
+                borderRadius: 4,
+              }}
+            >
+              <Switch
+                size="small"
+                checked={simulateFailure}
+                onChange={setSimulateFailure}
+                style={simulateFailure ? { background: "#ff4d4f" } : {}}
+              />
+              <Text style={{ fontSize: 12, color: "#874d00" }}>
+                Simulate Failure (demo only) — toggles Full Set Golden Pass Rate to 78.2%
+              </Text>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 12px",
+                background: "#e6f7ff",
+                border: "1px dashed #91d5ff",
+                borderRadius: 4,
+              }}
+            >
+              <Switch
+                size="small"
+                checked={simulateCaseRunning}
+                onChange={setSimulateCaseRunning}
+                style={simulateCaseRunning ? { background: "#1890ff" } : {}}
+              />
+              <Text style={{ fontSize: 12, color: "#0050b3" }}>
+                Simulate Case Running (demo only) — shows per-case running state in table
+              </Text>
+            </div>
           </div>
         </div>
       )}
