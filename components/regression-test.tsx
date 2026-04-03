@@ -1331,7 +1331,7 @@ export function RegressionTest({
   const [selectedVersion, setSelectedVersion] = useState<string>("")
 
   const [runStatus, setRunStatus] = useState<RunStatus>("idle")
-  const [progress, setProgress] = useState(0)
+
   const [suites, setSuites] = useState<SuiteResult[]>([])
   const [activeSuite, setActiveSuite] = useState<SuiteType>("golden")
   const [simulateFailure, setSimulateFailure] = useState(false)
@@ -1410,7 +1410,6 @@ export function RegressionTest({
   function handleRun() {
     if (!selectedId) return
     setSuites([])
-    setProgress(0)
     setPublished(false)
     setRunStatus("running")
 
@@ -1449,11 +1448,9 @@ export function RegressionTest({
             )
           )
           completedCount++
-          setProgress((completedCount / totalCases) * 100)
 
           // When all cases complete, finish the run
           if (completedCount === totalCases) {
-            setProgress(100)
             setRunStatus("done")
             const allPassed = results.every((s) => s.goldenPassRate >= 85)
             if (allPassed && selectedId) onPassedRun?.(selectedId)
@@ -1508,7 +1505,6 @@ export function RegressionTest({
     setSelectedVersion(agent?.testingVersions?.[0] ?? "")
     setSuites([])
     setRunStatus("idle")
-    setProgress(0)
     setPublished(false)
     setHistoryPanelOpen(false)
   }
@@ -1663,18 +1659,7 @@ export function RegressionTest({
           )}
         </div>
 
-        {runStatus === "running" && (
-          <div style={{ marginTop: 16 }}>
-            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
-              Running test sets: Golden Case → Benchmark Case → Original Source Case...
-            </Text>
-            <Progress
-              percent={progress}
-              strokeColor={{ "0%": "#1890ff", "100%": "#52c41a" }}
-              size="small"
-            />
-          </div>
-        )}
+
       </div>
 
       {/* Regression History Panel */}
@@ -1925,7 +1910,7 @@ export function RegressionTest({
       })()}
 
       {/* Results */}
-      {runStatus === "done" && suites.length > 0 && (
+      {(runStatus === "running" || runStatus === "done") && suites.length > 0 && (
         <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px" }}>
 
           {/* History run banner */}
