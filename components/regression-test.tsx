@@ -3,19 +3,26 @@
 import React, { useState, useEffect, useRef } from "react"
 import {
   Select, Button, Table, Tag, Typography, Space, Progress,
-  Statistic, Card, Divider, Empty, Switch, Tooltip, Drawer, Modal, Input, Tabs,
-  type EmptyProps,
+  Statistic, Card, Divider, Empty, Switch, Tooltip, Drawer, Modal, Input, Tabs, Dropdown,
+  type MenuProps,
 } from "antd"
-import { SearchOutlined, HistoryOutlined } from "@ant-design/icons"
 import {
-  PlayCircleOutlined, CheckCircleOutlined, CloseCircleOutlined,
-  ExperimentOutlined, TrophyOutlined, WarningOutlined, EyeOutlined,
+  SearchOutlined, HistoryOutlined, PlayCircleOutlined, CheckCircleOutlined, CloseCircleOutlined,
+  ExperimentOutlined, TrophyOutlined, WarningOutlined, EyeOutlined, DownOutlined, SafetyOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import { agentListData, auditCaseData, INITIAL_GOLDEN_CASES, type Agent, type AgentStatus, type GoldenCasesState } from "@/lib/mock-data"
 import { useRegion, getEntitiesForRegion, type EntityCode } from "@/lib/region-context"
 
 const { Text, Title } = Typography
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+function getOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"]
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -45,6 +52,16 @@ interface CaseResult {
   reviewDate: string
   confidence: number
   modelVersion: string
+  // New fields for UI
+  taskAmount?: string  // email address
+  agentName?: string
+  // AI Detail checklist
+  aiChecklist?: {
+    documentCompleteness?: { label: string; items: string[] }
+    identityValidation?: { label: string; items: string[] }
+    invoiceMatching?: { label: string; items: string[] }
+    taxCalculation?: { label: string; items: string[] }
+  }
 }
 
 // ── Version config mock data (for publish diff check) ────────────
@@ -273,36 +290,38 @@ export const RUN_REPORTS: Record<string, RunReport> = {
 
 interface RegressionRunRecord {
   runId: string
+  runNumber: number  // e.g. 11 for "11th Regression Run"
   runAt: string
   passRate: number
   status: "Passed" | "Failed"
   agentId: string
   version: string
+  agentName?: string
 }
 
 const REGRESSION_HISTORY: Record<string, RegressionRunRecord[]> = {
   // keyed by "agentId::version"
   "AGT-001::v1.3.0": [
-    { runId: "RUN-2043", runAt: "2025-03-18 14:22", passRate: 92, status: "Passed", agentId: "AGT-001", version: "v1.3.0" },
-    { runId: "RUN-2031", runAt: "2025-03-12 10:05", passRate: 88, status: "Passed", agentId: "AGT-001", version: "v1.3.0" },
-    { runId: "RUN-2020", runAt: "2025-03-05 09:40", passRate: 76, status: "Failed",  agentId: "AGT-001", version: "v1.3.0" },
+    { runId: "RUN-2043", runNumber: 11, runAt: "2026-03-16 13:21", passRate: 96, status: "Passed", agentId: "AGT-001", version: "v1.3.0", agentName: "Invoice Header Extractor" },
+    { runId: "RUN-2031", runNumber: 10, runAt: "2026-03-15 08:12", passRate: 96, status: "Passed", agentId: "AGT-001", version: "v1.3.0", agentName: "Invoice Header Extractor" },
+    { runId: "RUN-2020", runNumber: 9, runAt: "2026-03-14 12:32", passRate: 73, status: "Failed",  agentId: "AGT-001", version: "v1.3.0", agentName: "Invoice Header Extractor" },
   ],
   "AGT-001::v1.4.0-beta": [
-    { runId: "RUN-2043", runAt: "2025-03-20 11:30", passRate: 89, status: "Passed", agentId: "AGT-001", version: "v1.4.0-beta" },
-    { runId: "RUN-2038", runAt: "2025-03-19 16:15", passRate: 72, status: "Failed",  agentId: "AGT-001", version: "v1.4.0-beta" },
+    { runId: "RUN-2043", runNumber: 5, runAt: "2026-03-20 11:30", passRate: 89, status: "Passed", agentId: "AGT-001", version: "v1.4.0-beta", agentName: "Invoice Header Extractor" },
+    { runId: "RUN-2038", runNumber: 4, runAt: "2026-03-19 16:15", passRate: 72, status: "Failed",  agentId: "AGT-001", version: "v1.4.0-beta", agentName: "Invoice Header Extractor" },
   ],
   "AGT-001::v1.5.0-beta": [
-    { runId: "RUN-2042", runAt: "2025-03-21 09:10", passRate: 65, status: "Failed",  agentId: "AGT-001", version: "v1.5.0-beta" },
+    { runId: "RUN-2042", runNumber: 2, runAt: "2026-03-21 09:10", passRate: 65, status: "Failed",  agentId: "AGT-001", version: "v1.5.0-beta", agentName: "Invoice Header Extractor" },
   ],
   "AGT-002::v1.2.0": [
-    { runId: "RUN-2035", runAt: "2025-03-15 13:00", passRate: 91, status: "Passed", agentId: "AGT-002", version: "v1.2.0" },
+    { runId: "RUN-2035", runNumber: 8, runAt: "2026-03-15 13:00", passRate: 91, status: "Passed", agentId: "AGT-002", version: "v1.2.0", agentName: "PO Matching Agent" },
   ],
   "AGT-002::v1.3.0-beta": [
-    { runId: "RUN-2044", runAt: "2025-03-22 10:00", passRate: 84, status: "Failed",  agentId: "AGT-002", version: "v1.3.0-beta" },
-    { runId: "RUN-2040", runAt: "2025-03-20 14:30", passRate: 90, status: "Passed", agentId: "AGT-002", version: "v1.3.0-beta" },
+    { runId: "RUN-2044", runNumber: 6, runAt: "2026-03-22 10:00", passRate: 84, status: "Failed",  agentId: "AGT-002", version: "v1.3.0-beta", agentName: "PO Matching Agent" },
+    { runId: "RUN-2040", runNumber: 5, runAt: "2026-03-20 14:30", passRate: 90, status: "Passed", agentId: "AGT-002", version: "v1.3.0-beta", agentName: "PO Matching Agent" },
   ],
   "AGT-002::v1.4.0-beta": [
-    { runId: "RUN-2045", runAt: "2025-03-23 09:45", passRate: 78, status: "Failed",  agentId: "AGT-002", version: "v1.4.0-beta" },
+    { runId: "RUN-2045", runNumber: 3, runAt: "2026-03-23 09:45", passRate: 78, status: "Failed",  agentId: "AGT-002", version: "v1.4.0-beta", agentName: "PO Matching Agent" },
   ],
 }
 
@@ -511,6 +530,8 @@ function buildSuiteCases(
         reviewDate: mock?.reviewDate ?? "2025-03-10",
         confidence: mock?.confidence ?? 0.85,
         modelVersion: mock?.modelVersion ?? "gpt-4o-2024-05",
+        taskAmount: mock?.reviewer ? `${mock.reviewer}@shopee.com` : "qiuyue.ding@shopee.com",
+        agentName: "Invoice Header Extractor",
       }
     })
   }
@@ -540,6 +561,8 @@ function buildSuiteCases(
       reviewDate: mock?.reviewDate ?? "2025-03-10",
       confidence: mock?.confidence ?? 0.85,
       modelVersion: mock?.modelVersion ?? "gpt-4o-2024-05",
+      taskAmount: mock?.reviewer ? `${mock.reviewer}@shopee.com` : "qiuyue.ding@shopee.com",
+      agentName: "Invoice Header Extractor",
     }
   })
 }
@@ -676,20 +699,26 @@ function VerdictBanner({ suites, simulateFailure }: { suites: SuiteResult[]; sim
 // ── Metric Cards ─────────────────────────────────────────────────
 
 function MetricCards({ suite }: { suite: SuiteResult }) {
+  const gprPass = suite.goldenPassRate >= 85
   const metrics = [
-    { label: "Accuracy",        value: suite.accuracy,       suffix: "%" },
-    { label: "Precision",       value: suite.precision,      suffix: "%" },
-    { label: "Recall",          value: suite.recall,         suffix: "%" },
+    { label: "Golden Pass Rate", value: suite.goldenPassRate, suffix: "%", highlight: true },
+    { label: "Accuracy",         value: suite.accuracy,       suffix: "%" },
+    { label: "Precision",        value: suite.precision,      suffix: "%" },
+    { label: "Recall",           value: suite.recall,         suffix: "%" },
   ]
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
       {metrics.map((m) => (
         <Card
           key={m.label}
           size="small"
           style={{
-            border: "1px solid #f0f0f0",
-            background: "#fafafa",
+            border: m.highlight
+              ? gprPass ? "1px solid #b7eb8f" : "1px solid #ffa39e"
+              : "1px solid #f0f0f0",
+            background: m.highlight
+              ? gprPass ? "#f6ffed" : "#fff1f0"
+              : "#fafafa",
           }}
         >
           <Statistic
@@ -699,7 +728,9 @@ function MetricCards({ suite }: { suite: SuiteResult }) {
             valueStyle={{
               fontSize: 22,
               fontWeight: 700,
-              color: "#1d1d1d",
+              color: m.highlight
+                ? gprPass ? "#389e0d" : "#cf1322"
+                : "#1d1d1d",
             }}
           />
         </Card>
@@ -796,6 +827,67 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
     )
   }
 
+  // Inline AI Detail Expand Row
+  const renderExpandedRow = (record: CaseResult) => {
+    const predCfg = RESULT_TAG_CFG[record.agentPrediction as keyof typeof RESULT_TAG_CFG]
+    const finalPredCfg = predCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+    
+    // Mock checklist data
+    const checklist = record.aiChecklist ?? {
+      documentCompleteness: { label: "Document Completeness", items: ["WHT slip uploaded", "Tax invoice uploaded", "Shopee invoice uploaded"] },
+      identityValidation: { label: "Identity Validation", items: ["Entity identity match (Shopee)", "Collector identity match (seller/merchant)"] },
+      invoiceMatching: { label: "Invoice Matching", items: ["Invoice reference match (B9)", "Single invoice per slip"] },
+      taxCalculation: { label: "Tax Calculation", items: ["Tax rate verified", "Amount calculation correct"] },
+    }
+
+    return (
+      <div style={{ padding: "16px 20px", background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>
+        <div style={{ display: "flex", gap: 24 }}>
+          {/* Left: Summary */}
+          <div style={{ flex: "0 0 280px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <CheckCircleOutlined style={{ color: finalPredCfg.color, fontSize: 16 }} />
+              <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontWeight: 500, fontSize: 12 }}>
+                {record.agentPrediction}
+              </Tag>
+              <Text style={{ fontSize: 13, color: "#595959" }}>{(record.confidence * 100).toFixed(0)} / 1</Text>
+            </div>
+            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 16 }}>
+              AI recommend you {record.agentPrediction === "Pass" ? "approve" : "reject"} this Invoice & PO and move to next step
+            </Text>
+            
+            {/* Agent info */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "#fff", borderRadius: 4, border: "1px solid #f0f0f0" }}>
+              <Text style={{ fontSize: 12 }}>{record.agentName ?? "Invoice Header Extractor"}</Text>
+              <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontSize: 11, margin: 0 }}>
+                {record.agentPrediction}
+              </Tag>
+            </div>
+            <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <Text type="secondary">Confidence</Text>
+              <Text>{(record.confidence * 100).toFixed(2)} / 1</Text>
+            </div>
+          </div>
+
+          {/* Right: Checklists */}
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {Object.entries(checklist).map(([key, section]) => (
+              <div key={key}>
+                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>{section.label}</Text>
+                {section.items.map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 12 }} />
+                    <Text style={{ fontSize: 12 }}>{item}</Text>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const columns: ColumnsType<CaseResult> = [
     {
       title: "Case ID",
@@ -803,12 +895,6 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
       key: "caseId",
       width: 100,
       render: (v: string) => <Text code style={{ fontSize: 12 }}>{v}</Text>,
-      onCell: (record) => ({
-        onClick: () => {
-          onViewDetail?.(record)
-        },
-        style: { cursor: "pointer" },
-      }),
     },
     {
       title: "Invoice No",
@@ -818,14 +904,14 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
       render: (v: string) => <Text style={{ fontSize: 12 }}>{v}</Text>,
     },
     {
-      title: "PR #",
+      title: "PR Number",
       dataIndex: "prNo",
       key: "prNo",
       width: 130,
-      render: (v: string) => <Text style={{ fontSize: 12, color: "#1890ff" }}>{v}</Text>,
+      render: (v: string) => <Text style={{ fontSize: 12 }}>{v}</Text>,
     },
     {
-      title: "PO #",
+      title: "PO Number",
       dataIndex: "poNo",
       key: "poNo",
       width: 130,
@@ -847,53 +933,30 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
       key: "isGolden",
       width: 66,
       render: (v: boolean) =>
-        v ? <TrophyOutlined style={{ color: "#d48806" }} /> : <Text type="secondary" style={{ fontSize: 11 }}>—</Text>,
+        v ? <SafetyOutlined style={{ color: "#d48806", fontSize: 16 }} /> : null,
     },
     {
-      title: "Ground Truth",
-      key: "groundTruth",
-      width: 200,
-      render: (_: unknown, r: CaseResult) => <VerdictCell verdict={r.groundTruth} reason={r.groundTruthReason} />,
-    },
-    {
-      title: "Prediction",
-      key: "agentPrediction",
-      width: 200,
-      render: (_: unknown, r: CaseResult) => <VerdictCell verdict={r.agentPrediction} reason={r.agentPredictionReason} />,
-    },
-    {
-      title: "Result",
-      dataIndex: "correct",
-      key: "correct",
-      width: 72,
-      render: (v: boolean) =>
-        v
-          ? <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
-          : <CloseCircleOutlined style={{ color: "#f5222d", fontSize: 16 }} />,
-    },
-    {
-      title: "Latency",
-      dataIndex: "latencyMs",
-      key: "latencyMs",
-      width: 80,
-      render: (v: number) => <Text type="secondary" style={{ fontSize: 12 }}>{v} ms</Text>,
+      title: "Task Amount",
+      key: "taskAmount",
+      width: 180,
+      render: (_: unknown, r: CaseResult) => (
+        <Text style={{ fontSize: 12 }}>{r.taskAmount ?? r.reviewer + "@shopee.com"}</Text>
+      ),
     },
     {
       title: "AI Detail",
       key: "aiDetail",
-      width: 90,
+      width: 80,
       render: (_: unknown, record: CaseResult) => (
-        <Button
-          type="link"
-          size="small"
-          style={{ padding: 0, fontSize: 12 }}
+        <Typography.Link
+          style={{ fontSize: 12 }}
           onClick={(e) => {
             e.stopPropagation()
-            onViewDetail?.(record)
+            toggleRow(record.key)
           }}
         >
           View
-        </Button>
+        </Typography.Link>
       ),
     },
   ]
@@ -904,12 +967,19 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
       dataSource={cases}
       size="small"
       rowKey="key"
-      pagination={{ pageSize: 10, showTotal: (t) => `Total ${t} cases`, showSizeChanger: false }}
-      rowClassName={(r) => r.correct ? "cursor-pointer" : "bg-red-50 cursor-pointer"}
-      onRow={(r) => ({ onClick: () => toggleRow(r.key) })}
+      pagination={{ 
+        pageSize: 10, 
+        showTotal: (total, range) => `${range[0]}–${range[1]} of ${total}`,
+        showSizeChanger: true,
+        pageSizeOptions: ["10", "20", "50"],
+        showQuickJumper: true,
+      }}
+      rowClassName={(r) => r.correct ? "" : "bg-red-50"}
       expandable={{
         expandedRowKeys: expandedKeys,
+        expandedRowRender: renderExpandedRow,
         showExpandColumn: false,
+        rowExpandable: () => true,
       }}
     />
   )
@@ -1272,6 +1342,8 @@ export function RegressionTest({
   const [viewingHistoryRun, setViewingHistoryRun] = useState<RegressionRunRecord | null>(null)
   const [aiResultDrawerRun, setAiResultDrawerRun] = useState<RegressionRunRecord | null>(null)
   const [versionConfigModalOpen, setVersionConfigModalOpen] = useState(false)
+  const [selectedRun, setSelectedRun] = useState<RegressionRunRecord | null>(null)
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([])
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<CaseResult | null>(null)
   const [configMismatchModalOpen, setConfigMismatchModalOpen] = useState(false)
@@ -1783,43 +1855,147 @@ export function RegressionTest({
       {runStatus === "done" && suites.length > 0 && (
         <div style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 4, padding: "16px 20px" }}>
 
-          {/* History run banner */}
-          {viewingHistoryRun && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 4, padding: "8px 14px", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Text style={{ fontSize: 12, color: "#874d00" }}>
-                  正在查看历史记录：
-                </Text>
-                <Text code style={{ fontSize: 12 }}>{viewingHistoryRun.runId}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>{viewingHistoryRun.runAt}</Text>
-                <Tag style={{ fontSize: 11, margin: 0, color: viewingHistoryRun.status === "Passed" ? "#389e0d" : "#cf1322", background: viewingHistoryRun.status === "Passed" ? "#f6ffed" : "#fff1f0", borderColor: viewingHistoryRun.status === "Passed" ? "#b7eb8f" : "#ffa39e" }}>
-                  {viewingHistoryRun.status}
-                </Tag>
-                <Text style={{ fontSize: 12, color: viewingHistoryRun.passRate >= 85 ? "#52c41a" : "#cf1322", fontWeight: 500 }}>{viewingHistoryRun.passRate}%</Text>
-              </div>
-              <Button size="small" onClick={() => { setViewingHistoryRun(null); setRunStatus("idle"); setSuites([]) }}>
-                返回
-              </Button>
-            </div>
-          )}
+          {/* Run Header with Dropdown */}
+          {(() => {
+            const historyKey = `${selectedId}::${selectedVersion}`
+            const runHistory = REGRESSION_HISTORY[historyKey] ?? []
+            const currentRun = selectedRun ?? (viewingHistoryRun ?? runHistory[0])
+            const agentInfo = agentsWithTestingVersions.find(a => a.id === selectedId)
+            const goldenSuite = suites.find(s => s.type === "golden")
+            const isRecommended = goldenSuite ? goldenSuite.goldenPassRate >= 85 : false
 
-          {/* Verdict Banner */}
-          <VerdictBanner suites={suites} simulateFailure={simulateFailure} />
+            const runDropdownItems: MenuProps["items"] = runHistory.map((r, idx) => ({
+              key: r.runId,
+              label: (
+                <div style={{ padding: "4px 0", minWidth: 240 }}>
+                  <div style={{ fontWeight: 500, marginBottom: 2 }}>
+                    {getOrdinal(r.runNumber)} Regression Run
+                  </div>
+                  <div style={{ fontSize: 12, color: "#8c8c8c", marginBottom: 4 }}>
+                    Regression: {r.runAt}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    {r.passRate >= 85 ? (
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 12 }} />
+                    ) : (
+                      <WarningOutlined style={{ color: "#faad14", fontSize: 12 }} />
+                    )}
+                    <Text style={{ fontSize: 12, color: r.passRate >= 85 ? "#52c41a" : "#faad14" }}>
+                      Golden pass rate: {r.passRate}%
+                    </Text>
+                  </div>
+                </div>
+              ),
+              onClick: () => {
+                setSelectedRun(r)
+                // Load results for this run
+                const histAgentStep = (agentInfo?.step ?? "INVOICE_REVIEW") as AgentStep
+                const rebuilt: SuiteResult[] = (["golden", "benchmark", "current"] as const).map((type) => ({
+                  label: type === "golden" ? "Golden Case" : type === "benchmark" ? "Benchmark Case" : "Original Source Case",
+                  type,
+                  ...SUITE_METRICS_NORMAL[type],
+                  goldenPassRate: type === "golden" ? r.passRate : SUITE_METRICS_NORMAL[type].goldenPassRate,
+                  cases: buildSuiteCases(selectedId, type, r.passRate, sharedGoldenCases, histAgentStep),
+                }))
+                setSuites(rebuilt)
+              },
+            }))
 
-          {/* Set tabs */}
-          <div className="flex items-center gap-2 mb-4" style={{ marginTop: 16 }}>
-            {suites.map((s) => (
-              <Button
-                key={s.type}
-                type={activeSuite === s.type ? "primary" : "default"}
-                size="small"
-                onClick={() => setActiveSuite(s.type)}
-                style={activeSuite === s.type ? { background: "#1890ff" } : {}}
-              >
-                {s.label}
-              </Button>
-            ))}
-          </div>
+            return (
+              <>
+                {/* Run Title Row */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    <Dropdown menu={{ items: runDropdownItems }} trigger={["click"]}>
+                      <div style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                        <Title level={4} style={{ margin: 0, fontSize: 18 }}>
+                          {currentRun ? `${getOrdinal(currentRun.runNumber)} Regression Run` : "Latest Regression Run"}
+                        </Title>
+                        <DownOutlined style={{ fontSize: 12, color: "#8c8c8c" }} />
+                      </div>
+                    </Dropdown>
+                    <div style={{ marginTop: 4 }}>
+                      <Text type="secondary" style={{ fontSize: 13 }}>
+                        {agentInfo?.agentName ?? "Agent"} - {selectedVersion}
+                      </Text>
+                      <Tag style={{ marginLeft: 8, fontSize: 11, background: "#fffbe6", color: "#d48806", borderColor: "#ffe58f" }}>
+                        Testing
+                      </Tag>
+                    </div>
+                  </div>
+                  <Button onClick={() => {
+                    // Release version action
+                    if (!selectedId) return
+                    const agent = agentsWithTestingVersions.find(a => a.id === selectedId)
+                    const liveVersion = agent?.liveVersion
+                    const testingConfigKey = `${selectedId}::${selectedVersion}`
+                    const liveConfigKey = liveVersion ? `${selectedId}::${liveVersion}` : null
+                    const testingConfig = VERSION_CONFIGS[testingConfigKey]
+                    const liveConfig = liveConfigKey ? VERSION_CONFIGS[liveConfigKey] : undefined
+                    const diffRows = compareVersionConfigs(testingConfig, liveConfig)
+                    if (diffRows.length > 0) {
+                      setConfigDiffRows(diffRows)
+                      setConfigDiffMeta({
+                        agentName: agent?.agentName ?? selectedId,
+                        testingVersion: selectedVersion,
+                        liveVersion: liveVersion ?? "—",
+                      })
+                      setConfigMismatchModalOpen(true)
+                    } else {
+                      setPublished(true)
+                      onPublish?.(selectedId)
+                    }
+                  }}>
+                    Release Version
+                  </Button>
+                </div>
+
+                {/* Recommended to Release Banner */}
+                {isRecommended && (
+                  <div style={{ 
+                    background: "linear-gradient(90deg, #f6ffed 0%, #e6fffb 100%)", 
+                    border: "1px solid #b7eb8f", 
+                    borderRadius: 6, 
+                    padding: "12px 16px", 
+                    marginBottom: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8
+                  }}>
+                    <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                    <Text style={{ color: "#389e0d", fontWeight: 500 }}>Recommended to Release</Text>
+                  </div>
+                )}
+
+                {/* Set tabs with subtitles */}
+                <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #f0f0f0", marginBottom: 16 }}>
+                  {suites.map((s) => {
+                    const isActive = activeSuite === s.type
+                    return (
+                      <div
+                        key={s.type}
+                        onClick={() => setActiveSuite(s.type)}
+                        style={{
+                          padding: "12px 20px",
+                          cursor: "pointer",
+                          borderBottom: isActive ? "2px solid #1890ff" : "2px solid transparent",
+                          marginBottom: -1,
+                        }}
+                      >
+                        <Text strong={isActive} style={{ color: isActive ? "#1890ff" : "#595959", display: "block" }}>
+                          {s.label}
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Accuracy: {s.accuracy}% / Golden PR: {s.goldenPassRate}%
+                        </Text>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )
+          })()}
 
           {activeSuiteData && (
             <div style={{ display: "flex", gap: 0, height: detailDrawerOpen ? "600px" : "auto" }}>
