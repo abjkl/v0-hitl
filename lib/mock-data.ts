@@ -683,7 +683,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
 ]
 
 // ── Feedback Management (Human-in-the-Loop) ─────────────────────────
-export type FeedbackStatus = 'Pending' | 'Running' | 'Suggestion Ready' | 'Accepted' | 'Rejected'
+export type FeedbackStatus = 'Pending' | 'Running' | 'Processed' | 'Accepted' | 'Rejected'
 export type FeedbackStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 
 export interface FeedbackItem {
@@ -712,7 +712,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Update ground truth from Pass to Fail due to amount mismatch',
     createdAt: '2025-03-20 10:30',
@@ -772,7 +772,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Update GL account mapping from 5100 to 5200',
     createdAt: '2025-03-21 09:15',
@@ -832,7 +832,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-001',
     suggestedChange: 'Flag unit price discrepancy - USD to SGD conversion error',
     createdAt: '2025-03-23 08:45',
@@ -862,7 +862,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Update three-way match status - GR confirmed',
     createdAt: '2025-03-24 15:30',

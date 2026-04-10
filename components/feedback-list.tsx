@@ -23,7 +23,7 @@ const { Text, Title } = Typography
 function StatusBadge({ status }: { status: FeedbackStatus }) {
   if (status === "Pending") return <Badge status="default" text={<span style={{ fontSize: 13 }}>Pending</span>} />
   if (status === "Running") return <Badge status="processing" text={<span style={{ fontSize: 13 }}>Running</span>} />
-  if (status === "Suggestion Ready") return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Suggestion Ready</span>} />
+  if (status === "Processed") return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Processed</span>} />
   if (status === "Accepted") return <Badge status="success" text={<span style={{ fontSize: 13 }}>Accepted</span>} />
   if (status === "Rejected") return <Badge status="error" text={<span style={{ fontSize: 13 }}>Rejected</span>} />
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
@@ -148,7 +148,7 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
   const statusOptions: { label: string; value: FeedbackStatus }[] = [
     { label: "Pending", value: "Pending" },
     { label: "Running", value: "Running" },
-    { label: "Suggestion Ready", value: "Suggestion Ready" },
+    { label: "Processed", value: "Processed" },
     { label: "Accepted", value: "Accepted" },
     { label: "Rejected", value: "Rejected" },
   ]
