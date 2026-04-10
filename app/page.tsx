@@ -4,8 +4,8 @@ import { useState, useMemo } from "react"
 import { Layout, Menu, Typography, Select, Breadcrumb, Space } from "antd"
 import {
   DatabaseOutlined, RobotOutlined,
-  FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
-  ApartmentOutlined, FileTextOutlined, GlobalOutlined,
+  FolderOpenOutlined, FolderOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
+  ApartmentOutlined, FileTextOutlined, GlobalOutlined, StarOutlined, AppstoreOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -238,6 +238,17 @@ function handleArchive(newly: ArchivedCaseMock[]) {
               label: "Statistics",
             },
             {
+              key: "case-management-menu",
+              icon: <FolderOutlined />,
+              label: "Case Management",
+              children: [
+                { key: "case-management", icon: <TableOutlined />, label: "Case List" },
+                { key: "golden-case-management", icon: <StarOutlined />, label: "Golden Case Management" },
+                { key: "archived-cases", icon: <InboxOutlined />, label: "Archived Cases" },
+                { key: "pattern-library", icon: <AppstoreOutlined />, label: "Pattern Library" },
+              ],
+            },
+            {
               key: "agent-management",
               icon: <RobotOutlined />,
               label: "Agent Management",
@@ -254,7 +265,6 @@ function handleArchive(newly: ArchivedCaseMock[]) {
                 { key: "feedback-suggestion-list", icon: <TableOutlined />, label: "Feedback Suggestion List" },
               ],
             },
-            { key: "regression-test", icon: <ExperimentOutlined />, label: "Regression Test" },
             { key: "system-architecture", icon: <ApartmentOutlined />, label: "System Architecture" },
             { key: "prd", icon: <FileTextOutlined />, label: "PRD" },
           ]}
