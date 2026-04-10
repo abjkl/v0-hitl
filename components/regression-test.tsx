@@ -1856,23 +1856,36 @@ export function RegressionTest({
             const goldenSuite = suites.find(s => s.type === "golden")
             const isRecommended = goldenSuite ? goldenSuite.goldenPassRate >= 85 : false
 
-            const runDropdownItems: MenuProps["items"] = runHistory.map((r, idx) => ({
+            const currentRunId = currentRun?.runId
+
+            const runDropdownItems: MenuProps["items"] = runHistory.map((r) => {
+              const isSelected = r.runId === currentRunId
+              const dotColor = r.passRate >= 80 ? "#52c41a" : "#faad14"
+              return {
               key: r.runId,
               label: (
-                <div style={{ padding: "4px 0", minWidth: 240 }}>
-                  <div style={{ fontWeight: 500, marginBottom: 2 }}>
+                <div style={{
+                  padding: "6px 4px",
+                  minWidth: 260,
+                  background: isSelected ? "#e6f4ff" : "transparent",
+                  borderRadius: 4,
+                }}>
+                  <div style={{ fontWeight: isSelected ? 600 : 500, marginBottom: 2, color: isSelected ? "#1677ff" : "#262626" }}>
                     {getOrdinal(r.runNumber)} Regression Run
                   </div>
-                  <div style={{ fontSize: 12, color: "#8c8c8c", marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, color: "#8c8c8c", marginBottom: 6 }}>
                     Regression: {r.runAt}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    {r.passRate >= 85 ? (
-                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 12 }} />
-                    ) : (
-                      <WarningOutlined style={{ color: "#faad14", fontSize: 12 }} />
-                    )}
-                    <Text style={{ fontSize: 12, color: r.passRate >= 85 ? "#52c41a" : "#faad14" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: dotColor,
+                      display: "inline-block",
+                      flexShrink: 0,
+                    }} />
+                    <Text style={{ fontSize: 12, color: dotColor }}>
                       Golden pass rate: {r.passRate}%
                     </Text>
                   </div>
@@ -1891,7 +1904,8 @@ export function RegressionTest({
                 }))
                 setSuites(rebuilt)
               },
-            }))
+            }
+            })
 
             return (
               <>
