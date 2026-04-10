@@ -20,33 +20,8 @@ const { Text, Title } = Typography
 
 // ── Status Badge ──────────────────────────────────────────────────
 
-function StatusBadge({ status, processedBy, processedAt }: { status: FeedbackStatus; processedBy?: string; processedAt?: string }) {
+function StatusBadge({ status }: { status: FeedbackStatus }) {
   if (status === "Pending") return <Badge status="default" text={<span style={{ fontSize: 13 }}>Pending</span>} />
-  if (status === "Running") return <Badge status="processing" text={<span style={{ fontSize: 13 }}>Running</span>} />
-  if (status === "Processed") {
-    if (processedBy) {
-      return (
-        <Tooltip
-          title={
-            <div style={{ fontSize: 12, lineHeight: 1.8 }}>
-              <div><span style={{ color: "rgba(255,255,255,0.65)" }}>Processed by: </span>{processedBy}</div>
-              <div><span style={{ color: "rgba(255,255,255,0.65)" }}>Time: </span>{processedAt}</div>
-            </div>
-          }
-        >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "help" }}>
-            <Badge status="warning" />
-            <span style={{
-              fontSize: 13,
-              borderBottom: "1px dashed #d48806",
-              color: "inherit",
-            }}>Processed</span>
-          </span>
-        </Tooltip>
-      )
-    }
-    return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Processed</span>} />
-  }
   if (status === "Accepted") return <Badge status="success" text={<span style={{ fontSize: 13 }}>Accepted</span>} />
   if (status === "Rejected") return <Badge status="error" text={<span style={{ fontSize: 13 }}>Rejected</span>} />
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
@@ -170,8 +145,6 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
 
   const statusOptions: { label: string; value: FeedbackStatus }[] = [
     { label: "Pending", value: "Pending" },
-    { label: "Running", value: "Running" },
-    { label: "Processed", value: "Processed" },
     { label: "Accepted", value: "Accepted" },
     { label: "Rejected", value: "Rejected" },
   ]
@@ -286,9 +259,7 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status: FeedbackStatus, record: FeedbackItem) => (
-        <StatusBadge status={status} processedBy={record.processedBy} processedAt={record.processedAt} />
-      ),
+      render: (status: FeedbackStatus) => <StatusBadge status={status} />,
     },
     {
       title: "Created",
