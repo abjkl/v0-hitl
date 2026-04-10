@@ -1979,7 +1979,7 @@ export function RegressionTest({
                           {s.label}
                         </Text>
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                          Accuracy: {s.accuracy}% / Golden PR: {s.goldenPassRate}%
+                          Golden PR: {s.goldenPassRate}%
                         </Text>
                       </div>
                     )
