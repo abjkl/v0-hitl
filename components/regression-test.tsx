@@ -727,7 +727,7 @@ function VerdictBanner({ suites, simulateFailure, runStatus }: { suites: SuiteRe
   <Text type="secondary" style={{ fontSize: 11 }}>
     Hard Accuracy{" "}
     <span style={{ color: "#434343", fontWeight: 500 }}>{s.accuracy}%</span>
-                {" / "}Golden PR{" "}
+                {" / "}Automation Rate{" "}
                 <span style={{ color: s.pass ? "#389e0d" : "#cf1322", fontWeight: 600 }}>
                   {s.goldenPassRate}%
                 </span>
@@ -1299,12 +1299,14 @@ export function RegressionTest({
   goldenCases,
   onPublish,
   onPassedRun,
+  onViewVersionDetail,
   }: {
   preselectedAgentId?: string
   agents?: Agent[]
   goldenCases?: GoldenCasesState
   onPublish?: (agentId: string) => void
   onPassedRun?: (agentId: string) => void
+  onViewVersionDetail?: (agentId: string, version: string) => void
   }) {
   const { region } = useRegion()
   const [activeTab, setActiveTab] = useState<"runTest" | "prRecord">("runTest")
@@ -1337,6 +1339,7 @@ export function RegressionTest({
   const [simulateFailure, setSimulateFailure] = useState(false)
   const [simulateCaseRunning, setSimulateCaseRunning] = useState(false)
   const [published, setPublished] = useState(false)
+  const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
   const [selectedHistoryRunId, setSelectedHistoryRunId] = useState<string | null>(null)
   const [viewingHistoryRun, setViewingHistoryRun] = useState<RegressionRunRecord | null>(null)
@@ -1344,9 +1347,6 @@ export function RegressionTest({
   const [versionConfigModalOpen, setVersionConfigModalOpen] = useState(false)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<CaseResult | null>(null)
-  const [configMismatchModalOpen, setConfigMismatchModalOpen] = useState(false)
-  const [configDiffRows, setConfigDiffRows] = useState<ConfigDiffRow[]>([])
-  const [configDiffMeta, setConfigDiffMeta] = useState<{ agentName: string; testingVersion: string; liveVersion: string } | null>(null)
   const timerRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
@@ -1604,7 +1604,14 @@ export function RegressionTest({
           <div style={{ paddingTop: 20 }}>
             <Button
               disabled={!selectedId || !selectedVersion}
-              onClick={() => setVersionConfigModalOpen(true)}
+              onClick={() => {
+                if (selectedId && selectedVersion) {
+                  window.open(
+                    `?page=agent-detail&agentId=${selectedId}&version=${selectedVersion}`,
+                    "_blank"
+                  )
+                }
+              }}
               icon={<EyeOutlined />}
             >
               View Version Config
@@ -1613,48 +1620,47 @@ export function RegressionTest({
 
           {runStatus === "done" && (
             <div style={{ paddingTop: 20 }}>
-              <Tooltip title={!canPublish ? "Publishing thresholds not met" : published ? "Already published" : ""}>
-                <Button
-                  type="primary"
-                  icon={<CheckCircleOutlined />}
-                  disabled={!canPublish || published}
-                  style={
-                    published
-                      ? { background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default" }
-                      : canPublish
-                        ? { background: "#52c41a", borderColor: "#52c41a" }
-                        : {}
-                  }
-                  onClick={() => {
-                    if (!selectedId || published) return
-                    // Get live version for the selected agent
-                    const agent = agentsWithTestingVersions.find(a => a.id === selectedId)
-                    const liveVersion = agent?.liveVersion
-                    // Compare configs
-                    const testingConfigKey = `${selectedId}::${selectedVersion}`
-                    const liveConfigKey = liveVersion ? `${selectedId}::${liveVersion}` : null
-                    const testingConfig = VERSION_CONFIGS[testingConfigKey]
-                    const liveConfig = liveConfigKey ? VERSION_CONFIGS[liveConfigKey] : undefined
-                    const diffRows = compareVersionConfigs(testingConfig, liveConfig)
-
-                    if (diffRows.length > 0) {
-                      setConfigDiffRows(diffRows)
-                      setConfigDiffMeta({
-                        agentName: agent?.agentName ?? selectedId,
-                        testingVersion: selectedVersion,
-                        liveVersion: liveVersion ?? "—",
-                      })
-                      setConfigMismatchModalOpen(true)
-                    } else {
-                      // No diff, proceed directly
-                      setPublished(true)
-                      onPublish?.(selectedId)
-                    }
-                  }}
-                >
-                  {published ? "Published" : "Publish Version"}
-                </Button>
-              </Tooltip>
+              {(() => {
+                const agent = agentsWithTestingVersions.find(a => a.id === selectedId)
+                const isLiveVersion = agent?.liveVersion === selectedVersion
+                
+                if (isLiveVersion) {
+                  // Live version - show Published button (disabled)
+                  return (
+                    <Button
+                      disabled
+                      style={{ background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default", color: "#fff" }}
+                      icon={<CheckCircleOutlined />}
+                    >
+                      Published
+                    </Button>
+                  )
+                } else {
+                  // Testing version - show Publish Version button
+                  return (
+                    <Tooltip title={!canPublish ? "Publishing thresholds not met" : published ? "Already published" : ""}>
+                      <Button
+                        type="primary"
+                        icon={<CheckCircleOutlined />}
+                        disabled={!canPublish || published}
+                        style={
+                          published
+                            ? { background: "#8c8c8c", borderColor: "#8c8c8c", cursor: "default" }
+                            : canPublish
+                              ? { background: "#52c41a", borderColor: "#52c41a" }
+                              : {}
+                        }
+                        onClick={() => {
+                          if (!selectedId || published) return
+                          setPublishModalOpen(true)
+                        }}
+                      >
+                        {published ? "Published" : "Publish Version"}
+                      </Button>
+                    </Tooltip>
+                  )
+                }
+              })()}
             </div>
           )}
         </div>
@@ -1679,9 +1685,9 @@ export function RegressionTest({
                   <tr style={{ borderBottom: "1px solid #f0f0f0" }}>
                     <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Run ID</th>
                     <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Date / Time</th>
-                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Pass Rate</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Hard Accuracy</th>
+                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Automation Rate</th>
                     <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>Status</th>
-                    <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "#8c8c8c", fontWeight: 500 }}>AI Result</th>
                     <th style={{ textAlign: "left", padding: "6px 0", color: "#8c8c8c", fontWeight: 500 }}>Action</th>
                   </tr>
                 </thead>
@@ -1695,8 +1701,13 @@ export function RegressionTest({
                         <Text type="secondary">{r.runAt}</Text>
                       </td>
                       <td style={{ padding: "8px 12px 8px 0" }}>
-                        <Text style={{ color: r.passRate && r.passRate >= 85 ? "#52c41a" : "#cf1322", fontWeight: 500 }}>
-                          {r.status === "Running" ? "--" : `${r.passRate}%`}
+                        <Text style={{ color: r.status === "Running" ? "#8c8c8c" : (r.passRate && r.passRate >= 85 ? "#52c41a" : "#cf1322"), fontWeight: 500 }}>
+                          {r.status === "Running" ? "--" : `${r.passRate ?? 0}%`}
+                        </Text>
+                      </td>
+                      <td style={{ padding: "8px 12px 8px 0" }}>
+                        <Text style={{ color: r.status === "Running" ? "#8c8c8c" : "#434343", fontWeight: 500 }}>
+                          {r.status === "Running" ? "--" : `${r.passRate ? Math.round(r.passRate * 0.9) : 0}%`}
                         </Text>
                       </td>
                       <td style={{ padding: "8px 12px 8px 0" }}>
@@ -1710,12 +1721,6 @@ export function RegressionTest({
                         }}>
                           {r.status === "Running" ? "Running" : r.status}
                         </Tag>
-                      </td>
-                      <td style={{ padding: "8px 12px 8px 0" }}>
-                        <Typography.Link style={{ fontSize: 12 }} onClick={(e) => {
-                          e.stopPropagation()
-                          setAiResultDrawerRun(r)
-                        }}>View</Typography.Link>
                       </td>
                       <td style={{ padding: "8px 0" }}>
                         <Typography.Link style={{ fontSize: 12 }} onClick={(e) => {
@@ -2125,64 +2130,39 @@ export function RegressionTest({
         </div>
       )}
 
-      {/* Configuration Mismatch Modal */}
+      {/* Publish Confirmation Modal */}
       <Modal
-        title="Configuration Mismatch Detected"
-        open={configMismatchModalOpen}
-        onCancel={() => setConfigMismatchModalOpen(false)}
-        width={600}
+        title="Confirm Publishing"
+        open={publishModalOpen}
+        onCancel={() => setPublishModalOpen(false)}
         footer={[
-          <Button key="cancel" onClick={() => setConfigMismatchModalOpen(false)}>
+          <Button key="cancel" onClick={() => setPublishModalOpen(false)}>
             Cancel
           </Button>,
           <Button
             key="confirm"
             type="primary"
             onClick={() => {
-              setConfigMismatchModalOpen(false)
+              setPublishModalOpen(false)
               setPublished(true)
               onPublish?.(selectedId)
+              msgApi.success("Version published successfully")
             }}
+            style={{ background: "#52c41a", borderColor: "#52c41a" }}
           >
-            Confirm Publish
+            Confirm
           </Button>,
         ]}
       >
-        {configDiffMeta && (
-          <Text type="secondary" style={{ fontSize: 13, display: "block", marginBottom: 16 }}>
-            Comparing <Text strong>{configDiffMeta.agentName}</Text>{" "}
-            <Text code>{configDiffMeta.testingVersion}</Text>{" "}
-            <Text type="secondary">(Testing)</Text>{" vs "}
-            <Text code>{configDiffMeta.liveVersion}</Text>{" "}
-            <Text type="secondary">(Live)</Text>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Text>
+            Are you sure you want to publish <Text code>{selectedVersion}</Text> to Live?
           </Text>
-        )}
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: "#fafafa" }}>
-              <th style={{ textAlign: "left", padding: "8px 12px", border: "1px solid #f0f0f0", color: "#8c8c8c", fontWeight: 500, width: "28%" }}>Field</th>
-              <th style={{ textAlign: "left", padding: "8px 12px", border: "1px solid #f0f0f0", color: "#cf1322", fontWeight: 500, width: "36%" }}>
-                Testing{configDiffMeta ? ` (${configDiffMeta.testingVersion})` : ""}
-              </th>
-              <th style={{ textAlign: "left", padding: "8px 12px", border: "1px solid #f0f0f0", color: "#389e0d", fontWeight: 500, width: "36%" }}>
-                Live{configDiffMeta ? ` (${configDiffMeta.liveVersion})` : ""}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {configDiffRows.map((row) => (
-              <tr key={row.field}>
-                <td style={{ padding: "8px 12px", border: "1px solid #f0f0f0", fontWeight: 500 }}>{row.field}</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #f0f0f0", background: "#fff1f0", fontFamily: "monospace", fontSize: 12, wordBreak: "break-all" }}>{row.testingValue}</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #f0f0f0", background: "#f6ffed", fontFamily: "monospace", fontSize: 12, wordBreak: "break-all" }}>{row.liveValue}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div style={{ marginTop: 14, padding: "8px 12px", background: "#fffbe6", border: "1px solid #ffe58f", borderRadius: 4 }}>
-          <Text style={{ fontSize: 12, color: "#874d00" }}>
-            Publishing will make the Testing version the new Live version. This action cannot be undone.
-          </Text>
+          <div style={{ padding: "8px 12px", background: "#fffbe6", border: "1px dashed #ffe58f", borderRadius: 4 }}>
+            <Text style={{ fontSize: 12, color: "#874d00" }}>
+              This will replace the current Live version with the Testing version.
+            </Text>
+          </div>
         </div>
       </Modal>
 

@@ -24,8 +24,7 @@ const { Text, Title, Paragraph } = Typography
 
 function SuggestionTypeBadge({ type }: { type: AgentBSuggestionType }) {
   const colors: Record<AgentBSuggestionType, { bg: string; border: string; text: string; label: string }> = {
-    ADD_RULE: { bg: "#e6f4ff", border: "#91caff", text: "#0958d9", label: "ADD_RULE" },
-    MODIFY_RULE: { bg: "#fff7e6", border: "#ffd591", text: "#c05621", label: "MODIFY_RULE" },
+    MODIFY_PROMPT: { bg: "#f9f0ff", border: "#d3aef8", text: "#531dab", label: "MODIFY_PROMPT" },
     DATA_POINT: { bg: "#f5f5f5", border: "#d9d9d9", text: "#595959", label: "DATA_POINT" },
   }
   const cfg = colors[type]
@@ -125,34 +124,6 @@ function ModifyRuleDiff({ currentRule, suggestedRule }: { currentRule: string; s
   )
 }
 
-// ── New Rule Display for ADD_RULE ─────────────────────────────────
-
-function NewRuleDisplay({ newRule, insertInto }: { newRule: string; insertInto: string }) {
-  return (
-    <div style={{ marginTop: 12 }}>
-      <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 8 }}>Proposed New Rule</Text>
-      <div style={{
-        background: "#f6ffed",
-        border: "2px solid #52c41a",
-        borderRadius: 4,
-        padding: "12px",
-        fontFamily: "monospace",
-        fontSize: 12,
-        lineHeight: 1.6,
-        color: "#389e0d",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-        marginBottom: 12,
-      }}>
-        {newRule}
-      </div>
-      <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-        <strong>Insert into:</strong> {insertInto}
-      </Text>
-    </div>
-  )
-}
-
 // ── Suggestion Card ───────────────────────────────────────────────
 
 function RuleSuggestionCard({
@@ -231,14 +202,61 @@ function RuleSuggestionCard({
 
       {/* Rule Change section based on type */}
       <div>
-        {rule.type === "ADD_RULE" && rule.ruleChange.newRule && (
-          <NewRuleDisplay newRule={rule.ruleChange.newRule} insertInto={rule.ruleChange.insertInto || ""} />
-        )}
-        
-        {rule.type === "MODIFY_RULE" && rule.ruleChange.currentRule && rule.ruleChange.suggestedRule && (
+        {rule.type === "MODIFY_PROMPT" && (
           <>
-            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 12 }}>Rule Change (Diff View)</Text>
-            <ModifyRuleDiff currentRule={rule.ruleChange.currentRule} suggestedRule={rule.ruleChange.suggestedRule} />
+            {rule.ruleChange.currentRule && rule.ruleChange.suggestedRule && (
+              <>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 12 }}>Modify Prompt (Diff View)</Text>
+                <ModifyRuleDiff currentRule={rule.ruleChange.currentRule} suggestedRule={rule.ruleChange.suggestedRule} />
+              </>
+            )}
+            {rule.ruleChange.currentPrompt && rule.ruleChange.suggestedPrompt && (
+              <>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 12 }}>Modify Prompt</Text>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 12 }}>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, display: "block", marginBottom: 8, color: "#cf1322" }}>Current Prompt</Text>
+                    <div style={{
+                      background: "#fff1f0",
+                      border: "1px solid #ffccc7",
+                      borderRadius: 4,
+                      padding: "12px",
+                      fontSize: 13,
+                      color: "#595959",
+                      lineHeight: 1.6,
+                      minHeight: 200,
+                      maxHeight: 400,
+                      overflowY: "auto",
+                      fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}>
+                      {rule.ruleChange.currentPrompt}
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, display: "block", marginBottom: 8, color: "#52c41a" }}>Suggested Prompt</Text>
+                    <div style={{
+                      background: "#f6ffed",
+                      border: "1px solid #b7eb8f",
+                      borderRadius: 4,
+                      padding: "12px",
+                      fontSize: 13,
+                      color: "#595959",
+                      lineHeight: 1.6,
+                      minHeight: 200,
+                      maxHeight: 400,
+                      overflowY: "auto",
+                      fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}>
+                      {rule.ruleChange.suggestedPrompt}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
         

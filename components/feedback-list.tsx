@@ -20,10 +20,27 @@ const { Text, Title } = Typography
 
 // ── Status Badge ──────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: FeedbackStatus }) {
+function StatusBadge({ status, processedBy, processedAt }: { status: FeedbackStatus; processedBy?: string; processedAt?: string }) {
   if (status === "Pending") return <Badge status="default" text={<span style={{ fontSize: 13 }}>Pending</span>} />
   if (status === "Running") return <Badge status="processing" text={<span style={{ fontSize: 13 }}>Running</span>} />
-  if (status === "Suggestion Ready") return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Suggestion Ready</span>} />
+  if (status === "Processed") {
+    const badge = <Badge status="warning" text={<span style={{ fontSize: 13, cursor: processedBy ? "default" : undefined }}>Processed</span>} />
+    if (processedBy) {
+      return (
+        <Tooltip
+          title={
+            <div style={{ fontSize: 12, lineHeight: 1.8 }}>
+              <div><span style={{ color: "rgba(255,255,255,0.65)" }}>Processed by: </span>{processedBy}</div>
+              <div><span style={{ color: "rgba(255,255,255,0.65)" }}>Time: </span>{processedAt}</div>
+            </div>
+          }
+        >
+          {badge}
+        </Tooltip>
+      )
+    }
+    return badge
+  }
   if (status === "Accepted") return <Badge status="success" text={<span style={{ fontSize: 13 }}>Accepted</span>} />
   if (status === "Rejected") return <Badge status="error" text={<span style={{ fontSize: 13 }}>Rejected</span>} />
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
@@ -148,7 +165,7 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
   const statusOptions: { label: string; value: FeedbackStatus }[] = [
     { label: "Pending", value: "Pending" },
     { label: "Running", value: "Running" },
-    { label: "Suggestion Ready", value: "Suggestion Ready" },
+    { label: "Processed", value: "Processed" },
     { label: "Accepted", value: "Accepted" },
     { label: "Rejected", value: "Rejected" },
   ]
@@ -195,6 +212,20 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
       render: (text: string) => <Text style={{ fontSize: 13 }}>{text}</Text>,
     },
     {
+      title: "PR #",
+      dataIndex: "prNo",
+      key: "prNo",
+      width: 130,
+      render: (text: string) => <Text style={{ fontSize: 13 }}>{text}</Text>,
+    },
+    {
+      title: "PO #",
+      dataIndex: "poNo",
+      key: "poNo",
+      width: 130,
+      render: (text: string) => <Text style={{ fontSize: 13 }}>{text}</Text>,
+    },
+    {
       title: "Supplier",
       dataIndex: "supplierName",
       key: "supplierName",
@@ -207,7 +238,33 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
       ),
     },
     {
-      title: "Suggested Change",
+      title: "Agent",
+      dataIndex: "agentName",
+      key: "agentName",
+      width: 160,
+      ellipsis: true,
+      render: (text: string) => (
+        <Tooltip title={text}>
+          <Text style={{ fontSize: 13 }}>{text}</Text>
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Version",
+      dataIndex: "agentVersion",
+      key: "agentVersion",
+      width: 100,
+      render: (text: string) => <Text code style={{ fontSize: 12 }}>{text}</Text>,
+    },
+    {
+      title: "Feedback Item",
+      dataIndex: "caseId",
+      key: "feedbackItem",
+      width: 120,
+      render: (text: string) => <Text style={{ fontSize: 13 }}>{text}</Text>,
+    },
+    {
+      title: "Feedback Detail",
       dataIndex: "suggestedChange",
       key: "suggestedChange",
       flex: 1,
@@ -223,7 +280,9 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status: FeedbackStatus) => <StatusBadge status={status} />,
+      render: (status: FeedbackStatus, record: FeedbackItem) => (
+        <StatusBadge status={status} processedBy={record.processedBy} processedAt={record.processedAt} />
+      ),
     },
     {
       title: "Created",
@@ -231,21 +290,6 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
       key: "createdAt",
       width: 140,
       render: (text: string) => <Text type="secondary" style={{ fontSize: 12 }}>{text}</Text>,
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      width: 80,
-      fixed: "right",
-      render: (_: unknown, record: FeedbackItem) => (
-        <Button
-          type="text"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => onViewRunDetail(record.agentBRunId)}
-          style={{ color: "#1890ff", padding: 0 }}
-        />
-      ),
     },
   ]
 

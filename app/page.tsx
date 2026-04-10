@@ -4,8 +4,8 @@ import { useState, useMemo } from "react"
 import { Layout, Menu, Typography, Select, Breadcrumb, Space } from "antd"
 import {
   DatabaseOutlined, RobotOutlined,
-  FolderOpenOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
-  ApartmentOutlined, FileTextOutlined, GlobalOutlined,
+  FolderOpenOutlined, FolderOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
+  ApartmentOutlined, FileTextOutlined, GlobalOutlined, StarOutlined, AppstoreOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -72,6 +72,8 @@ function AppShell() {
   const [selectedKey, setSelectedKey] = useState("knowledge-detail")
   const [openKeys, setOpenKeys] = useState<string[]>(["knowledge-base", "case-management-menu", "agent-management", "feedback-management-menu"])
   const [regressionAgentId, setRegressionAgentId] = useState<string | undefined>(undefined)
+  const [selectedAgentDetailId, setSelectedAgentDetailId] = useState<string>("AGT-002")
+  const [selectedAgentDetailVersion, setSelectedAgentDetailVersion] = useState<string | undefined>(undefined)
   const [selectedAgentBRunId, setSelectedAgentBRunId] = useState<string | null>(null)
   const [selectedCase, setSelectedCase] = useState<AuditCase | null>(null)
   const [agents, setAgents] = useState<Agent[]>(agentListData)
@@ -165,6 +167,12 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     setPage("agent-detail")
   }
 
+  function goToAgentVersionDetail(agentId: string, version?: string) {
+    setSelectedAgentDetailId(agentId)
+    setSelectedAgentDetailVersion(version)
+    setPage("agent-detail")
+  }
+
   function goToAgentList() {
     setPage("agent-list")
     setSelectedKey("agent-management")
@@ -230,6 +238,17 @@ function handleArchive(newly: ArchivedCaseMock[]) {
               label: "Statistics",
             },
             {
+              key: "case-management-menu",
+              icon: <FolderOutlined />,
+              label: "Case Management",
+              children: [
+                { key: "case-management", icon: <TableOutlined />, label: "Case List" },
+                { key: "golden-case-management", icon: <StarOutlined />, label: "Golden Case Management" },
+                { key: "archived-cases", icon: <InboxOutlined />, label: "Archived Cases" },
+                { key: "pattern-library", icon: <AppstoreOutlined />, label: "Pattern Library" },
+              ],
+            },
+            {
               key: "agent-management",
               icon: <RobotOutlined />,
               label: "Agent Management",
@@ -246,7 +265,6 @@ function handleArchive(newly: ArchivedCaseMock[]) {
                 { key: "feedback-suggestion-list", icon: <TableOutlined />, label: "Feedback Suggestion List" },
               ],
             },
-            { key: "regression-test", icon: <ExperimentOutlined />, label: "Regression Test" },
             { key: "system-architecture", icon: <ApartmentOutlined />, label: "System Architecture" },
             { key: "prd", icon: <FileTextOutlined />, label: "PRD" },
           ]}
@@ -317,10 +335,10 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "archived-cases"          && <ArchiveCase archivedCases={archivedCases} onRestoreToList={handleRestore} />}
           {page === "golden-case-management"  && <GoldenCaseManagement goldenCases={goldenCases} setGoldenCases={setGoldenCases} />}
           {page === "case-detail"        && selectedCase && <CaseDetail record={selectedCase} onBack={goToCaseList} />}
-          {page === "regression-test"    && <RegressionTest preselectedAgentId={regressionAgentId} agents={agents} goldenCases={goldenCases} onPublish={handlePublish} onPassedRun={handlePassedRun} />}
+          {page === "regression-test"    && <RegressionTest preselectedAgentId={regressionAgentId} agents={agents} goldenCases={goldenCases} onPublish={handlePublish} onPassedRun={handlePassedRun} onViewVersionDetail={goToAgentVersionDetail} />}
           {page === "agent-list"         && <AgentList agents={agents} setAgents={setAgents} onView={goToAgentDetail} onTriggerTest={goToRegressionTest} />}
           {page === "pattern-library"    && <PatternLibrary />}
-          {page === "agent-detail"       && <AgentDetail agentId="AGT-002" passedAgentIds={passedAgentIds} onBack={goToAgentList} onPublish={handlePublish} onGoToRegressionTest={goToRegressionTest} />}
+          {page === "agent-detail"       && <AgentDetail agentId={selectedAgentDetailId} initialVersion={selectedAgentDetailVersion} passedAgentIds={passedAgentIds} onBack={goToAgentList} onPublish={handlePublish} onGoToRegressionTest={goToRegressionTest} />}
           {page === "system-architecture" && <SystemArchitecture />}
           {page === "prd"                     && <PrdViewer onNavigate={(p) => { setPage(p as Page); setSelectedKey(p); }} />}
           {page === "statistics"              && <Statistics />}

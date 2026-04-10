@@ -683,7 +683,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
 ]
 
 // ── Feedback Management (Human-in-the-Loop) ─────────────────────────
-export type FeedbackStatus = 'Pending' | 'Running' | 'Suggestion Ready' | 'Accepted' | 'Rejected'
+export type FeedbackStatus = 'Pending' | 'Running' | 'Processed' | 'Accepted' | 'Rejected'
 export type FeedbackStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 
 export interface FeedbackItem {
@@ -691,15 +691,21 @@ export interface FeedbackItem {
   feedbackId: string
   caseId: string
   invoiceNo: string
+  prNo: string
+  poNo: string
   supplierName: string
   step: FeedbackStep
   region: string
   entity: string
   status: FeedbackStatus
   agentBRunId: string
+  agentName: string
+  agentVersion: string
   suggestedChange: string
   createdAt: string
   updatedAt: string
+  processedBy?: string
+  processedAt?: string
 }
 
 export const feedbackData: FeedbackItem[] = [
@@ -708,27 +714,37 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0001',
     caseId: 'CASE-001',
     invoiceNo: 'INV-2025-0001',
+    prNo: 'PR-2025-0001',
+    poNo: 'PO-2024-0001',
     supplierName: 'Accenture Pte Ltd',
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-001',
+    agentName: 'Invoice Review Agent',
+    agentVersion: 'v1.3.0',
     suggestedChange: 'Update ground truth from Pass to Fail due to amount mismatch',
     createdAt: '2025-03-20 10:30',
     updatedAt: '2025-03-20 10:30',
+    processedBy: 'Alice Tan',
+    processedAt: '2025-03-20 11:15',
   },
   {
     key: 'fb-2',
     feedbackId: 'FB-2025-0002',
     caseId: 'CASE-002',
     invoiceNo: 'INV-2025-0002',
+    prNo: 'PR-2025-0002',
+    poNo: 'PO-2024-0002',
     supplierName: 'AWS Singapore Pte Ltd',
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
     status: 'Pending',
     agentBRunId: 'RUN-OV-001',
+    agentName: 'Invoice Review Agent',
+    agentVersion: 'v1.3.0',
     suggestedChange: 'Add pattern "duplicate-invoice" to detection list',
     createdAt: '2025-03-20 10:32',
     updatedAt: '2025-03-20 10:32',
@@ -738,12 +754,16 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0003',
     caseId: 'CASE-003',
     invoiceNo: 'INV-2025-0003',
+    prNo: 'PR-2025-0003',
+    poNo: 'PO-2024-0003',
     supplierName: 'Accenture Pte Ltd',
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
     status: 'Accepted',
     agentBRunId: 'RUN-OV-002',
+    agentName: 'Match Agent',
+    agentVersion: 'v2.1.0',
     suggestedChange: 'Update match status from N/A to Matched after PO data correction',
     createdAt: '2025-03-19 14:20',
     updatedAt: '2025-03-19 16:45',
@@ -753,12 +773,16 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0004',
     caseId: 'CASE-008',
     invoiceNo: 'INV-2025-0008',
+    prNo: 'PR-2025-0008',
+    poNo: 'PO-2024-0008',
     supplierName: 'Siemens Singapore',
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
     status: 'Rejected',
     agentBRunId: 'RUN-OV-002',
+    agentName: 'Match Agent',
+    agentVersion: 'v2.1.0',
     suggestedChange: 'Remove pattern "line-item-qty-mismatch" - false positive',
     createdAt: '2025-03-19 14:25',
     updatedAt: '2025-03-19 17:10',
@@ -768,27 +792,37 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0005',
     caseId: 'CASE-005',
     invoiceNo: 'INV-2025-0005',
+    prNo: 'PR-2025-0005',
+    poNo: 'PO-2024-0005',
     supplierName: 'AWS Singapore Pte Ltd',
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-001',
+    agentName: 'AP Voucher Agent',
+    agentVersion: 'v1.0.0',
     suggestedChange: 'Update GL account mapping from 5100 to 5200',
     createdAt: '2025-03-21 09:15',
     updatedAt: '2025-03-21 09:15',
+    processedBy: 'Bob Chen',
+    processedAt: '2025-03-21 10:02',
   },
   {
     key: 'fb-6',
     feedbackId: 'FB-2025-0006',
     caseId: 'CASE-011',
     invoiceNo: 'INV-2025-0011',
+    prNo: 'PR-2025-0011',
+    poNo: 'PO-2024-0011',
     supplierName: 'Google Asia Pacific',
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
     status: 'Running',
     agentBRunId: 'RUN-OV-001',
+    agentName: 'AP Voucher Agent',
+    agentVersion: 'v1.0.0',
     suggestedChange: 'Change cost center from CC-1001 to CC-1002',
     createdAt: '2025-03-21 09:20',
     updatedAt: '2025-03-21 09:20',
@@ -798,12 +832,16 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0007',
     caseId: 'CASE-012',
     invoiceNo: 'INV-2025-0012',
+    prNo: 'PR-2025-0012',
+    poNo: 'PO-2024-0012',
     supplierName: 'Accenture Pte Ltd',
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
     status: 'Pending',
     agentBRunId: 'RUN-OV-002',
+    agentName: 'Invoice Review Agent',
+    agentVersion: 'v1.4.0-beta',
     suggestedChange: 'Add pattern "header-check" based on missing vendor code',
     createdAt: '2025-03-22 11:00',
     updatedAt: '2025-03-22 11:00',
@@ -813,12 +851,16 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0008',
     caseId: 'CASE-014',
     invoiceNo: 'INV-2025-0014',
+    prNo: 'PR-2025-0014',
+    poNo: 'PO-2024-0014',
     supplierName: 'Google Asia Pacific',
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
     status: 'Accepted',
     agentBRunId: 'RUN-OV-002',
+    agentName: 'Invoice Review Agent',
+    agentVersion: 'v1.4.0-beta',
     suggestedChange: 'Confirm amount mismatch pattern - tolerance exceeded by 5%',
     createdAt: '2025-03-22 11:05',
     updatedAt: '2025-03-22 14:30',
@@ -828,27 +870,37 @@ export const feedbackData: FeedbackItem[] = [
     feedbackId: 'FB-2025-0009',
     caseId: 'CASE-016',
     invoiceNo: 'INV-2025-0016',
+    prNo: 'PR-2025-0016',
+    poNo: 'PO-2024-0016',
     supplierName: 'Salesforce Singapore',
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-001',
+    agentName: 'Match Agent',
+    agentVersion: 'v2.0.0',
     suggestedChange: 'Flag unit price discrepancy - USD to SGD conversion error',
     createdAt: '2025-03-23 08:45',
     updatedAt: '2025-03-23 08:45',
+    processedBy: 'Alice Tan',
+    processedAt: '2025-03-23 09:30',
   },
   {
     key: 'fb-10',
     feedbackId: 'FB-2025-0010',
     caseId: 'CASE-021',
     invoiceNo: 'INV-2025-0021',
+    prNo: 'PR-2025-0021',
+    poNo: 'PO-2024-0021',
     supplierName: 'DHL Express Pte Ltd',
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
     status: 'Rejected',
     agentBRunId: 'RUN-OV-001',
+    agentName: 'Invoice Review Agent',
+    agentVersion: 'v1.3.0',
     suggestedChange: 'Remove GST calculation error flag - tax rate is correct',
     createdAt: '2025-03-23 08:50',
     updatedAt: '2025-03-23 10:15',
@@ -862,7 +914,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Suggestion Ready',
+    status: 'Processed',
     agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Update three-way match status - GR confirmed',
     createdAt: '2025-03-24 15:30',
@@ -887,7 +939,7 @@ export const feedbackData: FeedbackItem[] = [
 
 // ── Agent B Run Detail ───────────────────────────────────────────────
 export type AgentBSuggestionStatus = 'Pending' | 'Accepted' | 'Rejected'
-export type AgentBSuggestionType = 'ADD_RULE' | 'MODIFY_RULE' | 'DATA_POINT'
+export type AgentBSuggestionType = 'MODIFY_PROMPT' | 'DATA_POINT'
 
 export interface AgentBRuleChange {
   type: AgentBSuggestionType
@@ -904,6 +956,8 @@ export interface AgentBRuleChange {
     newRule?: string
     observation?: string
     insertInto?: string
+    currentPrompt?: string
+    suggestedPrompt?: string
   }
 }
 
@@ -944,26 +998,24 @@ export const agentBRunData: Record<string, AgentBRunDetail> = {
     suggestions: [
       {
         key: 's1',
-        confidence: 0.92,
-        status: 'Pending',
+        confidence: 0.91,
+        status: 'Accepted',
         ruleChange: {
-          type: 'ADD_RULE',
-          title: 'Add BIR Information Validation Rule',
+          type: 'MODIFY_PROMPT',
+          title: 'Adjust Date Format Validation Logic',
           feedbackSource: {
             prNo: 'PR-2024-08821',
-            checkItem: 'Invoice Info Check',
-            comment: 'Invoice info needs to check BIR information, this rule was not in the prompt',
+            checkItem: 'Invoice Date Format',
+            comment: 'Current validation accepts MM/DD/YYYY but reviewers expect DD/MM/YYYY for consistency',
           },
-          analysisNotes: 'The human reviewer flagged that BIR (Business Identification Number) validation is entirely absent from the current Invoice Format Check Agent prompt. BIR is a mandatory field for PH entity supplier invoices under local tax compliance requirements. Recommend adding as a hard-fail rule.',
+          analysisNotes: 'Multiple reviewers noted inconsistency in date format acceptance. Current rule allows MM/DD/YYYY (US format) but company standard requires DD/MM/YYYY for uniformity across Asia-Pacific. Recommend tightening validation to strictly enforce DD/MM/YYYY only.',
           ruleChange: {
-            newRule: `Rule: BIR Information Validation (PH Entity)
-Applicability: Invoices where supplier entity = PH
-Check: BIR (Business Identification Number) must be
-present on invoice face and must match supplier
-master data BIR field exactly.
-Failure condition: BIR absent or mismatch → REJECT
-with reason: "BIR validation failed"`,
-            insertInto: 'Invoice Format Check Agent → Section: Required Invoice Fields',
+            currentRule: `Rule: Invoice Date Format
+Accepts date formats: DD/MM/YYYY or MM/DD/YYYY
+If date format invalid → flag as FAIL`,
+            suggestedRule: `Rule: Invoice Date Format
+Accepts date format: DD/MM/YYYY only (company standard for SEA/EA regions)
+If date format other than DD/MM/YYYY → flag as FAIL`,
           },
         },
       },
@@ -972,7 +1024,7 @@ with reason: "BIR validation failed"`,
         confidence: 0.87,
         status: 'Pending',
         ruleChange: {
-          type: 'MODIFY_RULE',
+          type: 'MODIFY_PROMPT',
           title: 'Update Date Format Validation',
           feedbackSource: {
             prNo: 'PR-2024-08831',
@@ -997,8 +1049,138 @@ Cross-check date against PO issue date.`,
           },
         },
       },
+      {
+        key: 's3',
+        confidence: 0.89,
+        status: 'Pending',
+        ruleChange: {
+          type: 'MODIFY_PROMPT',
+          title: 'Enhance Prompt with Currency Handling Guidelines',
+          feedbackSource: {
+            prNo: 'PR-2024-08845',
+            checkItem: 'Currency Normalization',
+            comment: 'Agent should normalize all currencies to SGD using latest exchange rates before validation',
+          },
+          analysisNotes: 'The current prompt does not provide guidance on multi-currency invoice handling. Reviewers flagged that invoices in USD, EUR, and other currencies require normalization to SGD for proper matching and amount validation. Recommend adding explicit currency handling guidance to the system prompt.',
+          ruleChange: {
+            currentPrompt: `You are an Invoice Format Check Agent. Your role is to validate invoice format compliance and identify any structural issues.
+
+Key Responsibilities:
+1. Check invoice header information (vendor name, invoice date, invoice number)
+2. Validate invoice line items (description, quantity, unit price)
+3. Verify invoice footer (total amount, tax calculation if applicable)
+4. Ensure date format is DD/MM/YYYY
+5. Cross-reference with PO data for completeness
+
+Report any format violations as FAIL with detailed reasons.`,
+            suggestedPrompt: `You are an Invoice Format Check Agent. Your role is to validate invoice format compliance and identify any structural issues.
+
+Key Responsibilities:
+1. Check invoice header information (vendor name, invoice date, invoice number)
+2. Validate invoice line items (description, quantity, unit price)
+3. Verify invoice footer (total amount, tax calculation if applicable)
+4. Ensure date format is DD/MM/YYYY
+5. Cross-reference with PO data for completeness
+
+Currency Handling:
+- If invoice is in foreign currency (USD, EUR, etc.), normalize all amounts to SGD
+- Use current exchange rate from financial system
+- Apply normalization before any amount validations
+- Document original currency and exchange rate used in report
+
+Report any format violations as FAIL with detailed reasons.`,
+          },
+        },
+      },
     ],
-    analysisNotes: 'Agent B analyzed 2 feedback items for Invoice Format Check Agent. Two rule gaps were identified: (1) BIR validation is entirely absent from current prompt for PH entity invoices; (2) date format validation accepts MM/DD/YYYY but reviewers expect DD/MM/YYYY. One prompt modification and one new rule are recommended.',
+    analysisNotes: 'Agent B analyzed 2 feedback items for Invoice Format Check Agent. One rule modification and one prompt modification are recommended to improve format validation consistency and expand the Agent prompt with enhanced guidelines.',
+  },
+  'RUN-B-002': {
+    runId: 'RUN-B-002',
+    triggeredBy: 'John Smith',
+    triggeredAt: '2025-03-19 14:18',
+    feedbackCount: 1,
+    agentCount: 1,
+    completedCount: 1,
+    region: 'SEA',
+    entity: 'SG',
+    runAt: '2025-03-19 14:18',
+    agentVersion: 'v2.0.0',
+    agentName: 'PO Match Agent',
+    suggestions: [
+      {
+        key: 's1',
+        confidence: 0.95,
+        status: 'Accepted',
+        ruleChange: {
+          type: 'MODIFY_PROMPT',
+          title: 'Tighten Line-Item Quantity Matching Tolerance',
+          feedbackSource: {
+            prNo: 'PR-2024-08832',
+            checkItem: 'Line Item Quantity Match',
+            comment: 'Current tolerance of 10% is too loose; should be 5% or less',
+          },
+          analysisNotes: 'Multiple reviewers noted false PASS results when invoice quantities were 7-10% off from PO. This is unacceptable in procurement. Recommend lowering tolerance from 10% to 5% for strict compliance. Risk of accepting fraudulent or erroneous invoices is too high.',
+          ruleChange: {
+            currentRule: `Rule: Line-Item Quantity Match
+PO quantity must match invoice line-item quantity
+with tolerance of ±10%.
+If mismatch > 10%, flag as FAIL.
+Allow partial match if reason documented.`,
+            suggestedRule: `Rule: Line-Item Quantity Match
+PO quantity must match invoice line-item quantity
+with tolerance of ±5%.
+If mismatch > 5%, flag as FAIL.
+No partial match exceptions allowed.`,
+          },
+        },
+      },
+    ],
+    analysisNotes: 'Agent B analyzed 1 feedback item for PO Match Agent. One rule modification recommended: tighten line-item quantity matching tolerance from ±10% to ±5% for stricter compliance.',
+  },
+  'RUN-B-003': {
+    runId: 'RUN-B-003',
+    triggeredBy: 'Sarah Johnson',
+    triggeredAt: '2025-03-21 09:12',
+    feedbackCount: 1,
+    agentCount: 1,
+    completedCount: 1,
+    region: 'SEA',
+    entity: 'SG',
+    runAt: '2025-03-21 09:12',
+    agentVersion: 'v1.0.0',
+    agentName: 'AP Voucher Agent',
+    suggestions: [
+      {
+        key: 's1',
+        confidence: 0.88,
+        status: 'Pending',
+        ruleChange: {
+          type: 'DATA_POINT',
+          title: 'Observation: GL Account Mapping Pattern Identified',
+          feedbackSource: {
+            prNo: 'PR-2024-08850',
+            checkItem: 'GL Account Assignment',
+            comment: 'Noticed pattern in GL account selection for IT service vendors',
+          },
+          analysisNotes: 'While reviewing AP Voucher processing, multiple IT service vendors (Salesforce, AWS, Microsoft) are being mapped to GL account 5100. However, some of these should map to 5150 (Cloud Services) instead of 5100 (Software License). This is a recurring data pattern that reviewers flagged. No rule change needed; just documenting the observation for manual review and potential future rule development.',
+          ruleChange: {
+            observation: `Observation: GL Account Assignment Pattern
+Multiple IT service vendors are being assigned to GL account 5100 (Software License) when they should potentially be assigned to GL account 5150 (Cloud Services).
+
+Affected vendors:
+- Salesforce: Currently 5100, consider 5150
+- AWS: Currently 5100, consider 5150  
+- Microsoft Azure: Currently 5100, consider 5150
+
+Pattern: Cloud-based SaaS solutions are being over-classified as software licenses. Recommend manual review of GL mapping rules for IT services.
+
+Frequency: Identified in ~15% of IT service invoices in current batch.`,
+          },
+        },
+      },
+    ],
+    analysisNotes: 'Agent B analyzed 1 feedback item for AP Voucher Agent. One data-point observation documented: potential GL account mapping issue for cloud-based IT services. Recommended for manual review; no rule change at this time.',
   },
 }
 
@@ -1166,9 +1348,9 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
         runDetailId: 'RUN-B-001',
       },
       {
-        agentName: 'Duplicate Invoice Agent',
-        step: 'INVOICE_REVIEW',
-        status: 'Analyzing',
+        agentName: 'PO Match Agent',
+        step: 'MATCH',
+        status: 'Completed',
         feedbackCount: 1,
         runDetailId: 'RUN-B-002',
       },
@@ -1184,12 +1366,12 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
     overallStatus: 'Completed',
     agentCards: [
       {
-        agentName: 'PO Match Agent',
-        step: 'MATCH',
+        agentName: 'AP Voucher Agent',
+        step: 'AP_VOUCHER',
         status: 'Completed',
-        feedbackCount: 2,
-        suggestionCount: 4,
-        runDetailId: 'RUN-B-001',
+        feedbackCount: 1,
+        suggestionCount: 1,
+        runDetailId: 'RUN-B-003',
       },
     ],
   },
