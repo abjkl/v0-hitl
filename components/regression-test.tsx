@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import {
   Select, Button, Table, Tag, Typography, Space, Progress,
-  Statistic, Card, Divider, Empty, Switch, Tooltip, Drawer, Modal, Input, Tabs, Dropdown,
+  Statistic, Card, Divider, Empty, Switch, Tooltip, Drawer, Modal, Input, Tabs, Dropdown, Popover,
   type MenuProps,
 } from "antd"
 import {
@@ -819,74 +819,9 @@ function ExpandedRowPanel({ record }: { record: CaseResult }) {
 // ── Case Result Table ──��─������───────────────────────────────────────
 
 function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewDetail?: (c: CaseResult) => void }) {
-  const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+  const [popoverRecord, setPopoverRecord] = useState<CaseResult | null>(null)
 
-  function toggleRow(key: string) {
-    setExpandedKeys((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    )
-  }
 
-  // Inline AI Detail Expand Row
-  const renderExpandedRow = (record: CaseResult) => {
-    const predCfg = RESULT_TAG_CFG[record.agentPrediction as keyof typeof RESULT_TAG_CFG]
-    const finalPredCfg = predCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
-    
-    // Mock checklist data
-    const checklist = record.aiChecklist ?? {
-      documentCompleteness: { label: "Document Completeness", items: ["WHT slip uploaded", "Tax invoice uploaded", "Shopee invoice uploaded"] },
-      identityValidation: { label: "Identity Validation", items: ["Entity identity match (Shopee)", "Collector identity match (seller/merchant)"] },
-      invoiceMatching: { label: "Invoice Matching", items: ["Invoice reference match (B9)", "Single invoice per slip"] },
-      taxCalculation: { label: "Tax Calculation", items: ["Tax rate verified", "Amount calculation correct"] },
-    }
-
-    return (
-      <div style={{ padding: "16px 20px", background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>
-        <div style={{ display: "flex", gap: 24 }}>
-          {/* Left: Summary */}
-          <div style={{ flex: "0 0 280px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <CheckCircleOutlined style={{ color: finalPredCfg.color, fontSize: 16 }} />
-              <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontWeight: 500, fontSize: 12 }}>
-                {record.agentPrediction}
-              </Tag>
-              <Text style={{ fontSize: 13, color: "#595959" }}>{(record.confidence * 100).toFixed(0)} / 1</Text>
-            </div>
-            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 16 }}>
-              AI recommend you {record.agentPrediction === "Pass" ? "approve" : "reject"} this Invoice & PO and move to next step
-            </Text>
-            
-            {/* Agent info */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "#fff", borderRadius: 4, border: "1px solid #f0f0f0" }}>
-              <Text style={{ fontSize: 12 }}>{record.agentName ?? "Invoice Header Extractor"}</Text>
-              <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontSize: 11, margin: 0 }}>
-                {record.agentPrediction}
-              </Tag>
-            </div>
-            <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <Text type="secondary">Confidence</Text>
-              <Text>{(record.confidence * 100).toFixed(2)} / 1</Text>
-            </div>
-          </div>
-
-          {/* Right: Checklists */}
-          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            {Object.entries(checklist).map(([key, section]) => (
-              <div key={key}>
-                <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>{section.label}</Text>
-                {section.items.map((item, idx) => (
-                  <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 12 }} />
-                    <Text style={{ fontSize: 12 }}>{item}</Text>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const columns: ColumnsType<CaseResult> = [
     {
@@ -947,17 +882,80 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
       title: "AI Detail",
       key: "aiDetail",
       width: 80,
-      render: (_: unknown, record: CaseResult) => (
-        <Typography.Link
-          style={{ fontSize: 12 }}
-          onClick={(e) => {
-            e.stopPropagation()
-            toggleRow(record.key)
-          }}
-        >
-          View
-        </Typography.Link>
-      ),
+      render: (_: unknown, record: CaseResult) => {
+        const predCfg = RESULT_TAG_CFG[record.agentPrediction as keyof typeof RESULT_TAG_CFG]
+        const finalPredCfg = predCfg ?? { color: "#8c8c8c", bg: "#f5f5f5", border: "#d9d9d9" }
+        
+        // Mock checklist data
+        const checklist = record.aiChecklist ?? {
+          documentCompleteness: { label: "Document Completeness", items: ["WHT slip uploaded", "Tax invoice uploaded", "Shopee invoice uploaded"] },
+          identityValidation: { label: "Identity Validation", items: ["Entity identity match (Shopee)", "Collector identity match (seller/merchant)"] },
+          invoiceMatching: { label: "Invoice Matching", items: ["Invoice reference match (B9)", "Single invoice per slip"] },
+          taxCalculation: { label: "Tax Calculation", items: ["Tax rate verified", "Amount calculation correct"] },
+        }
+
+        const popoverContent = (
+          <div style={{ minWidth: 500 }}>
+            <div style={{ display: "flex", gap: 24 }}>
+              {/* Left: Summary */}
+              <div style={{ flex: "0 0 280px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <CheckCircleOutlined style={{ color: finalPredCfg.color, fontSize: 16 }} />
+                  <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontWeight: 500, fontSize: 12 }}>
+                    {record.agentPrediction}
+                  </Tag>
+                  <Text style={{ fontSize: 13, color: "#595959" }}>{(record.confidence * 100).toFixed(0)} / 1</Text>
+                </div>
+                <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 16 }}>
+                  AI recommend you {record.agentPrediction === "Pass" ? "approve" : "reject"} this Invoice & PO and move to next step
+                </Text>
+                
+                {/* Agent info */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "#fff", borderRadius: 4, border: "1px solid #f0f0f0" }}>
+                  <Text style={{ fontSize: 12 }}>{record.agentName ?? "Invoice Header Extractor"}</Text>
+                  <Tag style={{ color: finalPredCfg.color, background: finalPredCfg.bg, borderColor: finalPredCfg.border, fontSize: 11, margin: 0 }}>
+                    {record.agentPrediction}
+                  </Tag>
+                </div>
+                <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <Text type="secondary">Confidence</Text>
+                  <Text>{(record.confidence * 100).toFixed(2)} / 1</Text>
+                </div>
+              </div>
+
+              {/* Right: Checklists */}
+              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                {Object.entries(checklist).map(([key, section]) => (
+                  <div key={key}>
+                    <Text strong style={{ fontSize: 12, display: "block", marginBottom: 8 }}>{section.label}</Text>
+                    {section.items.map((item, idx) => (
+                      <div key={idx} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 12 }} />
+                        <Text style={{ fontSize: 12 }}>{item}</Text>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+
+        return (
+          <Popover
+            content={popoverContent}
+            trigger="click"
+            open={popoverRecord?.key === record.key}
+            onOpenChange={(open) => {
+              setPopoverRecord(open ? record : null)
+            }}
+          >
+            <Typography.Link style={{ fontSize: 12 }}>
+              View
+            </Typography.Link>
+          </Popover>
+        )
+      },
     },
   ]
 
@@ -975,12 +973,6 @@ function CaseResultTable({ cases, onViewDetail }: { cases: CaseResult[]; onViewD
         showQuickJumper: true,
       }}
       rowClassName={(r) => r.correct ? "" : "bg-red-50"}
-      expandable={{
-        expandedRowKeys: expandedKeys,
-        expandedRowRender: renderExpandedRow,
-        showExpandColumn: false,
-        rowExpandable: () => true,
-      }}
     />
   )
 }
