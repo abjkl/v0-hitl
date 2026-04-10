@@ -683,7 +683,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
 ]
 
 // ── Feedback Management (Human-in-the-Loop) ─────────────────────────
-export type FeedbackStatus = 'Pending' | 'Processed' | 'New Version Generated'
+export type FeedbackStatus = 'Pending' | 'Processing' | 'New Version Generated'
 export type FeedbackStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 
 export interface FeedbackItem {
@@ -720,7 +720,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
-    status: 'New Version Generated',
+    status: 'Processing',
     agentBRunId: 'RUN-OV-001',
     agentName: 'Invoice Review Agent',
     agentVersion: 'v1.3.0',
@@ -798,7 +798,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
-    status: 'New Version Generated',
+    status: 'Processing',
     agentBRunId: 'RUN-OV-001',
     agentName: 'AP Voucher Agent',
     agentVersion: 'v1.0.0',

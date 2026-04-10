@@ -22,7 +22,7 @@ const { Text, Title } = Typography
 
 function StatusBadge({ status, processedBy, processedAt }: { status: FeedbackStatus; processedBy?: string; processedAt?: string }) {
   if (status === "Pending") return <Badge status="default" text={<span style={{ fontSize: 13 }}>Pending</span>} />
-  if (status === "Processed") {
+  if (status === "Processing") {
     if (processedBy) {
       return (
         <Tooltip
@@ -39,12 +39,12 @@ function StatusBadge({ status, processedBy, processedAt }: { status: FeedbackSta
               fontSize: 13,
               borderBottom: "1px dashed #d48806",
               color: "inherit",
-            }}>Processed</span>
+            }}>Processing</span>
           </span>
         </Tooltip>
       )
     }
-    return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Processed</span>} />
+    return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Processing</span>} />
   }
   if (status === "New Version Generated") return <Badge status="success" text={<span style={{ fontSize: 13 }}>New Version Generated</span>} />
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
@@ -168,7 +168,7 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
 
   const statusOptions: { label: string; value: FeedbackStatus }[] = [
     { label: "Pending", value: "Pending" },
-    { label: "Processed", value: "Processed" },
+    { label: "Processing", value: "Processing" },
     { label: "New Version Generated", value: "New Version Generated" },
   ]
 
