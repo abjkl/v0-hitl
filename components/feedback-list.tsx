@@ -22,9 +22,7 @@ const { Text, Title } = Typography
 
 function StatusBadge({ status, processedBy, processedAt }: { status: FeedbackStatus; processedBy?: string; processedAt?: string }) {
   if (status === "Pending") return <Badge status="default" text={<span style={{ fontSize: 13 }}>Pending</span>} />
-  if (status === "Running") return <Badge status="processing" text={<span style={{ fontSize: 13 }}>Running</span>} />
-  if (status === "Processed") {
-    const badge = <Badge status="warning" text={<span style={{ fontSize: 13, cursor: processedBy ? "default" : undefined }}>Processed</span>} />
+  if (status === "Processing") {
     if (processedBy) {
       return (
         <Tooltip
@@ -35,14 +33,20 @@ function StatusBadge({ status, processedBy, processedAt }: { status: FeedbackSta
             </div>
           }
         >
-          {badge}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "help" }}>
+            <Badge status="warning" />
+            <span style={{
+              fontSize: 13,
+              borderBottom: "1px dashed #d48806",
+              color: "inherit",
+            }}>Processing</span>
+          </span>
         </Tooltip>
       )
     }
-    return badge
+    return <Badge status="warning" text={<span style={{ fontSize: 13 }}>Processing</span>} />
   }
-  if (status === "Accepted") return <Badge status="success" text={<span style={{ fontSize: 13 }}>Accepted</span>} />
-  if (status === "Rejected") return <Badge status="error" text={<span style={{ fontSize: 13 }}>Rejected</span>} />
+  if (status === "New Version Generated") return <Badge status="success" text={<span style={{ fontSize: 13 }}>New Version Generated</span>} />
   return <Badge status="default" text={<span style={{ fontSize: 13 }}>{status}</span>} />
 }
 
@@ -164,10 +168,8 @@ export function FeedbackList({ onViewRunDetail }: FeedbackListProps) {
 
   const statusOptions: { label: string; value: FeedbackStatus }[] = [
     { label: "Pending", value: "Pending" },
-    { label: "Running", value: "Running" },
-    { label: "Processed", value: "Processed" },
-    { label: "Accepted", value: "Accepted" },
-    { label: "Rejected", value: "Rejected" },
+    { label: "Processing", value: "Processing" },
+    { label: "New Version Generated", value: "New Version Generated" },
   ]
 
   // Clear filters

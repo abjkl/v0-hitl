@@ -683,7 +683,7 @@ export const INITIAL_ARCHIVED_CASES: ArchivedCaseMock[] = [
 ]
 
 // ── Feedback Management (Human-in-the-Loop) ─────────────────────────
-export type FeedbackStatus = 'Pending' | 'Running' | 'Processed' | 'Accepted' | 'Rejected'
+export type FeedbackStatus = 'Pending' | 'Processing' | 'New Version Generated'
 export type FeedbackStep = 'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER'
 
 export interface FeedbackItem {
@@ -720,7 +720,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
-    status: 'Processed',
+    status: 'Processing',
     agentBRunId: 'RUN-OV-001',
     agentName: 'Invoice Review Agent',
     agentVersion: 'v1.3.0',
@@ -760,7 +760,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Accepted',
+    status: 'New Version Generated',
     agentBRunId: 'RUN-OV-002',
     agentName: 'Match Agent',
     agentVersion: 'v2.1.0',
@@ -779,7 +779,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Rejected',
+    status: 'Pending',
     agentBRunId: 'RUN-OV-002',
     agentName: 'Match Agent',
     agentVersion: 'v2.1.0',
@@ -798,7 +798,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
-    status: 'Processed',
+    status: 'Processing',
     agentBRunId: 'RUN-OV-001',
     agentName: 'AP Voucher Agent',
     agentVersion: 'v1.0.0',
@@ -819,7 +819,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
-    status: 'Running',
+    status: 'Pending',
     agentBRunId: 'RUN-OV-001',
     agentName: 'AP Voucher Agent',
     agentVersion: 'v1.0.0',
@@ -857,7 +857,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
-    status: 'Accepted',
+    status: 'New Version Generated',
     agentBRunId: 'RUN-OV-002',
     agentName: 'Invoice Review Agent',
     agentVersion: 'v1.4.0-beta',
@@ -876,7 +876,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Processed',
+    status: 'New Version Generated',
     agentBRunId: 'RUN-OV-001',
     agentName: 'Match Agent',
     agentVersion: 'v2.0.0',
@@ -897,7 +897,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'INVOICE_REVIEW',
     region: 'SEA',
     entity: 'SG',
-    status: 'Rejected',
+    status: 'Pending',
     agentBRunId: 'RUN-OV-001',
     agentName: 'Invoice Review Agent',
     agentVersion: 'v1.3.0',
@@ -914,7 +914,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'MATCH',
     region: 'SEA',
     entity: 'SG',
-    status: 'Processed',
+    status: 'New Version Generated',
     agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Update three-way match status - GR confirmed',
     createdAt: '2025-03-24 15:30',
@@ -929,7 +929,7 @@ export const feedbackData: FeedbackItem[] = [
     step: 'AP_VOUCHER',
     region: 'SEA',
     entity: 'SG',
-    status: 'Accepted',
+    status: 'New Version Generated',
     agentBRunId: 'RUN-OV-002',
     suggestedChange: 'Correct GL account from 4100 to 4200 for consulting services',
     createdAt: '2025-03-24 15:35',
@@ -999,7 +999,7 @@ export const agentBRunData: Record<string, AgentBRunDetail> = {
       {
         key: 's1',
         confidence: 0.91,
-        status: 'Accepted',
+        status: 'New Version Generated',
         ruleChange: {
           type: 'MODIFY_PROMPT',
           title: 'Adjust Date Format Validation Logic',
@@ -1111,7 +1111,7 @@ Report any format violations as FAIL with detailed reasons.`,
       {
         key: 's1',
         confidence: 0.95,
-        status: 'Accepted',
+        status: 'New Version Generated',
         ruleChange: {
           type: 'MODIFY_PROMPT',
           title: 'Tighten Line-Item Quantity Matching Tolerance',
@@ -1223,7 +1223,7 @@ export const suggestionRunData: SuggestionRun[] = [
     step: 'MATCH',
     caseCount: 1,
     suggestionCount: 1,
-    status: 'Accepted',
+    status: 'New Version Generated',
     acceptedCount: 1,
     rejectedCount: 0,
     pendingCount: 0,
