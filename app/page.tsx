@@ -25,7 +25,9 @@ import { FeedbackList } from "@/components/feedback-list"
 import { FeedbackSuggestionList } from "@/components/feedback-suggestion-list"
 import { AgentBRunDetail } from "@/components/agent-b-run-detail"
 import { Statistics } from "@/components/statistics"
-import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock } from "@/lib/mock-data"
+import { RiskLayerConfigList } from "@/components/risk-layer-config-list"
+import { RiskLayerConfigDetail } from "@/components/risk-layer-config-detail"
+import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, INITIAL_RISK_LAYER_CONFIGS, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock, type RiskLayerConfig } from "@/lib/mock-data"
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -47,6 +49,8 @@ type Page =
   | "feedback-suggestion-list"
   | "agent-b-run-detail"
   | "statistics"
+  | "risk-layer-config-list"
+  | "risk-layer-config-detail"
 
 const BREADCRUMBS: Record<Page, string[]> = {
   "knowledge-detail":        ["Knowledge Base", "Knowledge Detail"],
@@ -65,6 +69,8 @@ const BREADCRUMBS: Record<Page, string[]> = {
   "feedback-suggestion-list":["Feedback Management", "Feedback Suggestion List"],
   "agent-b-run-detail":      ["Feedback Management", "Feedback Suggestion List", "Run Detail"],
   "statistics":              ["Statistics"],
+  "risk-layer-config-list":  ["Risk Layer", "Configuration List"],
+  "risk-layer-config-detail":["Risk Layer", "Configuration List", "Configuration Detail"],
 }
 
 function AppShell() {
@@ -80,6 +86,9 @@ function AppShell() {
   const [goldenCases, setGoldenCases] = useState<GoldenCasesState>(INITIAL_GOLDEN_CASES)
   const [passedAgentIds, setPassedAgentIds] = useState<string[]>([])
   const [archivedCases, setArchivedCases] = useState<ArchivedCaseMock[]>(INITIAL_ARCHIVED_CASES)
+  const [riskLayerConfigs, setRiskLayerConfigs] = useState<RiskLayerConfig[]>(INITIAL_RISK_LAYER_CONFIGS)
+  const [selectedRiskLayerConfigId, setSelectedRiskLayerConfigId] = useState<string | null>(null)
+  const [isRiskLayerEditMode, setIsRiskLayerEditMode] = useState(false)
   const { region, setRegion } = useRegion()
 
   // Golden case IDs across all steps — used for archive retention
@@ -132,6 +141,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     if (key === "statistics") setPage("statistics")
     if (key === "feedback-list") setPage("feedback-list")
     if (key === "feedback-suggestion-list") setPage("feedback-suggestion-list")
+    if (key === "risk-layer-config-list") setPage("risk-layer-config-list")
   }
 
   function goToFeedbackList() {
@@ -184,6 +194,66 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     setSelectedKey("regression-test")
   }
 
+  function goToRiskLayerList() {
+    setPage("risk-layer-config-list")
+    setSelectedKey("risk-layer-config-list")
+  }
+
+  function goToRiskLayerDetail(id: string, editMode = false) {
+    setSelectedRiskLayerConfigId(id)
+    setIsRiskLayerEditMode(editMode)
+    setPage("risk-layer-config-detail")
+    setSelectedKey("risk-layer-config-list")
+  }
+
+  function handleRiskLayerSave(updatedConfig: RiskLayerConfig) {
+    setRiskLayerConfigs((prev) =>
+      prev.map((c) => (c.id === updatedConfig.id ? updatedConfig : c))
+    )
+  }
+
+  function handleRiskLayerActivate(id: string) {
+    setRiskLayerConfigs((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              status: "Active" as const,
+              changeLog: [
+                {
+                  timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+                  user: "Current User",
+                  action: "Activated" as const,
+                },
+                ...c.changeLog,
+              ],
+            }
+          : c
+      )
+    )
+  }
+
+  function handleRiskLayerDeactivate(id: string) {
+    setRiskLayerConfigs((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              status: "Inactive" as const,
+              changeLog: [
+                {
+                  timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+                  user: "Current User",
+                  action: "Deactivated" as const,
+                },
+                ...c.changeLog,
+              ],
+            }
+          : c
+      )
+    )
+  }
+
 
   const crumbs = BREADCRUMBS[page]
 
@@ -226,6 +296,11 @@ function handleArchive(newly: ArchivedCaseMock[]) {
                 { key: "knowledge-detail",   icon: <TableOutlined />, label: "Knowledge Detail" },
                 { key: "knowledge-endpoint", icon: <CodeOutlined />,  label: "Endpoint" },
               ],
+            },
+            {
+              key: "risk-layer-config-list",
+              icon: <FolderOpenOutlined />,
+              label: "Risk Layer",
             },
             {
               key: "regression-test",
@@ -345,6 +420,17 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "feedback-list"           && <FeedbackList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
+          {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id) => goToRiskLayerDetail(id, true)} />}
+          {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && (
+            <RiskLayerConfigDetail
+              config={riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId)!}
+              isEditMode={isRiskLayerEditMode}
+              onBack={goToRiskLayerList}
+              onSave={handleRiskLayerSave}
+              onActivate={handleRiskLayerActivate}
+              onDeactivate={handleRiskLayerDeactivate}
+            />
+          )}
         </Content>
       </Layout>
     </Layout>
