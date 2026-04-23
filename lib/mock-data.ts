@@ -1376,3 +1376,359 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
     ],
   },
 }
+
+// ── Risk Layer Configuration ─────────────────────────────────────
+
+export type RiskLayerStatus = 'Active' | 'Inactive' | 'Draft'
+
+// Parameter types for the 11 control parameters
+export enum ParameterType {
+  // Supplier Trust
+  LAST_APPROVED_TXN = 'last_approved_txn',
+  CUMULATIVE_APPROVED = 'cumulative_approved',
+  ACTIVITY_LEVEL = 'activity_level',
+  // Invoice Amount
+  AMOUNT_INCL_TAX = 'amount_incl_tax',
+  // Matching Quality
+  MATCH_VARIANCE = 'match_variance',
+  // Doc Strength
+  TAGGING_CHECK = 'tagging_check',
+  CONTENT_VALIDATION = 'content_validation',
+  // Compliance
+  CROSS_BORDER = 'cross_border',
+  // Anomaly Check
+  DUPLICATE_INV = 'duplicate_inv',
+  NEAR_DUPLICATE = 'near_duplicate',
+  BANK_ACCT_CHANGE = 'bank_acct_change',
+}
+
+export interface ParameterDefinition {
+  id: ParameterType
+  name: string
+  controlBlock: string
+  description: string
+  inputType: 'month' | 'count_month' | 'currency' | 'none'
+  defaultConfig?: Record<string, unknown>
+}
+
+export const PARAMETER_DEFINITIONS: ParameterDefinition[] = [
+  // Supplier Trust
+  { id: ParameterType.LAST_APPROVED_TXN, name: 'Last Approved Txn', controlBlock: 'Supplier Trust', description: 'Time since last approved transaction', inputType: 'month', defaultConfig: { value: 6 } },
+  { id: ParameterType.CUMULATIVE_APPROVED, name: 'Cumulative Approved', controlBlock: 'Supplier Trust', description: 'Number of approved PRs within period', inputType: 'count_month', defaultConfig: { count: 5, months: 12 } },
+  { id: ParameterType.ACTIVITY_LEVEL, name: 'Activity Level', controlBlock: 'Supplier Trust', description: 'Supplier activity level assessment', inputType: 'none' },
+  // Invoice Amount
+  { id: ParameterType.AMOUNT_INCL_TAX, name: 'Amount incl. Tax', controlBlock: 'Invoice Amount', description: 'Invoice amount including tax', inputType: 'currency', defaultConfig: { currency: 'SGD', value: 10000 } },
+  // Matching Quality
+  { id: ParameterType.MATCH_VARIANCE, name: 'Match Variance', controlBlock: 'Matching Quality', description: 'Allowed variance in PO matching', inputType: 'currency', defaultConfig: { currency: 'SGD', value: 100 } },
+  // Doc Strength
+  { id: ParameterType.TAGGING_CHECK, name: 'Tagging Check', controlBlock: 'Doc Strength', description: 'Document tagging verification', inputType: 'none' },
+  { id: ParameterType.CONTENT_VALIDATION, name: 'Content Validation', controlBlock: 'Doc Strength', description: 'Document content validation', inputType: 'none' },
+  // Compliance
+  { id: ParameterType.CROSS_BORDER, name: 'Cross Border', controlBlock: 'Compliance', description: 'Cross-border transaction check', inputType: 'none' },
+  // Anomaly Check
+  { id: ParameterType.DUPLICATE_INV, name: 'Duplicate Invoice', controlBlock: 'Anomaly Check', description: 'Check for duplicate invoices', inputType: 'none' },
+  { id: ParameterType.NEAR_DUPLICATE, name: 'Near Duplicate', controlBlock: 'Anomaly Check', description: 'Check for near-duplicate invoices', inputType: 'none' },
+  { id: ParameterType.BANK_ACCT_CHANGE, name: 'Bank Account Change', controlBlock: 'Anomaly Check', description: 'Detect recent bank account changes', inputType: 'none' },
+]
+
+export interface ConditionNode {
+  type: 'condition'
+  id: string
+  parameterId: ParameterType
+  config: Record<string, unknown>
+}
+
+export interface GroupNode {
+  type: 'group'
+  id: string
+  operator: 'AND' | 'OR'
+  children: RuleNode[]
+}
+
+export type RuleNode = ConditionNode | GroupNode
+
+export interface ChangeLogEntry {
+  timestamp: string
+  user: string
+  action: 'Created' | 'Updated' | 'Activated' | 'Deactivated'
+  details?: string
+}
+
+export interface RiskLayerConfig {
+  id: string
+  region: string
+  entity: string
+  description: string
+  rootRuleNode: GroupNode
+  status: RiskLayerStatus
+  lastUpdatedBy: string
+  lastUpdatedAt: string
+  changeLog: ChangeLogEntry[]
+}
+
+// Helper to generate unique IDs
+let riskLayerIdCounter = 1000
+export function generateRuleNodeId(): string {
+  return `node-${++riskLayerIdCounter}`
+}
+
+// Mock Risk Layer Configurations
+// region = country code (SG, MY, TW, BR, ...)
+// entity = business entity code (SPXSG, SPXMY, SPETW, ...)
+export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
+  {
+    id: 'RL-001',
+    region: 'SG',
+    entity: 'SPXSG',
+    description: 'Standard risk assessment rules for SPX Singapore with supplier trust and amount checks.',
+    status: 'Active',
+    lastUpdatedBy: 'Li Wei',
+    lastUpdatedAt: '2025-04-15 14:30',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-001',
+      operator: 'AND',
+      children: [
+        {
+          type: 'group',
+          id: 'grp-001-1',
+          operator: 'OR',
+          children: [
+            { type: 'condition', id: 'cond-001-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 6 } },
+            { type: 'condition', id: 'cond-001-2', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 5, months: 12 } },
+          ],
+        },
+        { type: 'condition', id: 'cond-001-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'SGD', value: 50000 } },
+        { type: 'condition', id: 'cond-001-4', parameterId: ParameterType.DUPLICATE_INV, config: {} },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-15 14:30', user: 'Li Wei', action: 'Updated', details: 'Adjusted amount threshold from 30,000 to 50,000 SGD' },
+      { timestamp: '2025-04-10 09:15', user: 'Chen Jing', action: 'Activated' },
+      { timestamp: '2025-04-08 16:45', user: 'Li Wei', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-002',
+    region: 'SG',
+    entity: 'SPSG',
+    description: 'SPE Singapore risk rules focusing on matching quality and document strength.',
+    status: 'Active',
+    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedAt: '2025-04-12 11:20',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-002',
+      operator: 'AND',
+      children: [
+        { type: 'condition', id: 'cond-002-1', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'SGD', value: 500 } },
+        { type: 'condition', id: 'cond-002-2', parameterId: ParameterType.TAGGING_CHECK, config: {} },
+        { type: 'condition', id: 'cond-002-3', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-12 11:20', user: 'Tan Mei Ling', action: 'Updated', details: 'Added content validation check' },
+      { timestamp: '2025-04-05 10:00', user: 'Tan Mei Ling', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-003',
+    region: 'MY',
+    entity: 'SPXMY',
+    description: 'SPX Malaysia rules with compliance and anomaly detection focus.',
+    status: 'Inactive',
+    lastUpdatedBy: 'Chen Jing',
+    lastUpdatedAt: '2025-04-08 16:00',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-003',
+      operator: 'OR',
+      children: [
+        { type: 'condition', id: 'cond-003-1', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        {
+          type: 'group',
+          id: 'grp-003-1',
+          operator: 'AND',
+          children: [
+            { type: 'condition', id: 'cond-003-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+            { type: 'condition', id: 'cond-003-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+          ],
+        },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-08 16:00', user: 'Chen Jing', action: 'Deactivated', details: 'Pending review of cross-border rules' },
+      { timestamp: '2025-04-02 14:30', user: 'Chen Jing', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-004',
+    region: 'MY',
+    entity: 'SPEMY',
+    description: 'SPE Malaysia comprehensive risk assessment with nested conditions.',
+    status: 'Active',
+    lastUpdatedBy: 'Li Wei',
+    lastUpdatedAt: '2025-04-18 09:45',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-004',
+      operator: 'AND',
+      children: [
+        {
+          type: 'group',
+          id: 'grp-004-1',
+          operator: 'OR',
+          children: [
+            { type: 'condition', id: 'cond-004-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 3 } },
+            { type: 'condition', id: 'cond-004-2', parameterId: ParameterType.ACTIVITY_LEVEL, config: {} },
+          ],
+        },
+        { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'MYR', value: 50000 } },
+        {
+          type: 'group',
+          id: 'grp-004-2',
+          operator: 'OR',
+          children: [
+            { type: 'condition', id: 'cond-004-4', parameterId: ParameterType.DUPLICATE_INV, config: {} },
+            { type: 'condition', id: 'cond-004-5', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+          ],
+        },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-18 09:45', user: 'Li Wei', action: 'Updated', details: 'Added anomaly check group' },
+      { timestamp: '2025-04-14 11:00', user: 'Li Wei', action: 'Activated' },
+      { timestamp: '2025-04-12 15:30', user: 'Li Wei', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-005',
+    region: 'TW',
+    entity: 'SPXTW',
+    description: 'SPX Taiwan draft configuration for new risk parameters.',
+    status: 'Draft',
+    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedAt: '2025-04-20 10:00',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-005',
+      operator: 'AND',
+      children: [
+        { type: 'condition', id: 'cond-005-1', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 10, months: 6 } },
+        { type: 'condition', id: 'cond-005-2', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'TWD', value: 5000 } },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-20 10:00', user: 'Tan Mei Ling', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-006',
+    region: 'TW',
+    entity: 'SPETW',
+    description: 'SPE Taiwan risk assessment with strict document and compliance checks.',
+    status: 'Active',
+    lastUpdatedBy: 'Chen Jing',
+    lastUpdatedAt: '2025-04-17 14:15',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-006',
+      operator: 'AND',
+      children: [
+        { type: 'condition', id: 'cond-006-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 12 } },
+        { type: 'condition', id: 'cond-006-2', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'TWD', value: 300000 } },
+        { type: 'condition', id: 'cond-006-3', parameterId: ParameterType.TAGGING_CHECK, config: {} },
+        { type: 'condition', id: 'cond-006-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-006-5', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-17 14:15', user: 'Chen Jing', action: 'Updated', details: 'Extended last approved txn period to 12 months' },
+      { timestamp: '2025-04-10 09:30', user: 'Chen Jing', action: 'Activated' },
+      { timestamp: '2025-04-06 16:00', user: 'Chen Jing', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-007',
+    region: 'BR',
+    entity: 'SPXBR',
+    description: 'SPX Brazil risk configuration with comprehensive anomaly detection.',
+    status: 'Draft',
+    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedAt: '2025-04-19 15:00',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-007',
+      operator: 'OR',
+      children: [
+        {
+          type: 'group',
+          id: 'grp-007-1',
+          operator: 'AND',
+          children: [
+            { type: 'condition', id: 'cond-007-1', parameterId: ParameterType.DUPLICATE_INV, config: {} },
+            { type: 'condition', id: 'cond-007-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+          ],
+        },
+        { type: 'condition', id: 'cond-007-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+        { type: 'condition', id: 'cond-007-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-19 15:00', user: 'Tan Mei Ling', action: 'Created' },
+    ],
+  },
+  {
+    id: 'RL-008',
+    region: 'BR',
+    entity: 'SPEBR',
+    description: 'SPE Brazil entity rules with supplier trust and compliance focus.',
+    status: 'Active',
+    lastUpdatedBy: 'Li Wei',
+    lastUpdatedAt: '2025-04-16 11:30',
+    rootRuleNode: {
+      type: 'group',
+      id: 'root-008',
+      operator: 'AND',
+      children: [
+        {
+          type: 'group',
+          id: 'grp-008-1',
+          operator: 'AND',
+          children: [
+            { type: 'condition', id: 'cond-008-1', parameterId: ParameterType.TAGGING_CHECK, config: {} },
+            { type: 'condition', id: 'cond-008-2', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+          ],
+        },
+        { type: 'condition', id: 'cond-008-3', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-008-4', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'BRL', value: 50000 } },
+      ],
+    },
+    changeLog: [
+      { timestamp: '2025-04-16 11:30', user: 'Li Wei', action: 'Updated', details: 'Added amount threshold' },
+      { timestamp: '2025-04-11 10:00', user: 'Li Wei', action: 'Created' },
+    ],
+  },
+]
+
+// Helper to get parameter definition by ID
+export function getParameterDefinition(id: ParameterType): ParameterDefinition | undefined {
+  return PARAMETER_DEFINITIONS.find((p) => p.id === id)
+}
+
+// Helper to count active rules in a config
+export function countActiveRules(node: RuleNode): number {
+  if (node.type === 'condition') return 1
+  return node.children.reduce((sum, child) => sum + countActiveRules(child), 0)
+}
+
+// Helper to generate logic summary string
+export function generateLogicSummary(node: RuleNode, depth = 0): string {
+  if (node.type === 'condition') {
+    const param = getParameterDefinition(node.parameterId)
+    return param?.name ?? node.parameterId
+  }
+  const childSummaries = node.children.map((c) => generateLogicSummary(c, depth + 1))
+  const joined = childSummaries.join(` ${node.operator} `)
+  return depth > 0 ? `(${joined})` : joined
+}
