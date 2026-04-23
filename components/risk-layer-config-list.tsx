@@ -33,7 +33,7 @@ import {
   generateRuleNodeId,
   ParameterType,
 } from "@/lib/mock-data"
-import { useRegion, REGIONS } from "@/lib/region-context"
+import { useRegion, REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
 const { Title, Text, Paragraph } = Typography
 
@@ -50,13 +50,12 @@ const STATUS_TAG_COLORS: Record<RiskLayerStatus, string> = {
   Draft: "blue",
 }
 
-const REGION_OPTIONS = REGIONS.filter((r) =>
-  ["SEA", "EA", "LATAM"].includes(r.code)
-).map((r) => ({ value: r.code, label: r.code }))
+const REGION_OPTIONS = REGIONS.map((r) => ({ value: r.code, label: r.code }))
 
-const ENTITY_OPTIONS = ["SG", "TH", "VN", "ID", "MY", "PH", "TW", "HK", "BR", "MX"].map(
-  (e) => ({ value: e, label: e })
-)
+const ALL_ENTITIES = Array.from(
+  new Set(Object.values(REGION_ENTITIES).flat())
+).sort()
+const ENTITY_OPTIONS = ALL_ENTITIES.map((e) => ({ value: e, label: e }))
 
 const STATUS_OPTIONS: { value: RiskLayerStatus; label: string }[] = [
   { value: "Active", label: "Active" },
@@ -166,8 +165,8 @@ export function RiskLayerConfigList({
 
     const newConfig: RiskLayerConfig = {
       id: newId,
-      region: "SEA",
-      entity: currentRegion,
+      region: currentRegion,
+      entity: REGION_ENTITIES[currentRegion as keyof typeof REGION_ENTITIES]?.[0] ?? "",
       description: "New risk layer configuration",
       status: "Draft",
       lastUpdatedBy: "Current User",

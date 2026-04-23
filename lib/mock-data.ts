@@ -1473,12 +1473,14 @@ export function generateRuleNodeId(): string {
 }
 
 // Mock Risk Layer Configurations
+// region = country code (SG, MY, TW, BR, ...)
+// entity = business entity code (SPXSG, SPXMY, SPETW, ...)
 export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   {
     id: 'RL-001',
-    region: 'SEA',
-    entity: 'SG',
-    description: 'Standard risk assessment rules for Singapore entity with supplier trust and amount checks.',
+    region: 'SG',
+    entity: 'SPXSG',
+    description: 'Standard risk assessment rules for SPX Singapore with supplier trust and amount checks.',
     status: 'Active',
     lastUpdatedBy: 'Li Wei',
     lastUpdatedAt: '2025-04-15 14:30',
@@ -1508,9 +1510,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
   {
     id: 'RL-002',
-    region: 'SEA',
-    entity: 'TH',
-    description: 'Thailand entity risk rules focusing on matching quality and document strength.',
+    region: 'SG',
+    entity: 'SPSG',
+    description: 'SPE Singapore risk rules focusing on matching quality and document strength.',
     status: 'Active',
     lastUpdatedBy: 'Tan Mei Ling',
     lastUpdatedAt: '2025-04-12 11:20',
@@ -1519,7 +1521,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-002',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-002-1', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'THB', value: 5000 } },
+        { type: 'condition', id: 'cond-002-1', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'SGD', value: 500 } },
         { type: 'condition', id: 'cond-002-2', parameterId: ParameterType.TAGGING_CHECK, config: {} },
         { type: 'condition', id: 'cond-002-3', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
       ],
@@ -1531,9 +1533,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
   {
     id: 'RL-003',
-    region: 'SEA',
-    entity: 'VN',
-    description: 'Vietnam entity rules with compliance and anomaly detection focus.',
+    region: 'MY',
+    entity: 'SPXMY',
+    description: 'SPX Malaysia rules with compliance and anomaly detection focus.',
     status: 'Inactive',
     lastUpdatedBy: 'Chen Jing',
     lastUpdatedAt: '2025-04-08 16:00',
@@ -1561,9 +1563,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
   {
     id: 'RL-004',
-    region: 'SEA',
-    entity: 'ID',
-    description: 'Indonesia entity comprehensive risk assessment with nested conditions.',
+    region: 'MY',
+    entity: 'SPEMY',
+    description: 'SPE Malaysia comprehensive risk assessment with nested conditions.',
     status: 'Active',
     lastUpdatedBy: 'Li Wei',
     lastUpdatedAt: '2025-04-18 09:45',
@@ -1581,7 +1583,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
             { type: 'condition', id: 'cond-004-2', parameterId: ParameterType.ACTIVITY_LEVEL, config: {} },
           ],
         },
-        { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'IDR', value: 100000000 } },
+        { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'MYR', value: 50000 } },
         {
           type: 'group',
           id: 'grp-004-2',
@@ -1601,9 +1603,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
   {
     id: 'RL-005',
-    region: 'SEA',
-    entity: 'MY',
-    description: 'Malaysia entity draft configuration for new risk parameters.',
+    region: 'TW',
+    entity: 'SPXTW',
+    description: 'SPX Taiwan draft configuration for new risk parameters.',
     status: 'Draft',
     lastUpdatedBy: 'Tan Mei Ling',
     lastUpdatedAt: '2025-04-20 10:00',
@@ -1613,7 +1615,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       operator: 'AND',
       children: [
         { type: 'condition', id: 'cond-005-1', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 10, months: 6 } },
-        { type: 'condition', id: 'cond-005-2', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'MYR', value: 500 } },
+        { type: 'condition', id: 'cond-005-2', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'TWD', value: 5000 } },
       ],
     },
     changeLog: [
@@ -1622,9 +1624,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
   {
     id: 'RL-006',
-    region: 'SEA',
-    entity: 'PH',
-    description: 'Philippines entity risk assessment with full control block coverage.',
+    region: 'TW',
+    entity: 'SPETW',
+    description: 'SPE Taiwan risk assessment with strict document and compliance checks.',
     status: 'Active',
     lastUpdatedBy: 'Chen Jing',
     lastUpdatedAt: '2025-04-17 14:15',
@@ -1634,7 +1636,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       operator: 'AND',
       children: [
         { type: 'condition', id: 'cond-006-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 12 } },
-        { type: 'condition', id: 'cond-006-2', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'PHP', value: 500000 } },
+        { type: 'condition', id: 'cond-006-2', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'TWD', value: 300000 } },
         { type: 'condition', id: 'cond-006-3', parameterId: ParameterType.TAGGING_CHECK, config: {} },
         { type: 'condition', id: 'cond-006-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
         { type: 'condition', id: 'cond-006-5', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
@@ -1648,63 +1650,63 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
   {
     id: 'RL-007',
-    region: 'EA',
-    entity: 'TW',
-    description: 'Taiwan entity rules with strict document and compliance checks.',
-    status: 'Active',
-    lastUpdatedBy: 'Li Wei',
-    lastUpdatedAt: '2025-04-16 11:30',
+    region: 'BR',
+    entity: 'SPXBR',
+    description: 'SPX Brazil risk configuration with comprehensive anomaly detection.',
+    status: 'Draft',
+    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedAt: '2025-04-19 15:00',
     rootRuleNode: {
       type: 'group',
       id: 'root-007',
-      operator: 'AND',
+      operator: 'OR',
       children: [
         {
           type: 'group',
           id: 'grp-007-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-007-1', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-            { type: 'condition', id: 'cond-007-2', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+            { type: 'condition', id: 'cond-007-1', parameterId: ParameterType.DUPLICATE_INV, config: {} },
+            { type: 'condition', id: 'cond-007-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
           ],
         },
-        { type: 'condition', id: 'cond-007-3', parameterId: ParameterType.CROSS_BORDER, config: {} },
-        { type: 'condition', id: 'cond-007-4', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'TWD', value: 300000 } },
+        { type: 'condition', id: 'cond-007-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+        { type: 'condition', id: 'cond-007-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-16 11:30', user: 'Li Wei', action: 'Updated', details: 'Added amount threshold' },
-      { timestamp: '2025-04-11 10:00', user: 'Li Wei', action: 'Created' },
+      { timestamp: '2025-04-19 15:00', user: 'Tan Mei Ling', action: 'Created' },
     ],
   },
   {
     id: 'RL-008',
-    region: 'LATAM',
-    entity: 'BR',
-    description: 'Brazil entity risk configuration with comprehensive anomaly detection.',
-    status: 'Draft',
-    lastUpdatedBy: 'Tan Mei Ling',
-    lastUpdatedAt: '2025-04-19 15:00',
+    region: 'BR',
+    entity: 'SPEBR',
+    description: 'SPE Brazil entity rules with supplier trust and compliance focus.',
+    status: 'Active',
+    lastUpdatedBy: 'Li Wei',
+    lastUpdatedAt: '2025-04-16 11:30',
     rootRuleNode: {
       type: 'group',
       id: 'root-008',
-      operator: 'OR',
+      operator: 'AND',
       children: [
         {
           type: 'group',
           id: 'grp-008-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-008-1', parameterId: ParameterType.DUPLICATE_INV, config: {} },
-            { type: 'condition', id: 'cond-008-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+            { type: 'condition', id: 'cond-008-1', parameterId: ParameterType.TAGGING_CHECK, config: {} },
+            { type: 'condition', id: 'cond-008-2', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
           ],
         },
-        { type: 'condition', id: 'cond-008-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
-        { type: 'condition', id: 'cond-008-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-008-3', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-008-4', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'BRL', value: 50000 } },
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-19 15:00', user: 'Tan Mei Ling', action: 'Created' },
+      { timestamp: '2025-04-16 11:30', user: 'Li Wei', action: 'Updated', details: 'Added amount threshold' },
+      { timestamp: '2025-04-11 10:00', user: 'Li Wei', action: 'Created' },
     ],
   },
 ]

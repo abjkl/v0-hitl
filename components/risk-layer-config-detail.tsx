@@ -29,7 +29,7 @@ import {
   generateLogicSummary,
 } from "@/lib/mock-data"
 import { RuleGroup } from "@/components/rule-group"
-import { REGIONS } from "@/lib/region-context"
+import { REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
 const { Title, Text, Paragraph } = Typography
 const { TextArea } = Input
@@ -49,12 +49,6 @@ const STATUS_TAG_COLORS: Record<string, string> = {
   Draft: "blue",
 }
 
-const ENTITIES_BY_REGION: Record<string, string[]> = {
-  SEA: ["SG", "TH", "VN", "ID", "MY", "PH"],
-  EA: ["TW", "HK"],
-  LATAM: ["BR", "MX"],
-}
-
 export function RiskLayerConfigDetail({
   config,
   isEditMode: initialEditMode,
@@ -71,7 +65,8 @@ export function RiskLayerConfigDetail({
     setIsEditing(initialEditMode)
   }, [config, initialEditMode])
 
-  const availableEntities = ENTITIES_BY_REGION[editedConfig.region] ?? []
+  const availableEntities =
+    REGION_ENTITIES[editedConfig.region as keyof typeof REGION_ENTITIES] ?? []
 
   function handleFieldChange<K extends keyof RiskLayerConfig>(
     field: K,
@@ -81,7 +76,8 @@ export function RiskLayerConfigDetail({
   }
 
   function handleRegionChange(newRegion: string) {
-    const newEntities = ENTITIES_BY_REGION[newRegion] ?? []
+    const newEntities =
+      REGION_ENTITIES[newRegion as keyof typeof REGION_ENTITIES] ?? []
     setEditedConfig((prev) => ({
       ...prev,
       region: newRegion,
@@ -231,9 +227,7 @@ export function RiskLayerConfigDetail({
                   value={editedConfig.region}
                   onChange={handleRegionChange}
                   style={{ width: "100%" }}
-                  options={REGIONS.filter((r) =>
-                    ["SEA", "EA", "LATAM"].includes(r.code)
-                  ).map((r) => ({
+                  options={REGIONS.map((r) => ({
                     value: r.code,
                     label: `${r.code} - ${r.name}`,
                   }))}
