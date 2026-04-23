@@ -28,7 +28,6 @@ import type { ColumnsType } from "antd/es/table"
 import {
   type RiskLayerConfig,
   type RiskLayerStatus,
-  countActiveRules,
   generateLogicSummary,
   generateRuleNodeId,
   ParameterType,
@@ -215,14 +214,6 @@ export function RiskLayerConfigList({
       width: 80,
       render: (entity: string) => (
         <Tag style={{ margin: 0 }}>{entity}</Tag>
-      ),
-    },
-    {
-      title: "Active Rules",
-      key: "activeRules",
-      width: 100,
-      render: (_, record) => (
-        <Text style={{ fontSize: 13 }}>{countActiveRules(record.rootRuleNode)}</Text>
       ),
     },
     {
