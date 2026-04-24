@@ -31,12 +31,12 @@ import {
 import { RuleGroup } from "@/components/rule-group"
 import { REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
-const { Title, Text, Paragraph } = Typography
-const { TextArea } = Input
+const { Title, Text } = Typography
 
 interface RiskLayerConfigDetailProps {
   config: RiskLayerConfig
   isEditMode: boolean
+  isNew?: boolean
   onBack: () => void
   onSave: (updatedConfig: RiskLayerConfig) => void
   onActivate: (id: string) => void
@@ -52,6 +52,7 @@ const STATUS_TAG_COLORS: Record<string, string> = {
 export function RiskLayerConfigDetail({
   config,
   isEditMode: initialEditMode,
+  isNew = false,
   onBack,
   onSave,
   onActivate,
@@ -94,10 +95,13 @@ export function RiskLayerConfigDetail({
     }
   }
 
-  function handleSave() {
+  function getTimestamp() {
     const now = new Date()
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+  }
 
+  function handleSave() {
+    const timestamp = getTimestamp()
     const updated: RiskLayerConfig = {
       ...editedConfig,
       lastUpdatedAt: timestamp,
@@ -115,6 +119,56 @@ export function RiskLayerConfigDetail({
     onSave(updated)
     setIsEditing(false)
     message.success("Configuration saved successfully")
+  }
+
+  function handleSaveAsDraft() {
+    const timestamp = getTimestamp()
+    const updated: RiskLayerConfig = {
+      ...editedConfig,
+      status: "Draft",
+      lastUpdatedAt: timestamp,
+      lastUpdatedBy: "Current User",
+      changeLog: [
+        {
+          timestamp,
+          user: "Current User",
+          action: isNew ? "Created" : "Updated",
+          details: "Saved as draft",
+        },
+        ...(isNew ? [] : editedConfig.changeLog),
+      ],
+    }
+    onSave(updated)
+    setIsEditing(false)
+    message.success("Configuration saved as draft")
+    onBack()
+  }
+
+  function handleSaveAndActivate() {
+    const timestamp = getTimestamp()
+    const updated: RiskLayerConfig = {
+      ...editedConfig,
+      status: "Active",
+      lastUpdatedAt: timestamp,
+      lastUpdatedBy: "Current User",
+      changeLog: [
+        {
+          timestamp,
+          user: "Current User",
+          action: "Activated",
+        },
+        {
+          timestamp,
+          user: "Current User",
+          action: isNew ? "Created" : "Updated",
+        },
+        ...(isNew ? [] : editedConfig.changeLog),
+      ],
+    }
+    onSave(updated)
+    setIsEditing(false)
+    message.success("Configuration saved and activated")
+    onBack()
   }
 
   function handleCancel() {
@@ -170,7 +224,19 @@ export function RiskLayerConfigDetail({
           </Space>
 
           <Space>
-            {isEditing ? (
+            {isNew ? (
+              // New config mode: Save as Draft / Save and Activate
+              <>
+                <Button onClick={onBack}>Cancel</Button>
+                <Button icon={<SaveOutlined />} onClick={handleSaveAsDraft}>
+                  Save as Draft
+                </Button>
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleSaveAndActivate}>
+                  Save and Activate
+                </Button>
+              </>
+            ) : isEditing ? (
+              // Edit mode
               <>
                 <Button icon={<CloseOutlined />} onClick={handleCancel}>
                   Cancel
@@ -180,6 +246,7 @@ export function RiskLayerConfigDetail({
                 </Button>
               </>
             ) : (
+              // View mode
               <>
                 <Button icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
                   Edit
@@ -253,21 +320,6 @@ export function RiskLayerConfigDetail({
             </div>
           </div>
 
-          <div>
-            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-              Description
-            </Text>
-            {isEditing ? (
-              <TextArea
-                value={editedConfig.description}
-                onChange={(e) => handleFieldChange("description", e.target.value)}
-                rows={2}
-                placeholder="Enter configuration description..."
-              />
-            ) : (
-              <Paragraph style={{ margin: 0 }}>{editedConfig.description}</Paragraph>
-            )}
-          </div>
         </div>
       </Card>
 

@@ -89,6 +89,7 @@ function AppShell() {
   const [riskLayerConfigs, setRiskLayerConfigs] = useState<RiskLayerConfig[]>(INITIAL_RISK_LAYER_CONFIGS)
   const [selectedRiskLayerConfigId, setSelectedRiskLayerConfigId] = useState<string | null>(null)
   const [isRiskLayerEditMode, setIsRiskLayerEditMode] = useState(false)
+  const [isRiskLayerNew, setIsRiskLayerNew] = useState(false)
   const { region, setRegion } = useRegion()
 
   // Golden case IDs across all steps — used for archive retention
@@ -199,9 +200,10 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     setSelectedKey("risk-layer-config-list")
   }
 
-  function goToRiskLayerDetail(id: string, editMode = false) {
+  function goToRiskLayerDetail(id: string, editMode = false, isNew = false) {
     setSelectedRiskLayerConfigId(id)
     setIsRiskLayerEditMode(editMode)
+    setIsRiskLayerNew(isNew)
     setPage("risk-layer-config-detail")
     setSelectedKey("risk-layer-config-list")
   }
@@ -420,11 +422,12 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "feedback-list"           && <FeedbackList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
-          {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id) => goToRiskLayerDetail(id, true)} />}
+          {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id, isNew) => goToRiskLayerDetail(id, true, isNew)} />}
           {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && (
             <RiskLayerConfigDetail
               config={riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId)!}
               isEditMode={isRiskLayerEditMode}
+              isNew={isRiskLayerNew}
               onBack={goToRiskLayerList}
               onSave={handleRiskLayerSave}
               onActivate={handleRiskLayerActivate}

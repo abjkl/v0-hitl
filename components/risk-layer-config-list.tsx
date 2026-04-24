@@ -40,7 +40,7 @@ interface RiskLayerConfigListProps {
   configs: RiskLayerConfig[]
   setConfigs: React.Dispatch<React.SetStateAction<RiskLayerConfig[]>>
   onView: (id: string) => void
-  onEdit: (id: string) => void
+  onEdit: (id: string, isNew?: boolean) => void
 }
 
 const STATUS_TAG_COLORS: Record<RiskLayerStatus, string> = {
@@ -78,7 +78,6 @@ export function RiskLayerConfigList({
     return configs.filter((c) => {
       const matchSearch =
         !searchText ||
-        c.description.toLowerCase().includes(searchText.toLowerCase()) ||
         c.region.toLowerCase().includes(searchText.toLowerCase()) ||
         c.entity.toLowerCase().includes(searchText.toLowerCase())
 
@@ -166,7 +165,7 @@ export function RiskLayerConfigList({
       id: newId,
       region: currentRegion,
       entity: REGION_ENTITIES[currentRegion as keyof typeof REGION_ENTITIES]?.[0] ?? "",
-      description: "New risk layer configuration",
+      description: "",
       status: "Draft",
       lastUpdatedBy: "Current User",
       lastUpdatedAt: timestamp,
@@ -192,7 +191,7 @@ export function RiskLayerConfigList({
       ],
     }
     setConfigs((prev) => [...prev, newConfig])
-    onEdit(newId)
+    onEdit(newId, true)
   }
 
   const columns: ColumnsType<RiskLayerConfig> = [
@@ -353,11 +352,11 @@ export function RiskLayerConfigList({
       >
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Input
-            placeholder="Search by description, region, or entity..."
+            placeholder="Search by region or entity..."
             prefix={<SearchOutlined style={{ color: "#999" }} />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
+            style={{ width: 200 }}
             allowClear
           />
           <Select
