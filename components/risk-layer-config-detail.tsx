@@ -105,6 +105,28 @@ export function RiskLayerConfigDetail({
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
   }
 
+  function handleSaveAsDraft() {
+    const timestamp = getTimestamp()
+    const updated: RiskLayerConfig = {
+      ...editedConfig,
+      status: "Draft",
+      lastUpdatedAt: timestamp,
+      lastUpdatedBy: currentUser,
+      changeLog: [
+        {
+          timestamp,
+          user: currentUser,
+          action: "Updated",
+          details: "Saved as draft",
+        },
+        ...editedConfig.changeLog,
+      ],
+    }
+    onSave(updated)
+    setIsEditing(false)
+    message.success("Configuration saved as draft")
+  }
+
   function handleSave() {
     const timestamp = getTimestamp()
     const updated: RiskLayerConfig = {
@@ -220,14 +242,30 @@ export function RiskLayerConfigDetail({
               </>
             ) : isEditing ? (
               // Edit mode
-              <>
-                <Button icon={<CloseOutlined />} onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-                  Save
-                </Button>
-              </>
+              config.status === "Draft" ? (
+                // Draft config in edit mode: Save as Draft or Save and Activate
+                <>
+                  <Button icon={<CloseOutlined />} onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button icon={<SaveOutlined />} onClick={handleSaveAsDraft}>
+                    Save as Draft
+                  </Button>
+                  <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleSaveAndActivate}>
+                    Save and Activate
+                  </Button>
+                </>
+              ) : (
+                // Non-draft config in edit mode: Cancel and Save
+                <>
+                  <Button icon={<CloseOutlined />} onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
+                    Save
+                  </Button>
+                </>
+              )
             ) : (
               // View mode
               <>
