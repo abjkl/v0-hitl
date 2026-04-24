@@ -26,9 +26,9 @@ import {
   type RiskLayerConfig,
   type GroupNode,
   type RuleNode,
-  generateLogicSummary,
 } from "@/lib/mock-data"
 import { RuleGroup } from "@/components/rule-group"
+import { RiskLayerTrialRun } from "@/components/risk-layer-trial-run"
 import { REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
 const { Title, Text } = Typography
@@ -186,8 +186,6 @@ export function RiskLayerConfigDetail({
     message.success("Configuration deactivated")
   }
 
-  const logicPreview = generateLogicSummary(editedConfig.rootRuleNode)
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
@@ -344,27 +342,10 @@ export function RiskLayerConfigDetail({
         />
       </Card>
 
-      {/* Logic Preview */}
-      <Card
-        title="Logic Preview"
-        size="small"
-        style={{ borderRadius: 8 }}
-        styles={{ body: { padding: 20 } }}
-      >
-        <div
-          style={{
-            padding: 16,
-            background: "#f5f5f5",
-            borderRadius: 6,
-            fontFamily: "monospace",
-            fontSize: 13,
-            lineHeight: 1.6,
-            overflowX: "auto",
-          }}
-        >
-          {logicPreview || "No rules configured"}
-        </div>
-      </Card>
+      {/* PR Trial Run */}
+      {!isNew && (
+        <RiskLayerTrialRun config={config} />
+      )}
 
       {/* Change Log (View mode only) */}
       {!isEditing && (

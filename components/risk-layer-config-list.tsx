@@ -10,7 +10,6 @@ import {
   Tag,
   Typography,
   Space,
-  Tooltip,
   Dropdown,
   message,
 } from "antd"
@@ -28,13 +27,12 @@ import type { ColumnsType } from "antd/es/table"
 import {
   type RiskLayerConfig,
   type RiskLayerStatus,
-  generateLogicSummary,
   generateRuleNodeId,
   ParameterType,
 } from "@/lib/mock-data"
 import { useRegion, REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
-const { Title, Text, Paragraph } = Typography
+const { Title, Text } = Typography
 
 interface RiskLayerConfigListProps {
   configs: RiskLayerConfig[]
@@ -214,29 +212,6 @@ export function RiskLayerConfigList({
       render: (entity: string) => (
         <Tag style={{ margin: 0 }}>{entity}</Tag>
       ),
-    },
-    {
-      title: "Logic Summary",
-      key: "logicSummary",
-      render: (_, record) => {
-        const summary = generateLogicSummary(record.rootRuleNode)
-        return (
-          <Tooltip title={summary}>
-            <Paragraph
-              ellipsis={{ rows: 1 }}
-              style={{
-                margin: 0,
-                fontSize: 12,
-                fontFamily: "monospace",
-                color: "#666",
-                maxWidth: 300,
-              }}
-            >
-              {summary}
-            </Paragraph>
-          </Tooltip>
-        )
-      },
     },
     {
       title: "Status",
