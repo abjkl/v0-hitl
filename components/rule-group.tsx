@@ -14,7 +14,7 @@ import { RuleCondition } from "@/components/rule-condition"
 
 const { Text } = Typography
 
-const MAX_DEPTH = 3
+const MAX_DEPTH = 2
 
 interface RuleGroupProps {
   node: GroupNode
