@@ -21,6 +21,7 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons"
 import {
   type RiskLayerConfig,
@@ -42,11 +43,13 @@ interface RiskLayerConfigDetailProps {
   onSave: (updatedConfig: RiskLayerConfig) => void
   onActivate: (id: string) => void
   onDeactivate: (id: string) => void
+  onDelete?: (id: string) => void
 }
 
 const STATUS_TAG_COLORS: Record<string, string> = {
   Active: "green",
   Inactive: "default",
+  Draft: "blue",
 }
 
 export function RiskLayerConfigDetail({
@@ -58,6 +61,7 @@ export function RiskLayerConfigDetail({
   onSave,
   onActivate,
   onDeactivate,
+  onDelete,
 }: RiskLayerConfigDetailProps) {
   const [isEditing, setIsEditing] = useState(initialEditMode)
   const [editedConfig, setEditedConfig] = useState<RiskLayerConfig>(config)
@@ -164,6 +168,12 @@ export function RiskLayerConfigDetail({
     message.success("Configuration deactivated")
   }
 
+  function handleDelete() {
+    onDelete?.(config.id)
+    message.success("Configuration deleted")
+    onBack()
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
@@ -224,7 +234,19 @@ export function RiskLayerConfigDetail({
                 <Button icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
                   Edit
                 </Button>
-                {config.status === "Active" ? (
+                {config.status === "Draft" ? (
+                  <Popconfirm
+                    title="Delete this draft configuration?"
+                    description="This action cannot be undone."
+                    onConfirm={handleDelete}
+                    okText="Delete"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Button icon={<DeleteOutlined />} danger>
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                ) : config.status === "Active" ? (
                   <Popconfirm
                     title="Deactivate this configuration?"
                     description="This will stop the rule from being applied."

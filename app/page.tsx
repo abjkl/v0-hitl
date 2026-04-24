@@ -258,6 +258,10 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     )
   }
 
+  function handleRiskLayerDelete(id: string) {
+    setRiskLayerConfigs((prev) => prev.filter((c) => c.id !== id))
+  }
+
 
   const crumbs = BREADCRUMBS[page]
 
@@ -441,6 +445,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
               onSave={handleRiskLayerSave}
               onActivate={handleRiskLayerActivate}
               onDeactivate={handleRiskLayerDeactivate}
+              onDelete={handleRiskLayerDelete}
             />
           )}
         </Content>

@@ -1379,7 +1379,7 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
 
 // ── Risk Layer Configuration ─────────────────────────────────────
 
-export type RiskLayerStatus = 'Active' | 'Inactive'
+export type RiskLayerStatus = 'Active' | 'Inactive' | 'Draft'
 
 // Parameter types for the 11 control parameters
 export enum ParameterType {
@@ -1621,8 +1621,10 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     id: 'RL-005',
     region: 'TW',
     entity: 'SPXTW',
-    description: 'SPX Taiwan draft configuration for new risk parameters.',
-    status: 'Inactive',
+    description: "SPX Taiwan draft configuration for new risk parameters.",
+    status: 'Draft',
+    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedAt: '2025-04-20 10:00',
     rootRuleNode: {
       type: 'group',
       id: 'root-005',
@@ -1666,8 +1668,10 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     id: 'RL-007',
     region: 'BR',
     entity: 'SPXBR',
-    description: 'SPX Brazil risk configuration with comprehensive anomaly detection.',
-    status: 'Inactive',
+    description: "SPX Brazil risk configuration with comprehensive anomaly detection.",
+    status: 'Draft',
+    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedAt: '2025-04-19 15:00',
     rootRuleNode: {
       type: 'group',
       id: 'root-007',

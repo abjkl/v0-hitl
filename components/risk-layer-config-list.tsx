@@ -12,6 +12,7 @@ import {
   Space,
   Dropdown,
   Tooltip,
+  Popconfirm,
   message,
 } from "antd"
 import {
@@ -23,6 +24,7 @@ import {
   MoreOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -46,6 +48,7 @@ interface RiskLayerConfigListProps {
 const STATUS_TAG_COLORS: Record<RiskLayerStatus, string> = {
   Active: "green",
   Inactive: "default",
+  Draft: "blue",
 }
 
 const REGION_OPTIONS = REGIONS.map((r) => ({ value: r.code, label: r.code }))
@@ -58,6 +61,7 @@ const ENTITY_OPTIONS = ALL_ENTITIES.map((e) => ({ value: e, label: e }))
 const STATUS_OPTIONS: { value: RiskLayerStatus; label: string }[] = [
   { value: "Active", label: "Active" },
   { value: "Inactive", label: "Inactive" },
+  { value: "Draft", label: "Draft" },
 ]
 
 export function RiskLayerConfigList({
@@ -155,6 +159,11 @@ export function RiskLayerConfigList({
     message.success("Configuration deactivated")
   }
 
+  function handleDelete(id: string) {
+    setConfigs((prev) => prev.filter((c) => c.id !== id))
+    message.success("Configuration deleted")
+  }
+
   function handleNewConfiguration() {
     const now = new Date()
     const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
@@ -165,7 +174,7 @@ export function RiskLayerConfigList({
       region: currentRegion,
       entity: REGION_ENTITIES[currentRegion as keyof typeof REGION_ENTITIES]?.[0] ?? "",
       description: "",
-      status: "Inactive",
+      status: "Draft",
       lastUpdatedBy: currentUser,
       lastUpdatedAt: timestamp,
       rootRuleNode: {
@@ -266,20 +275,28 @@ export function RiskLayerConfigList({
                   onClick: () => handleDuplicate(record),
                 },
                 { type: "divider" },
-                record.status === "Active"
+                record.status === "Draft"
                   ? {
-                      key: "deactivate",
-                      icon: <StopOutlined />,
-                      label: "Deactivate",
+                      key: "delete",
+                      icon: <DeleteOutlined />,
+                      label: "Delete",
                       danger: true,
-                      onClick: () => handleDeactivate(record.id),
+                      onClick: () => handleDelete(record.id),
                     }
-                  : {
-                      key: "activate",
-                      icon: <CheckCircleOutlined />,
-                      label: "Activate",
-                      onClick: () => handleActivate(record.id),
-                    },
+                  : record.status === "Active"
+                    ? {
+                        key: "deactivate",
+                        icon: <StopOutlined />,
+                        label: "Deactivate",
+                        danger: true,
+                        onClick: () => handleDeactivate(record.id),
+                      }
+                    : {
+                        key: "activate",
+                        icon: <CheckCircleOutlined />,
+                        label: "Activate",
+                        onClick: () => handleActivate(record.id),
+                      },
               ],
             }}
             trigger={["click"]}
