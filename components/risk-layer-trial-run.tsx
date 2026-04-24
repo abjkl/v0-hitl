@@ -1,33 +1,59 @@
 "use client"
 
 import { useState } from "react"
-import { Card, Button, Input, Table, Tag, Typography, Space, Spin } from "antd"
-import { PlayCircleOutlined } from "@ant-design/icons"
+import { Card, Button, Input, Table, Tag, Typography, Space, Spin, Popover, List } from "antd"
+import { PlayCircleOutlined, InfoCircleOutlined } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
-import type { RiskLayerConfig } from "@/lib/mock-data"
+import {
+  type RiskLayerConfig,
+  type RuleNode,
+  type ConditionNode,
+  getParameterDefinition,
+} from "@/lib/mock-data"
 
 const { Text } = Typography
 
 // Mock PR data pool – keyed by PR id
 const PR_DATA_POOL: Record<string, PRRecord> = {
-  "PR-001": { prId: "PR-001", paymentGroup: "PG-001", invoiceNumber: "INV-2025-0001", invoiceDate: "2025-01-05", whtReview: "Pass",  ebsApVoucherNo: "AP-88001", status: "Approved" },
-  "PR-002": { prId: "PR-002", paymentGroup: "PG-001", invoiceNumber: "INV-2025-0002", invoiceDate: "2025-01-08", whtReview: "N/A",   ebsApVoucherNo: "AP-88002", status: "Rejected" },
-  "PR-003": { prId: "PR-003", paymentGroup: "PG-002", invoiceNumber: "INV-2025-0003", invoiceDate: "2025-01-12", whtReview: "Pass",  ebsApVoucherNo: "AP-88003", status: "Approved" },
-  "PR-004": { prId: "PR-004", paymentGroup: "PG-002", invoiceNumber: "INV-2025-0004", invoiceDate: "2025-01-15", whtReview: "Pass",  ebsApVoucherNo: "AP-88004", status: "Approved" },
-  "PR-005": { prId: "PR-005", paymentGroup: "PG-003", invoiceNumber: "INV-2025-0005", invoiceDate: "2025-01-20", whtReview: "N/A",   ebsApVoucherNo: "AP-88005", status: "Approved" },
-  "PR-006": { prId: "PR-006", paymentGroup: "PG-004", invoiceNumber: "INV-2025-0006", invoiceDate: "2025-02-01", whtReview: "Pass",  ebsApVoucherNo: "AP-88006", status: "Approved" },
-  "PR-007": { prId: "PR-007", paymentGroup: "PG-004", invoiceNumber: "INV-2025-0007", invoiceDate: "2025-02-05", whtReview: "Fail",  ebsApVoucherNo: "",          status: "Rejected" },
-  "PR-008": { prId: "PR-008", paymentGroup: "PG-005", invoiceNumber: "INV-2025-0008", invoiceDate: "2025-02-10", whtReview: "Pass",  ebsApVoucherNo: "AP-88008", status: "Approved" },
-  "PR-009": { prId: "PR-009", paymentGroup: "PG-006", invoiceNumber: "INV-2025-0009", invoiceDate: "2025-02-14", whtReview: "N/A",   ebsApVoucherNo: "AP-88009", status: "Approved" },
-  "PR-010": { prId: "PR-010", paymentGroup: "PG-007", invoiceNumber: "INV-2025-0010", invoiceDate: "2025-02-20", whtReview: "Fail",  ebsApVoucherNo: "",          status: "Rejected" },
-  "PR-011": { prId: "PR-011", paymentGroup: "PG-008", invoiceNumber: "INV-2025-0011", invoiceDate: "2025-03-01", whtReview: "Pass",  ebsApVoucherNo: "AP-88011", status: "Approved" },
-  "PR-012": { prId: "PR-012", paymentGroup: "PG-009", invoiceNumber: "INV-2025-0012", invoiceDate: "2025-03-05", whtReview: "Pass",  ebsApVoucherNo: "AP-88012", status: "Approved" },
+  "PR-001": { prId: "PR-001", paymentGroup: "PG-001", invoiceNumber: "INV-2025-0001", invoiceDate: "2025-01-05", whtReview: "Pass", ebsApVoucherNo: "AP-88001", status: "Approved" },
+  "PR-002": { prId: "PR-002", paymentGroup: "PG-001", invoiceNumber: "INV-2025-0002", invoiceDate: "2025-01-08", whtReview: "N/A",  ebsApVoucherNo: "AP-88002", status: "Rejected" },
+  "PR-003": { prId: "PR-003", paymentGroup: "PG-002", invoiceNumber: "INV-2025-0003", invoiceDate: "2025-01-12", whtReview: "Pass", ebsApVoucherNo: "AP-88003", status: "Approved" },
+  "PR-004": { prId: "PR-004", paymentGroup: "PG-002", invoiceNumber: "INV-2025-0004", invoiceDate: "2025-01-15", whtReview: "Pass", ebsApVoucherNo: "AP-88004", status: "Approved" },
+  "PR-005": { prId: "PR-005", paymentGroup: "PG-003", invoiceNumber: "INV-2025-0005", invoiceDate: "2025-01-20", whtReview: "N/A",  ebsApVoucherNo: "AP-88005", status: "Approved" },
+  "PR-006": { prId: "PR-006", paymentGroup: "PG-004", invoiceNumber: "INV-2025-0006", invoiceDate: "2025-02-01", whtReview: "Pass", ebsApVoucherNo: "AP-88006", status: "Approved" },
+  "PR-007": { prId: "PR-007", paymentGroup: "PG-004", invoiceNumber: "INV-2025-0007", invoiceDate: "2025-02-05", whtReview: "Fail", ebsApVoucherNo: "",         status: "Rejected" },
+  "PR-008": { prId: "PR-008", paymentGroup: "PG-005", invoiceNumber: "INV-2025-0008", invoiceDate: "2025-02-10", whtReview: "Pass", ebsApVoucherNo: "AP-88008", status: "Approved" },
+  "PR-009": { prId: "PR-009", paymentGroup: "PG-006", invoiceNumber: "INV-2025-0009", invoiceDate: "2025-02-14", whtReview: "N/A",  ebsApVoucherNo: "AP-88009", status: "Approved" },
+  "PR-010": { prId: "PR-010", paymentGroup: "PG-007", invoiceNumber: "INV-2025-0010", invoiceDate: "2025-02-20", whtReview: "Fail", ebsApVoucherNo: "",         status: "Rejected" },
+  "PR-011": { prId: "PR-011", paymentGroup: "PG-008", invoiceNumber: "INV-2025-0011", invoiceDate: "2025-03-01", whtReview: "Pass", ebsApVoucherNo: "AP-88011", status: "Approved" },
+  "PR-012": { prId: "PR-012", paymentGroup: "PG-009", invoiceNumber: "INV-2025-0012", invoiceDate: "2025-03-05", whtReview: "Pass", ebsApVoucherNo: "AP-88012", status: "Approved" },
 }
 
-// Deterministically simulate risk layer result based on PR id + config id
-function evaluateRiskLayer(prId: string, config: RiskLayerConfig): "Triggered" | "Passed" {
-  const hash = (prId + config.id).split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
-  return hash % 3 === 0 ? "Triggered" : "Passed"
+// Collect all leaf ConditionNodes from a rule tree
+function collectConditions(node: RuleNode): ConditionNode[] {
+  if (node.type === "condition") return [node]
+  return node.children.flatMap(collectConditions)
+}
+
+// Deterministically decide which conditions are "hit" for a given PR + config
+function evaluateRiskLayer(
+  prId: string,
+  config: RiskLayerConfig,
+): { result: "Yes" | "No"; hitConditions: string[] } {
+  const allConditions = collectConditions(config.rootRuleNode)
+  const prHash = prId.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const configHash = config.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+
+  // Deterministically pick a subset of conditions as "hit"
+  const hitConditions: string[] = allConditions
+    .filter((_, idx) => (prHash + configHash + idx) % 3 === 0)
+    .map((c) => {
+      const param = getParameterDefinition(c.parameterId)
+      return param?.name ?? c.parameterId
+    })
+
+  const triggered = hitConditions.length > 0
+  return { result: triggered ? "Yes" : "No", hitConditions }
 }
 
 interface PRRecord {
@@ -41,7 +67,8 @@ interface PRRecord {
 }
 
 interface TrialRunRow extends PRRecord {
-  riskLayer: "Triggered" | "Passed" | "Not Found"
+  riskResult: "Yes" | "No" | "Not Found"
+  hitConditions: string[]
 }
 
 interface RiskLayerTrialRunProps {
@@ -64,7 +91,6 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
     setRunning(true)
     setResults(null)
 
-    // Simulate async evaluation
     setTimeout(() => {
       const rows: TrialRunRow[] = ids.map((id) => {
         const pr = PR_DATA_POOL[id]
@@ -77,13 +103,12 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
             whtReview: "—",
             ebsApVoucherNo: "—",
             status: "Not Found",
-            riskLayer: "Not Found",
+            riskResult: "Not Found",
+            hitConditions: [],
           }
         }
-        return {
-          ...pr,
-          riskLayer: evaluateRiskLayer(id, config),
-        }
+        const { result, hitConditions } = evaluateRiskLayer(id, config)
+        return { ...pr, riskResult: result, hitConditions }
       })
       setResults(rows)
       setRunning(false)
@@ -136,7 +161,7 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
       key: "ebsApVoucherNo",
       width: 160,
       render: (v: string) => (
-        <Text style={{ fontSize: 13 }}>{v || <Text type="secondary">—</Text>}</Text>
+        <Text style={{ fontSize: 13 }}>{v || "—"}</Text>
       ),
     },
     {
@@ -152,16 +177,48 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
     },
     {
       title: "Risk Layer",
-      dataIndex: "riskLayer",
       key: "riskLayer",
-      width: 120,
-      render: (v: string) => {
-        if (v === "Not Found") return <Text type="secondary">—</Text>
-        const color = v === "Triggered" ? "orange" : "green"
+      width: 140,
+      render: (_: unknown, row: TrialRunRow) => {
+        if (row.riskResult === "Not Found") return <Text type="secondary">—</Text>
+
+        if (row.riskResult === "No") {
+          return <Tag color="green" style={{ margin: 0, fontWeight: 500 }}>Passed</Tag>
+        }
+
+        // Yes – show tag + popover with hit conditions
+        const popoverContent = (
+          <div style={{ maxWidth: 280 }}>
+            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
+              Conditions triggered:
+            </Text>
+            <List
+              size="small"
+              dataSource={row.hitConditions}
+              renderItem={(item) => (
+                <List.Item style={{ padding: "4px 0", borderBottom: "none" }}>
+                  <Space size={6}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fa8c16", display: "inline-block", flexShrink: 0 }} />
+                    <Text style={{ fontSize: 13 }}>{item}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </div>
+        )
+
         return (
-          <Tag color={color} style={{ margin: 0, fontWeight: 500 }}>
-            {v}
-          </Tag>
+          <Popover
+            content={popoverContent}
+            title={null}
+            trigger="hover"
+            placement="left"
+          >
+            <Space size={4} style={{ cursor: "pointer" }}>
+              <Tag color="orange" style={{ margin: 0, fontWeight: 500 }}>Yes</Tag>
+              <InfoCircleOutlined style={{ color: "#fa8c16", fontSize: 13 }} />
+            </Space>
+          </Popover>
         )
       },
     },
@@ -202,7 +259,7 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Loading */}
         {running && (
           <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
             <Space>
@@ -212,6 +269,7 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
           </div>
         )}
 
+        {/* Results table */}
         {results && !running && (
           <div>
             <div style={{ marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -220,12 +278,12 @@ export function RiskLayerTrialRun({ config }: RiskLayerTrialRunProps) {
               </Text>
               <Space size={16}>
                 <Text style={{ fontSize: 12 }}>
-                  <Tag color="orange" style={{ margin: 0 }}>Triggered</Tag>
-                  {" "}{results.filter((r) => r.riskLayer === "Triggered").length}
+                  <Tag color="orange" style={{ margin: 0 }}>Yes</Tag>
+                  {" "}{results.filter((r) => r.riskResult === "Yes").length}
                 </Text>
                 <Text style={{ fontSize: 12 }}>
                   <Tag color="green" style={{ margin: 0 }}>Passed</Tag>
-                  {" "}{results.filter((r) => r.riskLayer === "Passed").length}
+                  {" "}{results.filter((r) => r.riskResult === "No").length}
                 </Text>
               </Space>
             </div>
