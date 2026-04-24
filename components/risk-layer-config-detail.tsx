@@ -21,26 +21,29 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons"
 import {
   type RiskLayerConfig,
   type GroupNode,
   type RuleNode,
-  generateLogicSummary,
 } from "@/lib/mock-data"
 import { RuleGroup } from "@/components/rule-group"
+import { RiskLayerTrialRun } from "@/components/risk-layer-trial-run"
 import { REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
-const { Title, Text, Paragraph } = Typography
-const { TextArea } = Input
+const { Title, Text } = Typography
 
 interface RiskLayerConfigDetailProps {
   config: RiskLayerConfig
   isEditMode: boolean
+  isNew?: boolean
+  currentUser: string
   onBack: () => void
   onSave: (updatedConfig: RiskLayerConfig) => void
   onActivate: (id: string) => void
   onDeactivate: (id: string) => void
+  onDelete?: (id: string) => void
 }
 
 const STATUS_TAG_COLORS: Record<string, string> = {
@@ -52,10 +55,13 @@ const STATUS_TAG_COLORS: Record<string, string> = {
 export function RiskLayerConfigDetail({
   config,
   isEditMode: initialEditMode,
+  isNew = false,
+  currentUser,
   onBack,
   onSave,
   onActivate,
   onDeactivate,
+  onDelete,
 }: RiskLayerConfigDetailProps) {
   const [isEditing, setIsEditing] = useState(initialEditMode)
   const [editedConfig, setEditedConfig] = useState<RiskLayerConfig>(config)
@@ -94,18 +100,43 @@ export function RiskLayerConfigDetail({
     }
   }
 
-  function handleSave() {
+  function getTimestamp() {
     const now = new Date()
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+  }
 
+  function handleSaveAsDraft() {
+    const timestamp = getTimestamp()
     const updated: RiskLayerConfig = {
       ...editedConfig,
+      status: "Draft",
       lastUpdatedAt: timestamp,
-      lastUpdatedBy: "Current User",
+      lastUpdatedBy: currentUser,
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
+          action: "Updated",
+          details: "Saved as draft",
+        },
+        ...editedConfig.changeLog,
+      ],
+    }
+    onSave(updated)
+    setIsEditing(false)
+    message.success("Configuration saved as draft")
+  }
+
+  function handleSave() {
+    const timestamp = getTimestamp()
+    const updated: RiskLayerConfig = {
+      ...editedConfig,
+      lastUpdatedAt: timestamp,
+      lastUpdatedBy: currentUser,
+      changeLog: [
+        {
+          timestamp,
+          user: currentUser,
           action: "Updated",
           details: "Configuration updated",
         },
@@ -115,6 +146,33 @@ export function RiskLayerConfigDetail({
     onSave(updated)
     setIsEditing(false)
     message.success("Configuration saved successfully")
+  }
+
+  function handleSaveAndActivate() {
+    const timestamp = getTimestamp()
+    const updated: RiskLayerConfig = {
+      ...editedConfig,
+      status: "Active",
+      lastUpdatedAt: timestamp,
+      lastUpdatedBy: currentUser,
+      changeLog: [
+        {
+          timestamp,
+          user: currentUser,
+          action: "Activated",
+        },
+        {
+          timestamp,
+          user: currentUser,
+          action: isNew ? "Created" : "Updated",
+        },
+        ...(isNew ? [] : editedConfig.changeLog),
+      ],
+    }
+    onSave(updated)
+    setIsEditing(false)
+    message.success("Configuration saved and activated")
+    onBack()
   }
 
   function handleCancel() {
@@ -132,7 +190,11 @@ export function RiskLayerConfigDetail({
     message.success("Configuration deactivated")
   }
 
-  const logicPreview = generateLogicSummary(editedConfig.rootRuleNode)
+  function handleDelete() {
+    onDelete?.(config.id)
+    message.success("Configuration deleted")
+    onBack()
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -170,21 +232,59 @@ export function RiskLayerConfigDetail({
           </Space>
 
           <Space>
-            {isEditing ? (
+            {isNew ? (
+              // New config mode: Save and Activate
               <>
-                <Button icon={<CloseOutlined />} onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
-                  Save
+                <Button onClick={onBack}>Cancel</Button>
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleSaveAndActivate}>
+                  Save and Activate
                 </Button>
               </>
+            ) : isEditing ? (
+              // Edit mode
+              config.status === "Draft" ? (
+                // Draft config in edit mode: Save as Draft or Save and Activate
+                <>
+                  <Button icon={<CloseOutlined />} onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button icon={<SaveOutlined />} onClick={handleSaveAsDraft}>
+                    Save as Draft
+                  </Button>
+                  <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleSaveAndActivate}>
+                    Save and Activate
+                  </Button>
+                </>
+              ) : (
+                // Non-draft config in edit mode: Cancel and Save
+                <>
+                  <Button icon={<CloseOutlined />} onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
+                    Save
+                  </Button>
+                </>
+              )
             ) : (
+              // View mode
               <>
                 <Button icon={<EditOutlined />} onClick={() => setIsEditing(true)}>
                   Edit
                 </Button>
-                {config.status === "Active" ? (
+                {config.status === "Draft" ? (
+                  <Popconfirm
+                    title="Delete this draft configuration?"
+                    description="This action cannot be undone."
+                    onConfirm={handleDelete}
+                    okText="Delete"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Button icon={<DeleteOutlined />} danger>
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                ) : config.status === "Active" ? (
                   <Popconfirm
                     title="Deactivate this configuration?"
                     description="This will stop the rule from being applied."
@@ -253,21 +353,6 @@ export function RiskLayerConfigDetail({
             </div>
           </div>
 
-          <div>
-            <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 4 }}>
-              Description
-            </Text>
-            {isEditing ? (
-              <TextArea
-                value={editedConfig.description}
-                onChange={(e) => handleFieldChange("description", e.target.value)}
-                rows={2}
-                placeholder="Enter configuration description..."
-              />
-            ) : (
-              <Paragraph style={{ margin: 0 }}>{editedConfig.description}</Paragraph>
-            )}
-          </div>
         </div>
       </Card>
 
@@ -292,27 +377,10 @@ export function RiskLayerConfigDetail({
         />
       </Card>
 
-      {/* Logic Preview */}
-      <Card
-        title="Logic Preview"
-        size="small"
-        style={{ borderRadius: 8 }}
-        styles={{ body: { padding: 20 } }}
-      >
-        <div
-          style={{
-            padding: 16,
-            background: "#f5f5f5",
-            borderRadius: 6,
-            fontFamily: "monospace",
-            fontSize: 13,
-            lineHeight: 1.6,
-            overflowX: "auto",
-          }}
-        >
-          {logicPreview || "No rules configured"}
-        </div>
-      </Card>
+      {/* PR Trial Run */}
+      {!isNew && (
+        <RiskLayerTrialRun config={config} />
+      )}
 
       {/* Change Log (View mode only) */}
       {!isEditing && (

@@ -10,8 +10,9 @@ import {
   Tag,
   Typography,
   Space,
-  Tooltip,
   Dropdown,
+  Tooltip,
+  Popconfirm,
   message,
 } from "antd"
 import {
@@ -23,24 +24,25 @@ import {
   MoreOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import {
   type RiskLayerConfig,
   type RiskLayerStatus,
-  generateLogicSummary,
   generateRuleNodeId,
   ParameterType,
 } from "@/lib/mock-data"
 import { useRegion, REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
-const { Title, Text, Paragraph } = Typography
+const { Title, Text } = Typography
 
 interface RiskLayerConfigListProps {
   configs: RiskLayerConfig[]
   setConfigs: React.Dispatch<React.SetStateAction<RiskLayerConfig[]>>
+  currentUser: string
   onView: (id: string) => void
-  onEdit: (id: string) => void
+  onEdit: (id: string, isNew?: boolean) => void
 }
 
 const STATUS_TAG_COLORS: Record<RiskLayerStatus, string> = {
@@ -65,6 +67,7 @@ const STATUS_OPTIONS: { value: RiskLayerStatus; label: string }[] = [
 export function RiskLayerConfigList({
   configs,
   setConfigs,
+  currentUser,
   onView,
   onEdit,
 }: RiskLayerConfigListProps) {
@@ -78,7 +81,6 @@ export function RiskLayerConfigList({
     return configs.filter((c) => {
       const matchSearch =
         !searchText ||
-        c.description.toLowerCase().includes(searchText.toLowerCase()) ||
         c.region.toLowerCase().includes(searchText.toLowerCase()) ||
         c.entity.toLowerCase().includes(searchText.toLowerCase())
 
@@ -97,13 +99,13 @@ export function RiskLayerConfigList({
     const newConfig: RiskLayerConfig = {
       ...JSON.parse(JSON.stringify(record)),
       id: `RL-${String(configs.length + 1).padStart(3, "0")}`,
-      status: "Draft",
-      lastUpdatedBy: "Current User",
+      status: "Inactive",
+      lastUpdatedBy: currentUser,
       lastUpdatedAt: timestamp,
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: "Created",
           details: `Duplicated from ${record.id}`,
         },
@@ -123,7 +125,7 @@ export function RiskLayerConfigList({
               changeLog: [
                 {
                   timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                  user: "Current User",
+                  user: currentUser,
                   action: "Activated" as const,
                 },
                 ...c.changeLog,
@@ -145,7 +147,7 @@ export function RiskLayerConfigList({
               changeLog: [
                 {
                   timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                  user: "Current User",
+                  user: currentUser,
                   action: "Deactivated" as const,
                 },
                 ...c.changeLog,
@@ -157,6 +159,11 @@ export function RiskLayerConfigList({
     message.success("Configuration deactivated")
   }
 
+  function handleDelete(id: string) {
+    setConfigs((prev) => prev.filter((c) => c.id !== id))
+    message.success("Configuration deleted")
+  }
+
   function handleNewConfiguration() {
     const now = new Date()
     const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
@@ -166,9 +173,9 @@ export function RiskLayerConfigList({
       id: newId,
       region: currentRegion,
       entity: REGION_ENTITIES[currentRegion as keyof typeof REGION_ENTITIES]?.[0] ?? "",
-      description: "New risk layer configuration",
+      description: "",
       status: "Draft",
-      lastUpdatedBy: "Current User",
+      lastUpdatedBy: currentUser,
       lastUpdatedAt: timestamp,
       rootRuleNode: {
         type: "group",
@@ -186,13 +193,13 @@ export function RiskLayerConfigList({
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: "Created",
         },
       ],
     }
     setConfigs((prev) => [...prev, newConfig])
-    onEdit(newId)
+    onEdit(newId, true)
   }
 
   const columns: ColumnsType<RiskLayerConfig> = [
@@ -215,29 +222,6 @@ export function RiskLayerConfigList({
       render: (entity: string) => (
         <Tag style={{ margin: 0 }}>{entity}</Tag>
       ),
-    },
-    {
-      title: "Logic Summary",
-      key: "logicSummary",
-      render: (_, record) => {
-        const summary = generateLogicSummary(record.rootRuleNode)
-        return (
-          <Tooltip title={summary}>
-            <Paragraph
-              ellipsis={{ rows: 1 }}
-              style={{
-                margin: 0,
-                fontSize: 12,
-                fontFamily: "monospace",
-                color: "#666",
-                maxWidth: 300,
-              }}
-            >
-              {summary}
-            </Paragraph>
-          </Tooltip>
-        )
-      },
     },
     {
       title: "Status",
@@ -291,20 +275,28 @@ export function RiskLayerConfigList({
                   onClick: () => handleDuplicate(record),
                 },
                 { type: "divider" },
-                record.status === "Active"
+                record.status === "Draft"
                   ? {
-                      key: "deactivate",
-                      icon: <StopOutlined />,
-                      label: "Deactivate",
+                      key: "delete",
+                      icon: <DeleteOutlined />,
+                      label: "Delete",
                       danger: true,
-                      onClick: () => handleDeactivate(record.id),
+                      onClick: () => handleDelete(record.id),
                     }
-                  : {
-                      key: "activate",
-                      icon: <CheckCircleOutlined />,
-                      label: "Activate",
-                      onClick: () => handleActivate(record.id),
-                    },
+                  : record.status === "Active"
+                    ? {
+                        key: "deactivate",
+                        icon: <StopOutlined />,
+                        label: "Deactivate",
+                        danger: true,
+                        onClick: () => handleDeactivate(record.id),
+                      }
+                    : {
+                        key: "activate",
+                        icon: <CheckCircleOutlined />,
+                        label: "Activate",
+                        onClick: () => handleActivate(record.id),
+                      },
               ],
             }}
             trigger={["click"]}
@@ -353,11 +345,11 @@ export function RiskLayerConfigList({
       >
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Input
-            placeholder="Search by description, region, or entity..."
+            placeholder="Search by region or entity..."
             prefix={<SearchOutlined style={{ color: "#999" }} />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 280 }}
+            style={{ width: 200 }}
             allowClear
           />
           <Select

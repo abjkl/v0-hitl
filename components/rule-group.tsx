@@ -8,12 +8,13 @@ import {
   type ConditionNode,
   ParameterType,
   generateRuleNodeId,
+  getParameterDefinition,
 } from "@/lib/mock-data"
 import { RuleCondition } from "@/components/rule-condition"
 
 const { Text } = Typography
 
-const MAX_DEPTH = 3
+const MAX_DEPTH = 2
 
 interface RuleGroupProps {
   node: GroupNode
@@ -52,11 +53,14 @@ export function RuleGroup({
   }
 
   function handleAddCondition() {
+    const defaultParam = ParameterType.LAST_APPROVED_TXN
+    const paramDef = getParameterDefinition(defaultParam)
     const newCondition: ConditionNode = {
       type: "condition",
       id: generateRuleNodeId(),
-      parameterId: ParameterType.LAST_APPROVED_TXN,
-      config: { value: 6 },
+      parameterId: defaultParam,
+      operator: paramDef?.defaultOperator ?? null,
+      config: paramDef?.defaultConfig ?? {},
     }
     onUpdate(path, { ...node, children: [...node.children, newCondition] })
   }
@@ -152,7 +156,15 @@ export function RuleGroup({
               key={child.id}
               node={child}
               path={[...path, index]}
-              onUpdate={onUpdate}
+              onUpdate={(childPath, newNode) => {
+                // If the child is updating itself (path matches), update via handleChildUpdate
+                if (childPath.length === path.length + 1 && childPath[childPath.length - 1] === index) {
+                  handleChildUpdate(index, newNode)
+                } else {
+                  // Otherwise, propagate up
+                  onUpdate(childPath, newNode)
+                }
+              }}
               onDelete={() => handleChildDelete(index)}
               depth={depth + 1}
               readOnly={readOnly}
