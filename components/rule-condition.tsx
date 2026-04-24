@@ -4,8 +4,10 @@ import { Select, InputNumber, Button, Typography, Space } from "antd"
 import { DeleteOutlined } from "@ant-design/icons"
 import {
   type ConditionNode,
+  type ConditionOperator,
   type ParameterType,
   PARAMETER_DEFINITIONS,
+  OPERATORS_FOR_TYPE,
   getParameterDefinition,
 } from "@/lib/mock-data"
 
@@ -18,16 +20,11 @@ interface RuleConditionProps {
   readOnly?: boolean
 }
 
-// Group parameters by control block for the dropdown
+// Group parameters by control block for the Select options
 const parameterOptions = PARAMETER_DEFINITIONS.reduce(
   (acc, param) => {
-    if (!acc[param.controlBlock]) {
-      acc[param.controlBlock] = []
-    }
-    acc[param.controlBlock].push({
-      value: param.id,
-      label: param.name,
-    })
+    if (!acc[param.controlBlock]) acc[param.controlBlock] = []
+    acc[param.controlBlock].push({ value: param.id, label: param.name })
     return acc
   },
   {} as Record<string, { value: string; label: string }[]>
@@ -38,92 +35,103 @@ const selectOptions = Object.entries(parameterOptions).map(([block, options]) =>
   options,
 }))
 
+const OPERATOR_DISPLAY: Record<string, string> = {
+  ">": ">",
+  "<": "<",
+  "=": "=",
+  ">=": "≥",
+  "<=": "≤",
+  "!=": "≠",
+}
+
 export function RuleCondition({ node, onUpdate, onDelete, readOnly = false }: RuleConditionProps) {
   const paramDef = getParameterDefinition(node.parameterId)
+  const operatorType = paramDef?.operatorType ?? "boolean"
+  const availableOperators = OPERATORS_FOR_TYPE[operatorType]
+  const isBoolean = operatorType === "boolean"
 
   function handleParameterChange(value: ParameterType) {
     const newParamDef = getParameterDefinition(value)
     onUpdate({
       ...node,
       parameterId: value,
+      operator: newParamDef?.defaultOperator ?? null,
       config: newParamDef?.defaultConfig ?? {},
     })
   }
 
-  function handleConfigChange(key: string, value: unknown) {
-    onUpdate({
-      ...node,
-      config: { ...node.config, [key]: value },
-    })
+  function handleOperatorChange(value: ConditionOperator) {
+    onUpdate({ ...node, operator: value })
   }
 
-  function renderConfigInputs() {
-    if (!paramDef) return null
+  function handleConfigChange(key: string, value: unknown) {
+    onUpdate({ ...node, config: { ...node.config, [key]: value } })
+  }
+
+  function renderValueInputs() {
+    if (!paramDef || isBoolean) return null
 
     switch (paramDef.inputType) {
       case "month":
         return (
-          <Space size={4} style={{ marginLeft: 8 }}>
-            <Text type="secondary" style={{ fontSize: 13 }}>{"<"}</Text>
+          <Space size={4}>
             <InputNumber
               size="small"
               min={1}
               max={120}
               value={node.config.value as number}
               onChange={(v) => handleConfigChange("value", v)}
-              style={{ width: 60 }}
+              style={{ width: 64 }}
               disabled={readOnly}
             />
-            <Text type="secondary" style={{ fontSize: 13 }}>month</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>month(s)</Text>
           </Space>
         )
 
       case "count_month":
         return (
-          <Space size={4} style={{ marginLeft: 8 }}>
-            <Text type="secondary" style={{ fontSize: 13 }}>{">"}</Text>
+          <Space size={4}>
             <InputNumber
               size="small"
               min={1}
               max={1000}
               value={node.config.count as number}
               onChange={(v) => handleConfigChange("count", v)}
-              style={{ width: 60 }}
+              style={{ width: 64 }}
               disabled={readOnly}
             />
-            <Text type="secondary" style={{ fontSize: 13 }}>PRs within</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>PRs in</Text>
             <InputNumber
               size="small"
               min={1}
               max={120}
               value={node.config.months as number}
               onChange={(v) => handleConfigChange("months", v)}
-              style={{ width: 60 }}
+              style={{ width: 64 }}
               disabled={readOnly}
             />
-            <Text type="secondary" style={{ fontSize: 13 }}>month</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>month(s)</Text>
           </Space>
         )
 
       case "currency":
         return (
-          <Space size={4} style={{ marginLeft: 8 }}>
-            <Text type="secondary" style={{ fontSize: 13 }}>{"<="}</Text>
+          <Space size={4}>
             <Select
               size="small"
               value={node.config.currency as string}
               onChange={(v) => handleConfigChange("currency", v)}
-              style={{ width: 70 }}
+              style={{ width: 72 }}
               disabled={readOnly}
               options={[
                 { value: "SGD", label: "SGD" },
-                { value: "THB", label: "THB" },
-                { value: "VND", label: "VND" },
-                { value: "IDR", label: "IDR" },
                 { value: "MYR", label: "MYR" },
-                { value: "PHP", label: "PHP" },
                 { value: "TWD", label: "TWD" },
                 { value: "BRL", label: "BRL" },
+                { value: "THB", label: "THB" },
+                { value: "IDR", label: "IDR" },
+                { value: "PHP", label: "PHP" },
+                { value: "VND", label: "VND" },
               ]}
             />
             <InputNumber
@@ -133,19 +141,15 @@ export function RuleCondition({ node, onUpdate, onDelete, readOnly = false }: Ru
               onChange={(v) => handleConfigChange("value", v)}
               style={{ width: 120 }}
               disabled={readOnly}
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(value) => Number(value?.replace(/,/g, "") ?? 0)}
+              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v) => Number(v?.replace(/,/g, "") ?? 0)}
             />
           </Space>
         )
 
       case "none":
       default:
-        return (
-          <Text type="secondary" style={{ fontSize: 12, marginLeft: 8, fontStyle: "italic" }}>
-            {paramDef.description}
-          </Text>
-        )
+        return null
     }
   }
 
@@ -155,23 +159,63 @@ export function RuleCondition({ node, onUpdate, onDelete, readOnly = false }: Ru
         display: "flex",
         alignItems: "center",
         gap: 8,
-        padding: "8px 12px",
+        padding: "7px 12px",
         background: "#fafafa",
         borderRadius: 6,
         border: "1px solid #f0f0f0",
+        flexWrap: "wrap",
       }}
     >
+      {/* Parameter selector */}
       <Select
         size="small"
         value={node.parameterId}
         onChange={handleParameterChange}
-        style={{ width: 180 }}
+        style={{ width: 190 }}
         options={selectOptions}
         disabled={readOnly}
         placeholder="Select parameter"
       />
 
-      {renderConfigInputs()}
+      {/* Operator dropdown — hidden for boolean fields */}
+      {!isBoolean && (
+        readOnly ? (
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              width: 28,
+              textAlign: "center",
+              color: "#595959",
+            }}
+          >
+            {OPERATOR_DISPLAY[node.operator ?? "="] ?? node.operator}
+          </Text>
+        ) : (
+          <Select
+            size="small"
+            value={node.operator ?? availableOperators[0]}
+            onChange={handleOperatorChange}
+            style={{ width: 60 }}
+            disabled={readOnly}
+            options={availableOperators.map((op) => ({
+              value: op,
+              label: OPERATOR_DISPLAY[op] ?? op,
+            }))}
+            popupMatchSelectWidth={false}
+          />
+        )
+      )}
+
+      {/* Value inputs */}
+      {renderValueInputs()}
+
+      {/* Boolean: just show the italic description inline */}
+      {isBoolean && (
+        <Text type="secondary" style={{ fontSize: 12, fontStyle: "italic" }}>
+          {paramDef?.description}
+        </Text>
+      )}
 
       <div style={{ flex: 1 }} />
 

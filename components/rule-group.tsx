@@ -8,6 +8,7 @@ import {
   type ConditionNode,
   ParameterType,
   generateRuleNodeId,
+  getParameterDefinition,
 } from "@/lib/mock-data"
 import { RuleCondition } from "@/components/rule-condition"
 
@@ -52,11 +53,14 @@ export function RuleGroup({
   }
 
   function handleAddCondition() {
+    const defaultParam = ParameterType.LAST_APPROVED_TXN
+    const paramDef = getParameterDefinition(defaultParam)
     const newCondition: ConditionNode = {
       type: "condition",
       id: generateRuleNodeId(),
-      parameterId: ParameterType.LAST_APPROVED_TXN,
-      config: { value: 6 },
+      parameterId: defaultParam,
+      operator: paramDef?.defaultOperator ?? null,
+      config: paramDef?.defaultConfig ?? {},
     }
     onUpdate(path, { ...node, children: [...node.children, newCondition] })
   }

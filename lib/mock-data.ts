@@ -1402,39 +1402,58 @@ export enum ParameterType {
   BANK_ACCT_CHANGE = 'bank_acct_change',
 }
 
+// operatorType drives which operator set is available:
+//   'numeric'  → >, <, =, >=, <=, !=
+//   'duration' → >, <, =, >=, <=
+//   'boolean'  → no operator shown (pure flag check)
+//   'enum'     → =, !=
+export type OperatorType = 'numeric' | 'duration' | 'boolean' | 'enum'
+
+export const OPERATORS_FOR_TYPE: Record<OperatorType, string[]> = {
+  numeric:  ['>', '<', '=', '>=', '<=', '!='],
+  duration: ['>', '<', '=', '>=', '<='],
+  boolean:  [],
+  enum:     ['=', '!='],
+}
+
+export type ConditionOperator = '>' | '<' | '=' | '>=' | '<=' | '!='
+
 export interface ParameterDefinition {
   id: ParameterType
   name: string
   controlBlock: string
   description: string
   inputType: 'month' | 'count_month' | 'currency' | 'none'
+  operatorType: OperatorType
+  defaultOperator: ConditionOperator | null   // null for boolean fields
   defaultConfig?: Record<string, unknown>
 }
 
 export const PARAMETER_DEFINITIONS: ParameterDefinition[] = [
   // Supplier Trust
-  { id: ParameterType.LAST_APPROVED_TXN, name: 'Last Approved Txn', controlBlock: 'Supplier Trust', description: 'Time since last approved transaction', inputType: 'month', defaultConfig: { value: 6 } },
-  { id: ParameterType.CUMULATIVE_APPROVED, name: 'Cumulative Approved', controlBlock: 'Supplier Trust', description: 'Number of approved PRs within period', inputType: 'count_month', defaultConfig: { count: 5, months: 12 } },
-  { id: ParameterType.ACTIVITY_LEVEL, name: 'Activity Level', controlBlock: 'Supplier Trust', description: 'Supplier activity level assessment', inputType: 'none' },
+  { id: ParameterType.LAST_APPROVED_TXN,  name: 'Last Approved Txn',    controlBlock: 'Supplier Trust',   description: 'Time since last approved transaction',   inputType: 'month',       operatorType: 'duration', defaultOperator: '<',  defaultConfig: { value: 6 } },
+  { id: ParameterType.CUMULATIVE_APPROVED, name: 'Cumulative Approved', controlBlock: 'Supplier Trust',   description: 'Number of approved PRs within period',  inputType: 'count_month', operatorType: 'numeric',  defaultOperator: '>',  defaultConfig: { count: 5, months: 12 } },
+  { id: ParameterType.ACTIVITY_LEVEL,      name: 'Activity Level',      controlBlock: 'Supplier Trust',   description: 'Supplier activity level assessment',     inputType: 'none',        operatorType: 'enum',     defaultOperator: '=' },
   // Invoice Amount
-  { id: ParameterType.AMOUNT_INCL_TAX, name: 'Amount incl. Tax', controlBlock: 'Invoice Amount', description: 'Invoice amount including tax', inputType: 'currency', defaultConfig: { currency: 'SGD', value: 10000 } },
+  { id: ParameterType.AMOUNT_INCL_TAX,    name: 'Amount incl. Tax',     controlBlock: 'Invoice Amount',   description: 'Invoice amount including tax',           inputType: 'currency',    operatorType: 'numeric',  defaultOperator: '<=', defaultConfig: { currency: 'SGD', value: 10000 } },
   // Matching Quality
-  { id: ParameterType.MATCH_VARIANCE, name: 'Match Variance', controlBlock: 'Matching Quality', description: 'Allowed variance in PO matching', inputType: 'currency', defaultConfig: { currency: 'SGD', value: 100 } },
+  { id: ParameterType.MATCH_VARIANCE,     name: 'Match Variance',       controlBlock: 'Matching Quality', description: 'Allowed variance in PO matching',        inputType: 'currency',    operatorType: 'numeric',  defaultOperator: '<=', defaultConfig: { currency: 'SGD', value: 100 } },
   // Doc Strength
-  { id: ParameterType.TAGGING_CHECK, name: 'Tagging Check', controlBlock: 'Doc Strength', description: 'Document tagging verification', inputType: 'none' },
-  { id: ParameterType.CONTENT_VALIDATION, name: 'Content Validation', controlBlock: 'Doc Strength', description: 'Document content validation', inputType: 'none' },
+  { id: ParameterType.TAGGING_CHECK,      name: 'Tagging Check',        controlBlock: 'Doc Strength',     description: 'Document tagging verification',          inputType: 'none',        operatorType: 'boolean',  defaultOperator: null },
+  { id: ParameterType.CONTENT_VALIDATION, name: 'Content Validation',   controlBlock: 'Doc Strength',     description: 'Document content validation',            inputType: 'none',        operatorType: 'boolean',  defaultOperator: null },
   // Compliance
-  { id: ParameterType.CROSS_BORDER, name: 'Cross Border', controlBlock: 'Compliance', description: 'Cross-border transaction check', inputType: 'none' },
+  { id: ParameterType.CROSS_BORDER,       name: 'Cross Border',         controlBlock: 'Compliance',       description: 'Cross-border transaction check',         inputType: 'none',        operatorType: 'boolean',  defaultOperator: null },
   // Anomaly Check
-  { id: ParameterType.DUPLICATE_INV, name: 'Duplicate Invoice', controlBlock: 'Anomaly Check', description: 'Check for duplicate invoices', inputType: 'none' },
-  { id: ParameterType.NEAR_DUPLICATE, name: 'Near Duplicate', controlBlock: 'Anomaly Check', description: 'Check for near-duplicate invoices', inputType: 'none' },
-  { id: ParameterType.BANK_ACCT_CHANGE, name: 'Bank Account Change', controlBlock: 'Anomaly Check', description: 'Detect recent bank account changes', inputType: 'none' },
+  { id: ParameterType.DUPLICATE_INV,      name: 'Duplicate Invoice',    controlBlock: 'Anomaly Check',    description: 'Check for duplicate invoices',           inputType: 'none',        operatorType: 'boolean',  defaultOperator: null },
+  { id: ParameterType.NEAR_DUPLICATE,     name: 'Near Duplicate',       controlBlock: 'Anomaly Check',    description: 'Check for near-duplicate invoices',      inputType: 'none',        operatorType: 'boolean',  defaultOperator: null },
+  { id: ParameterType.BANK_ACCT_CHANGE,   name: 'Bank Account Change',  controlBlock: 'Anomaly Check',    description: 'Detect recent bank account changes',     inputType: 'none',        operatorType: 'boolean',  defaultOperator: null },
 ]
 
 export interface ConditionNode {
   type: 'condition'
   id: string
   parameterId: ParameterType
+  operator: ConditionOperator | null   // null for boolean fields
   config: Record<string, unknown>
 }
 
@@ -1494,12 +1513,12 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-001-1',
           operator: 'OR',
           children: [
-            { type: 'condition', id: 'cond-001-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 6 } },
-            { type: 'condition', id: 'cond-001-2', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 5, months: 12 } },
+            { type: 'condition', id: 'cond-001-1', parameterId: ParameterType.LAST_APPROVED_TXN, operator: '<', config: { value: 6 } },
+            { type: 'condition', id: 'cond-001-2', parameterId: ParameterType.CUMULATIVE_APPROVED, operator: '>', config: { count: 5, months: 12 } },
           ],
         },
-        { type: 'condition', id: 'cond-001-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'SGD', value: 50000 } },
-        { type: 'condition', id: 'cond-001-4', parameterId: ParameterType.DUPLICATE_INV, config: {} },
+        { type: 'condition', id: 'cond-001-3', parameterId: ParameterType.AMOUNT_INCL_TAX, operator: '<=', config: { currency: 'SGD', value: 50000 } },
+        { type: 'condition', id: 'cond-001-4', parameterId: ParameterType.DUPLICATE_INV, operator: null, config: {} },
       ],
     },
     changeLog: [
@@ -1521,9 +1540,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-002',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-002-1', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'SGD', value: 500 } },
-        { type: 'condition', id: 'cond-002-2', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-        { type: 'condition', id: 'cond-002-3', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+        { type: 'condition', id: 'cond-002-1', parameterId: ParameterType.MATCH_VARIANCE, operator: '<=', config: { currency: 'SGD', value: 500 } },
+        { type: 'condition', id: 'cond-002-2', parameterId: ParameterType.TAGGING_CHECK, operator: null, config: {} },
+        { type: 'condition', id: 'cond-002-3', parameterId: ParameterType.CONTENT_VALIDATION, operator: null, config: {} },
       ],
     },
     changeLog: [
@@ -1544,14 +1563,14 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-003',
       operator: 'OR',
       children: [
-        { type: 'condition', id: 'cond-003-1', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-003-1', parameterId: ParameterType.CROSS_BORDER, operator: null, config: {} },
         {
           type: 'group',
           id: 'grp-003-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-003-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
-            { type: 'condition', id: 'cond-003-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+            { type: 'condition', id: 'cond-003-2', parameterId: ParameterType.NEAR_DUPLICATE, operator: null, config: {} },
+            { type: 'condition', id: 'cond-003-3', parameterId: ParameterType.BANK_ACCT_CHANGE, operator: null, config: {} },
           ],
         },
       ],
@@ -1579,18 +1598,18 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-004-1',
           operator: 'OR',
           children: [
-            { type: 'condition', id: 'cond-004-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 3 } },
-            { type: 'condition', id: 'cond-004-2', parameterId: ParameterType.ACTIVITY_LEVEL, config: {} },
+            { type: 'condition', id: 'cond-004-1', parameterId: ParameterType.LAST_APPROVED_TXN, operator: '<', config: { value: 3 } },
+            { type: 'condition', id: 'cond-004-2', parameterId: ParameterType.ACTIVITY_LEVEL, operator: '=', config: {} },
           ],
         },
-        { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'MYR', value: 50000 } },
+        { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, operator: '<=', config: { currency: 'MYR', value: 50000 } },
         {
           type: 'group',
           id: 'grp-004-2',
           operator: 'OR',
           children: [
-            { type: 'condition', id: 'cond-004-4', parameterId: ParameterType.DUPLICATE_INV, config: {} },
-            { type: 'condition', id: 'cond-004-5', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+            { type: 'condition', id: 'cond-004-4', parameterId: ParameterType.DUPLICATE_INV, operator: null, config: {} },
+            { type: 'condition', id: 'cond-004-5', parameterId: ParameterType.NEAR_DUPLICATE, operator: null, config: {} },
           ],
         },
       ],
@@ -1614,8 +1633,8 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-005',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-005-1', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 10, months: 6 } },
-        { type: 'condition', id: 'cond-005-2', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'TWD', value: 5000 } },
+        { type: 'condition', id: 'cond-005-1', parameterId: ParameterType.CUMULATIVE_APPROVED, operator: '>', config: { count: 10, months: 6 } },
+        { type: 'condition', id: 'cond-005-2', parameterId: ParameterType.MATCH_VARIANCE, operator: '<=', config: { currency: 'TWD', value: 5000 } },
       ],
     },
     changeLog: [
@@ -1635,11 +1654,11 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-006',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-006-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 12 } },
-        { type: 'condition', id: 'cond-006-2', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'TWD', value: 300000 } },
-        { type: 'condition', id: 'cond-006-3', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-        { type: 'condition', id: 'cond-006-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
-        { type: 'condition', id: 'cond-006-5', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+        { type: 'condition', id: 'cond-006-1', parameterId: ParameterType.LAST_APPROVED_TXN, operator: '<', config: { value: 12 } },
+        { type: 'condition', id: 'cond-006-2', parameterId: ParameterType.AMOUNT_INCL_TAX, operator: '<=', config: { currency: 'TWD', value: 300000 } },
+        { type: 'condition', id: 'cond-006-3', parameterId: ParameterType.TAGGING_CHECK, operator: null, config: {} },
+        { type: 'condition', id: 'cond-006-4', parameterId: ParameterType.CROSS_BORDER, operator: null, config: {} },
+        { type: 'condition', id: 'cond-006-5', parameterId: ParameterType.BANK_ACCT_CHANGE, operator: null, config: {} },
       ],
     },
     changeLog: [
@@ -1666,12 +1685,12 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-007-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-007-1', parameterId: ParameterType.DUPLICATE_INV, config: {} },
-            { type: 'condition', id: 'cond-007-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+            { type: 'condition', id: 'cond-007-1', parameterId: ParameterType.DUPLICATE_INV, operator: null, config: {} },
+            { type: 'condition', id: 'cond-007-2', parameterId: ParameterType.NEAR_DUPLICATE, operator: null, config: {} },
           ],
         },
-        { type: 'condition', id: 'cond-007-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
-        { type: 'condition', id: 'cond-007-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-007-3', parameterId: ParameterType.BANK_ACCT_CHANGE, operator: null, config: {} },
+        { type: 'condition', id: 'cond-007-4', parameterId: ParameterType.CROSS_BORDER, operator: null, config: {} },
       ],
     },
     changeLog: [
@@ -1696,12 +1715,12 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-008-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-008-1', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-            { type: 'condition', id: 'cond-008-2', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+            { type: 'condition', id: 'cond-008-1', parameterId: ParameterType.TAGGING_CHECK, operator: null, config: {} },
+            { type: 'condition', id: 'cond-008-2', parameterId: ParameterType.CONTENT_VALIDATION, operator: null, config: {} },
           ],
         },
-        { type: 'condition', id: 'cond-008-3', parameterId: ParameterType.CROSS_BORDER, config: {} },
-        { type: 'condition', id: 'cond-008-4', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'BRL', value: 50000 } },
+        { type: 'condition', id: 'cond-008-3', parameterId: ParameterType.CROSS_BORDER, operator: null, config: {} },
+        { type: 'condition', id: 'cond-008-4', parameterId: ParameterType.AMOUNT_INCL_TAX, operator: '<=', config: { currency: 'BRL', value: 50000 } },
       ],
     },
     changeLog: [
