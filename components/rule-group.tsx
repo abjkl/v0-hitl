@@ -1,11 +1,12 @@
 "use client"
 
-import { Button, Radio, Typography, Space, Tooltip } from "antd"
+import { Button, Radio, Typography, Space } from "antd"
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons"
 import {
   type GroupNode,
   type RuleNode,
   type ConditionNode,
+  ParameterType,
   generateRuleNodeId,
 } from "@/lib/mock-data"
 import { RuleCondition } from "@/components/rule-condition"
@@ -23,13 +24,6 @@ interface RuleGroupProps {
   readOnly?: boolean
 }
 
-// Color scheme for nesting levels
-const LEVEL_COLORS = {
-  0: { border: "#1890ff", bg: "#e6f4ff", label: "blue" },  // Level 1 (Root) - Blue
-  1: { border: "#fa8c16", bg: "#fff7e6", label: "orange" }, // Level 2 (Sub) - Orange
-  2: { border: "#52c41a", bg: "#f6ffed", label: "green" },  // Level 3 (Sub) - Green
-}
-
 export function RuleGroup({
   node,
   path,
@@ -40,7 +34,7 @@ export function RuleGroup({
 }: RuleGroupProps) {
   const isRoot = depth === 0
   const canAddGroup = depth < MAX_DEPTH - 1
-  const colors = LEVEL_COLORS[Math.min(depth, 2) as 0 | 1 | 2]
+  const borderColor = node.operator === "AND" ? "#1890ff" : "#fa8c16"
 
   function handleOperatorChange(operator: "AND" | "OR") {
     onUpdate(path, { ...node, operator })
@@ -61,10 +55,8 @@ export function RuleGroup({
     const newCondition: ConditionNode = {
       type: "condition",
       id: generateRuleNodeId(),
-      invoiceField: "Invoice Amount",
-      poField: "PO Amount",
-      condition: "<=",
-      toleranceRange: 0,
+      parameterId: ParameterType.LAST_APPROVED_TXN,
+      config: { value: 6 },
     }
     onUpdate(path, { ...node, children: [...node.children, newCondition] })
   }
@@ -82,9 +74,9 @@ export function RuleGroup({
   return (
     <div
       style={{
-        borderLeft: `3px solid ${colors.border}`,
+        borderLeft: `3px solid ${borderColor}`,
         paddingLeft: 16,
-        marginLeft: isRoot ? 0 : 24,
+        marginLeft: isRoot ? 0 : 8,
         marginTop: isRoot ? 0 : 12,
         marginBottom: isRoot ? 0 : 12,
       }}
@@ -97,12 +89,12 @@ export function RuleGroup({
           justifyContent: "space-between",
           marginBottom: 12,
           padding: "6px 12px",
-          background: colors.bg,
+          background: node.operator === "AND" ? "#e6f4ff" : "#fff7e6",
           borderRadius: 6,
         }}
       >
         <Space size={12}>
-          <Text strong style={{ fontSize: 13, color: colors.border }}>
+          <Text strong style={{ fontSize: 13, color: borderColor }}>
             {isRoot ? "Root Group" : "Sub Group"}
           </Text>
           {!readOnly ? (
@@ -121,7 +113,7 @@ export function RuleGroup({
               style={{
                 fontSize: 12,
                 padding: "2px 8px",
-                background: colors.border,
+                background: borderColor,
                 color: "#fff",
                 borderRadius: 4,
               }}
@@ -131,24 +123,17 @@ export function RuleGroup({
           )}
         </Space>
 
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {isRoot && depth === 0 && (
-            <Text type="secondary" style={{ fontSize: 11, color: "#999" }}>
-              Max 3 levels of nesting
-            </Text>
-          )}
-          {!isRoot && !readOnly && (
-            <Button
-              type="text"
-              size="small"
-              icon={<DeleteOutlined />}
-              onClick={onDelete}
-              style={{ color: "#ff4d4f" }}
-            >
-              Remove
-            </Button>
-          )}
-        </div>
+        {!isRoot && !readOnly && (
+          <Button
+            type="text"
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={onDelete}
+            style={{ color: "#ff4d4f" }}
+          >
+            Remove
+          </Button>
+        )}
       </div>
 
       {/* Children */}
@@ -187,7 +172,7 @@ export function RuleGroup({
           >
             Add Condition
           </Button>
-          {canAddGroup ? (
+          {canAddGroup && (
             <Button
               type="dashed"
               size="small"
@@ -196,17 +181,6 @@ export function RuleGroup({
             >
               Add Group
             </Button>
-          ) : (
-            <Tooltip title="Maximum nesting depth reached">
-              <Button
-                type="dashed"
-                size="small"
-                icon={<PlusOutlined />}
-                disabled
-              >
-                Add Group
-              </Button>
-            </Tooltip>
           )}
         </div>
       )}

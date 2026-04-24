@@ -29,6 +29,7 @@ import {
   type RiskLayerConfig,
   type RiskLayerStatus,
   generateRuleNodeId,
+  ParameterType,
 } from "@/lib/mock-data"
 import { useRegion, REGIONS, REGION_ENTITIES } from "@/lib/region-context"
 
@@ -175,10 +176,8 @@ export function RiskLayerConfigList({
           {
             type: "condition",
             id: generateRuleNodeId(),
-            invoiceField: "Invoice Amount",
-            poField: "PO Amount",
-            condition: "<=",
-            toleranceRange: 0,
+            parameterId: ParameterType.LAST_APPROVED_TXN,
+            config: { value: 6 },
           },
         ],
       },
