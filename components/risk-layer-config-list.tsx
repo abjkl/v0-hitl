@@ -45,7 +45,6 @@ interface RiskLayerConfigListProps {
 const STATUS_TAG_COLORS: Record<RiskLayerStatus, string> = {
   Active: "green",
   Inactive: "default",
-  Draft: "blue",
 }
 
 const REGION_OPTIONS = REGIONS.map((r) => ({ value: r.code, label: r.code }))
@@ -58,7 +57,6 @@ const ENTITY_OPTIONS = ALL_ENTITIES.map((e) => ({ value: e, label: e }))
 const STATUS_OPTIONS: { value: RiskLayerStatus; label: string }[] = [
   { value: "Active", label: "Active" },
   { value: "Inactive", label: "Inactive" },
-  { value: "Draft", label: "Draft" },
 ]
 
 export function RiskLayerConfigList({
@@ -95,7 +93,7 @@ export function RiskLayerConfigList({
     const newConfig: RiskLayerConfig = {
       ...JSON.parse(JSON.stringify(record)),
       id: `RL-${String(configs.length + 1).padStart(3, "0")}`,
-      status: "Draft",
+      status: "Inactive",
       lastUpdatedBy: "Current User",
       lastUpdatedAt: timestamp,
       changeLog: [
@@ -165,7 +163,7 @@ export function RiskLayerConfigList({
       region: currentRegion,
       entity: REGION_ENTITIES[currentRegion as keyof typeof REGION_ENTITIES]?.[0] ?? "",
       description: "",
-      status: "Draft",
+      status: "Inactive",
       lastUpdatedBy: "Current User",
       lastUpdatedAt: timestamp,
       rootRuleNode: {

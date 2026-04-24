@@ -46,7 +46,6 @@ interface RiskLayerConfigDetailProps {
 const STATUS_TAG_COLORS: Record<string, string> = {
   Active: "green",
   Inactive: "default",
-  Draft: "blue",
 }
 
 export function RiskLayerConfigDetail({
@@ -119,29 +118,6 @@ export function RiskLayerConfigDetail({
     onSave(updated)
     setIsEditing(false)
     message.success("Configuration saved successfully")
-  }
-
-  function handleSaveAsDraft() {
-    const timestamp = getTimestamp()
-    const updated: RiskLayerConfig = {
-      ...editedConfig,
-      status: "Draft",
-      lastUpdatedAt: timestamp,
-      lastUpdatedBy: "Current User",
-      changeLog: [
-        {
-          timestamp,
-          user: "Current User",
-          action: isNew ? "Created" : "Updated",
-          details: "Saved as draft",
-        },
-        ...(isNew ? [] : editedConfig.changeLog),
-      ],
-    }
-    onSave(updated)
-    setIsEditing(false)
-    message.success("Configuration saved as draft")
-    onBack()
   }
 
   function handleSaveAndActivate() {
@@ -223,12 +199,9 @@ export function RiskLayerConfigDetail({
 
           <Space>
             {isNew ? (
-              // New config mode: Save as Draft / Save and Activate
+              // New config mode: Save and Activate
               <>
                 <Button onClick={onBack}>Cancel</Button>
-                <Button icon={<SaveOutlined />} onClick={handleSaveAsDraft}>
-                  Save as Draft
-                </Button>
                 <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleSaveAndActivate}>
                   Save and Activate
                 </Button>
