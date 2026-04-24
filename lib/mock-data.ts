@@ -1381,61 +1381,13 @@ export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
 
 export type RiskLayerStatus = 'Active' | 'Inactive' | 'Draft'
 
-// Parameter types for the 11 control parameters
-export enum ParameterType {
-  // Supplier Trust
-  LAST_APPROVED_TXN = 'last_approved_txn',
-  CUMULATIVE_APPROVED = 'cumulative_approved',
-  ACTIVITY_LEVEL = 'activity_level',
-  // Invoice Amount
-  AMOUNT_INCL_TAX = 'amount_incl_tax',
-  // Matching Quality
-  MATCH_VARIANCE = 'match_variance',
-  // Doc Strength
-  TAGGING_CHECK = 'tagging_check',
-  CONTENT_VALIDATION = 'content_validation',
-  // Compliance
-  CROSS_BORDER = 'cross_border',
-  // Anomaly Check
-  DUPLICATE_INV = 'duplicate_inv',
-  NEAR_DUPLICATE = 'near_duplicate',
-  BANK_ACCT_CHANGE = 'bank_acct_change',
-}
-
-export interface ParameterDefinition {
-  id: ParameterType
-  name: string
-  controlBlock: string
-  description: string
-  inputType: 'month' | 'count_month' | 'currency' | 'none'
-  defaultConfig?: Record<string, unknown>
-}
-
-export const PARAMETER_DEFINITIONS: ParameterDefinition[] = [
-  // Supplier Trust
-  { id: ParameterType.LAST_APPROVED_TXN, name: 'Last Approved Txn', controlBlock: 'Supplier Trust', description: 'Time since last approved transaction', inputType: 'month', defaultConfig: { value: 6 } },
-  { id: ParameterType.CUMULATIVE_APPROVED, name: 'Cumulative Approved', controlBlock: 'Supplier Trust', description: 'Number of approved PRs within period', inputType: 'count_month', defaultConfig: { count: 5, months: 12 } },
-  { id: ParameterType.ACTIVITY_LEVEL, name: 'Activity Level', controlBlock: 'Supplier Trust', description: 'Supplier activity level assessment', inputType: 'none' },
-  // Invoice Amount
-  { id: ParameterType.AMOUNT_INCL_TAX, name: 'Amount incl. Tax', controlBlock: 'Invoice Amount', description: 'Invoice amount including tax', inputType: 'currency', defaultConfig: { currency: 'SGD', value: 10000 } },
-  // Matching Quality
-  { id: ParameterType.MATCH_VARIANCE, name: 'Match Variance', controlBlock: 'Matching Quality', description: 'Allowed variance in PO matching', inputType: 'currency', defaultConfig: { currency: 'SGD', value: 100 } },
-  // Doc Strength
-  { id: ParameterType.TAGGING_CHECK, name: 'Tagging Check', controlBlock: 'Doc Strength', description: 'Document tagging verification', inputType: 'none' },
-  { id: ParameterType.CONTENT_VALIDATION, name: 'Content Validation', controlBlock: 'Doc Strength', description: 'Document content validation', inputType: 'none' },
-  // Compliance
-  { id: ParameterType.CROSS_BORDER, name: 'Cross Border', controlBlock: 'Compliance', description: 'Cross-border transaction check', inputType: 'none' },
-  // Anomaly Check
-  { id: ParameterType.DUPLICATE_INV, name: 'Duplicate Invoice', controlBlock: 'Anomaly Check', description: 'Check for duplicate invoices', inputType: 'none' },
-  { id: ParameterType.NEAR_DUPLICATE, name: 'Near Duplicate', controlBlock: 'Anomaly Check', description: 'Check for near-duplicate invoices', inputType: 'none' },
-  { id: ParameterType.BANK_ACCT_CHANGE, name: 'Bank Account Change', controlBlock: 'Anomaly Check', description: 'Detect recent bank account changes', inputType: 'none' },
-]
-
 export interface ConditionNode {
   type: 'condition'
   id: string
-  parameterId: ParameterType
-  config: Record<string, unknown>
+  invoiceField: string  // e.g. "Invoice Amount", "Invoice Date"
+  poField: string       // e.g. "PO Amount", "PO Date"
+  condition: string     // e.g. "=", "!=", "<", ">", "<=", ">="
+  toleranceRange: number // tolerance value (used with ± prefix)
 }
 
 export interface GroupNode {
@@ -1494,12 +1446,12 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-001-1',
           operator: 'OR',
           children: [
-            { type: 'condition', id: 'cond-001-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 6 } },
-            { type: 'condition', id: 'cond-001-2', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 5, months: 12 } },
+            { type: 'condition', id: 'cond-001-1', invoiceField: 'Invoice Amount', poField: 'PO Amount', condition: '<=', toleranceRange: 100 },
+            { type: 'condition', id: 'cond-001-2', invoiceField: 'Invoice Date', poField: 'PO Date', condition: '=', toleranceRange: 5 },
           ],
         },
-        { type: 'condition', id: 'cond-001-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'SGD', value: 50000 } },
-        { type: 'condition', id: 'cond-001-4', parameterId: ParameterType.DUPLICATE_INV, config: {} },
+        { type: 'condition', id: 'cond-001-3', invoiceField: 'Invoice Total', poField: 'PO Total', condition: '<=', toleranceRange: 500 },
+        { type: 'condition', id: 'cond-001-4', invoiceField: 'Line Amount', poField: 'Line PO Amount', condition: '<=', toleranceRange: 50 },
       ],
     },
     changeLog: [
@@ -1521,9 +1473,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-002',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-002-1', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'SGD', value: 500 } },
-        { type: 'condition', id: 'cond-002-2', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-        { type: 'condition', id: 'cond-002-3', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+        { type: 'condition', id: 'cond-002-1', invoiceField: 'Unit Price', poField: 'PO Unit Price', condition: '<=', toleranceRange: 10 },
+        { type: 'condition', id: 'cond-002-2', invoiceField: 'Quantity', poField: 'PO Quantity', condition: '=', toleranceRange: 1 },
+        { type: 'condition', id: 'cond-002-3', invoiceField: 'Description', poField: 'PO Description', condition: '=', toleranceRange: 0 },
       ],
     },
     changeLog: [
@@ -1544,14 +1496,14 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-003',
       operator: 'OR',
       children: [
-        { type: 'condition', id: 'cond-003-1', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-003-1', invoiceField: 'Invoice Number', poField: 'PO Number', condition: '!=', toleranceRange: 0 },
         {
           type: 'group',
           id: 'grp-003-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-003-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
-            { type: 'condition', id: 'cond-003-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+            { type: 'condition', id: 'cond-003-2', invoiceField: 'Vendor ID', poField: 'PO Vendor', condition: '=', toleranceRange: 0 },
+            { type: 'condition', id: 'cond-003-3', invoiceField: 'Bank Name', poField: 'PO Bank', condition: '=', toleranceRange: 0 },
           ],
         },
       ],
@@ -1579,18 +1531,18 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-004-1',
           operator: 'OR',
           children: [
-            { type: 'condition', id: 'cond-004-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 3 } },
-            { type: 'condition', id: 'cond-004-2', parameterId: ParameterType.ACTIVITY_LEVEL, config: {} },
+            { type: 'condition', id: 'cond-004-1', invoiceField: 'Invoice Date', poField: 'PO Date', condition: '<=', toleranceRange: 30 },
+            { type: 'condition', id: 'cond-004-2', invoiceField: 'Vendor Status', poField: 'Vendor Active', condition: '=', toleranceRange: 0 },
           ],
         },
-        { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'MYR', value: 50000 } },
+        { type: 'condition', id: 'cond-004-3', invoiceField: 'Invoice Amount', poField: 'PO Amount', condition: '<=', toleranceRange: 200 },
         {
           type: 'group',
           id: 'grp-004-2',
           operator: 'OR',
           children: [
-            { type: 'condition', id: 'cond-004-4', parameterId: ParameterType.DUPLICATE_INV, config: {} },
-            { type: 'condition', id: 'cond-004-5', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+            { type: 'condition', id: 'cond-004-4', invoiceField: 'Invoice Number', poField: 'Previous Invoice', condition: '!=', toleranceRange: 0 },
+            { type: 'condition', id: 'cond-004-5', invoiceField: 'Invoice Hash', poField: 'Previous Hash', condition: '!=', toleranceRange: 0 },
           ],
         },
       ],
@@ -1614,8 +1566,8 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-005',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-005-1', parameterId: ParameterType.CUMULATIVE_APPROVED, config: { count: 10, months: 6 } },
-        { type: 'condition', id: 'cond-005-2', parameterId: ParameterType.MATCH_VARIANCE, config: { currency: 'TWD', value: 5000 } },
+        { type: 'condition', id: 'cond-005-1', invoiceField: 'Invoice Count', poField: 'PO Count', condition: '<=', toleranceRange: 100 },
+        { type: 'condition', id: 'cond-005-2', invoiceField: 'Unit Price', poField: 'PO Unit Price', condition: '<=', toleranceRange: 50 },
       ],
     },
     changeLog: [
@@ -1635,11 +1587,11 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       id: 'root-006',
       operator: 'AND',
       children: [
-        { type: 'condition', id: 'cond-006-1', parameterId: ParameterType.LAST_APPROVED_TXN, config: { value: 12 } },
-        { type: 'condition', id: 'cond-006-2', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'TWD', value: 300000 } },
-        { type: 'condition', id: 'cond-006-3', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-        { type: 'condition', id: 'cond-006-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
-        { type: 'condition', id: 'cond-006-5', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
+        { type: 'condition', id: 'cond-006-1', invoiceField: 'Invoice Date', poField: 'PO Date', condition: '<=', toleranceRange: 365 },
+        { type: 'condition', id: 'cond-006-2', invoiceField: 'Invoice Amount', poField: 'PO Amount', condition: '<=', toleranceRange: 1000 },
+        { type: 'condition', id: 'cond-006-3', invoiceField: 'Tax Code', poField: 'PO Tax Code', condition: '=', toleranceRange: 0 },
+        { type: 'condition', id: 'cond-006-4', invoiceField: 'Country', poField: 'PO Country', condition: '=', toleranceRange: 0 },
+        { type: 'condition', id: 'cond-006-5', invoiceField: 'Bank Country', poField: 'PO Bank Country', condition: '=', toleranceRange: 0 },
       ],
     },
     changeLog: [
@@ -1666,12 +1618,12 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-007-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-007-1', parameterId: ParameterType.DUPLICATE_INV, config: {} },
-            { type: 'condition', id: 'cond-007-2', parameterId: ParameterType.NEAR_DUPLICATE, config: {} },
+            { type: 'condition', id: 'cond-007-1', invoiceField: 'Invoice Number', poField: 'Previous Invoice', condition: '!=', toleranceRange: 0 },
+            { type: 'condition', id: 'cond-007-2', invoiceField: 'Invoice Amount', poField: 'Previous Amount', condition: '<=', toleranceRange: 1 },
           ],
         },
-        { type: 'condition', id: 'cond-007-3', parameterId: ParameterType.BANK_ACCT_CHANGE, config: {} },
-        { type: 'condition', id: 'cond-007-4', parameterId: ParameterType.CROSS_BORDER, config: {} },
+        { type: 'condition', id: 'cond-007-3', invoiceField: 'Bank Name', poField: 'Previous Bank', condition: '!=', toleranceRange: 0 },
+        { type: 'condition', id: 'cond-007-4', invoiceField: 'Country', poField: 'Expected Country', condition: '!=', toleranceRange: 0 },
       ],
     },
     changeLog: [
@@ -1696,12 +1648,12 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           id: 'grp-008-1',
           operator: 'AND',
           children: [
-            { type: 'condition', id: 'cond-008-1', parameterId: ParameterType.TAGGING_CHECK, config: {} },
-            { type: 'condition', id: 'cond-008-2', parameterId: ParameterType.CONTENT_VALIDATION, config: {} },
+            { type: 'condition', id: 'cond-008-1', invoiceField: 'Reference', poField: 'PO Reference', condition: '=', toleranceRange: 0 },
+            { type: 'condition', id: 'cond-008-2', invoiceField: 'Description', poField: 'PO Description', condition: '=', toleranceRange: 0 },
           ],
         },
-        { type: 'condition', id: 'cond-008-3', parameterId: ParameterType.CROSS_BORDER, config: {} },
-        { type: 'condition', id: 'cond-008-4', parameterId: ParameterType.AMOUNT_INCL_TAX, config: { currency: 'BRL', value: 50000 } },
+        { type: 'condition', id: 'cond-008-3', invoiceField: 'Country', poField: 'Supplier Country', condition: '=', toleranceRange: 0 },
+        { type: 'condition', id: 'cond-008-4', invoiceField: 'Invoice Amount', poField: 'PO Amount', condition: '<=', toleranceRange: 500 },
       ],
     },
     changeLog: [
@@ -1711,9 +1663,10 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
   },
 ]
 
-// Helper to get parameter definition by ID
-export function getParameterDefinition(id: ParameterType): ParameterDefinition | undefined {
-  return PARAMETER_DEFINITIONS.find((p) => p.id === id)
+// Helper to generate unique IDs
+let riskLayerIdCounter = 1000
+export function generateRuleNodeId(): string {
+  return `node-${++riskLayerIdCounter}`
 }
 
 // Helper to count active rules in a config
