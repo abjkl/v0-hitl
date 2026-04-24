@@ -38,6 +38,7 @@ const { Title, Text } = Typography
 interface RiskLayerConfigListProps {
   configs: RiskLayerConfig[]
   setConfigs: React.Dispatch<React.SetStateAction<RiskLayerConfig[]>>
+  currentUser: string
   onView: (id: string) => void
   onEdit: (id: string, isNew?: boolean) => void
 }
@@ -62,6 +63,7 @@ const STATUS_OPTIONS: { value: RiskLayerStatus; label: string }[] = [
 export function RiskLayerConfigList({
   configs,
   setConfigs,
+  currentUser,
   onView,
   onEdit,
 }: RiskLayerConfigListProps) {
@@ -94,12 +96,12 @@ export function RiskLayerConfigList({
       ...JSON.parse(JSON.stringify(record)),
       id: `RL-${String(configs.length + 1).padStart(3, "0")}`,
       status: "Inactive",
-      lastUpdatedBy: "Current User",
+      lastUpdatedBy: currentUser,
       lastUpdatedAt: timestamp,
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: "Created",
           details: `Duplicated from ${record.id}`,
         },
@@ -119,7 +121,7 @@ export function RiskLayerConfigList({
               changeLog: [
                 {
                   timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                  user: "Current User",
+                  user: currentUser,
                   action: "Activated" as const,
                 },
                 ...c.changeLog,
@@ -141,7 +143,7 @@ export function RiskLayerConfigList({
               changeLog: [
                 {
                   timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                  user: "Current User",
+                  user: currentUser,
                   action: "Deactivated" as const,
                 },
                 ...c.changeLog,
@@ -164,7 +166,7 @@ export function RiskLayerConfigList({
       entity: REGION_ENTITIES[currentRegion as keyof typeof REGION_ENTITIES]?.[0] ?? "",
       description: "",
       status: "Inactive",
-      lastUpdatedBy: "Current User",
+      lastUpdatedBy: currentUser,
       lastUpdatedAt: timestamp,
       rootRuleNode: {
         type: "group",
@@ -182,7 +184,7 @@ export function RiskLayerConfigList({
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: "Created",
         },
       ],

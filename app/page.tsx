@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Layout, Menu, Typography, Select, Breadcrumb, Space } from "antd"
+import { Layout, Menu, Typography, Select, Breadcrumb, Space, Avatar } from "antd"
 import {
   DatabaseOutlined, RobotOutlined,
   FolderOpenOutlined, FolderOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
-  ApartmentOutlined, FileTextOutlined, GlobalOutlined, StarOutlined, AppstoreOutlined,
+  ApartmentOutlined, FileTextOutlined, GlobalOutlined, StarOutlined, AppstoreOutlined, UserOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -31,6 +31,8 @@ import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, INITIAL_RI
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
+
+const CURRENT_USER_EMAIL = "alice.wong@shopee.com"
 
 type Page =
   | "knowledge-detail"
@@ -224,7 +226,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
               changeLog: [
                 {
                   timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                  user: "Current User",
+                  user: CURRENT_USER_EMAIL,
                   action: "Activated" as const,
                 },
                 ...c.changeLog,
@@ -245,7 +247,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
               changeLog: [
                 {
                   timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                  user: "Current User",
+                  user: CURRENT_USER_EMAIL,
                   action: "Deactivated" as const,
                 },
                 ...c.changeLog,
@@ -377,31 +379,37 @@ function handleArchive(newly: ArchivedCaseMock[]) {
             separator={<Text type="secondary" style={{ fontSize: 13 }}>/</Text>}
           />
 
-          <Select
-            value={region}
-            size="small"
-            popupMatchSelectWidth={160}
-            onChange={(v) => setRegion(v as RegionCode)}
-            suffixIcon={null}
-            labelRender={() => (
-              <Space size={5}>
-                <GlobalOutlined style={{ fontSize: 13, color: "#595959" }} />
-                <Text strong style={{ fontSize: 13 }}>{region}</Text>
-              </Space>
-            )}
-            style={{ width: 80 }}
-            options={REGIONS.filter((r) =>
-              ["SG", "ID", "TH", "MY", "PH", "VN"].includes(r.code)
-            ).map((r) => ({
-              value: r.code,
-              label: (
-                <Space size={6}>
-                  <Text strong style={{ fontSize: 13 }}>{r.code}</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>{r.name}</Text>
+          <Space size={16}>
+            <Select
+              value={region}
+              size="small"
+              popupMatchSelectWidth={160}
+              onChange={(v) => setRegion(v as RegionCode)}
+              suffixIcon={null}
+              labelRender={() => (
+                <Space size={5}>
+                  <GlobalOutlined style={{ fontSize: 13, color: "#595959" }} />
+                  <Text strong style={{ fontSize: 13 }}>{region}</Text>
                 </Space>
-              ),
-            }))}
-          />
+              )}
+              style={{ width: 80 }}
+              options={REGIONS.filter((r) =>
+                ["SG", "ID", "TH", "MY", "PH", "VN"].includes(r.code)
+              ).map((r) => ({
+                value: r.code,
+                label: (
+                  <Space size={6}>
+                    <Text strong style={{ fontSize: 13 }}>{r.code}</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{r.name}</Text>
+                  </Space>
+                ),
+              }))}
+            />
+            <Space size={8}>
+              <Avatar size={24} icon={<UserOutlined />} style={{ background: "#e6f4ff", color: "#1677ff" }} />
+              <Text style={{ fontSize: 13, color: "#595959" }}>{CURRENT_USER_EMAIL}</Text>
+            </Space>
+          </Space>
         </Header>
 
         {/* Content */}
@@ -422,12 +430,13 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "feedback-list"           && <FeedbackList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
-          {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id, isNew) => goToRiskLayerDetail(id, true, isNew)} />}
+          {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} currentUser={CURRENT_USER_EMAIL} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id, isNew) => goToRiskLayerDetail(id, true, isNew)} />}
           {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId) && (
             <RiskLayerConfigDetail
               config={riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId)!}
               isEditMode={isRiskLayerEditMode}
               isNew={isRiskLayerNew}
+              currentUser={CURRENT_USER_EMAIL}
               onBack={goToRiskLayerList}
               onSave={handleRiskLayerSave}
               onActivate={handleRiskLayerActivate}

@@ -37,6 +37,7 @@ interface RiskLayerConfigDetailProps {
   config: RiskLayerConfig
   isEditMode: boolean
   isNew?: boolean
+  currentUser: string
   onBack: () => void
   onSave: (updatedConfig: RiskLayerConfig) => void
   onActivate: (id: string) => void
@@ -52,6 +53,7 @@ export function RiskLayerConfigDetail({
   config,
   isEditMode: initialEditMode,
   isNew = false,
+  currentUser,
   onBack,
   onSave,
   onActivate,
@@ -104,11 +106,11 @@ export function RiskLayerConfigDetail({
     const updated: RiskLayerConfig = {
       ...editedConfig,
       lastUpdatedAt: timestamp,
-      lastUpdatedBy: "Current User",
+      lastUpdatedBy: currentUser,
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: "Updated",
           details: "Configuration updated",
         },
@@ -126,16 +128,16 @@ export function RiskLayerConfigDetail({
       ...editedConfig,
       status: "Active",
       lastUpdatedAt: timestamp,
-      lastUpdatedBy: "Current User",
+      lastUpdatedBy: currentUser,
       changeLog: [
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: "Activated",
         },
         {
           timestamp,
-          user: "Current User",
+          user: currentUser,
           action: isNew ? "Created" : "Updated",
         },
         ...(isNew ? [] : editedConfig.changeLog),
