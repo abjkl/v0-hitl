@@ -156,7 +156,15 @@ export function RuleGroup({
               key={child.id}
               node={child}
               path={[...path, index]}
-              onUpdate={onUpdate}
+              onUpdate={(childPath, newNode) => {
+                // If the child is updating itself (path matches), update via handleChildUpdate
+                if (childPath.length === path.length + 1 && childPath[childPath.length - 1] === index) {
+                  handleChildUpdate(index, newNode)
+                } else {
+                  // Otherwise, propagate up
+                  onUpdate(childPath, newNode)
+                }
+              }}
               onDelete={() => handleChildDelete(index)}
               depth={depth + 1}
               readOnly={readOnly}
