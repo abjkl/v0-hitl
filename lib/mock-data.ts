@@ -1386,7 +1386,6 @@ export enum ParameterType {
   // Supplier Trust
   LAST_APPROVED_TXN = 'last_approved_txn',
   CUMULATIVE_APPROVED = 'cumulative_approved',
-  ACTIVITY_LEVEL = 'activity_level',
   // Invoice Amount
   AMOUNT_INCL_TAX = 'amount_incl_tax',
   // Matching Quality
@@ -1433,7 +1432,6 @@ export const PARAMETER_DEFINITIONS: ParameterDefinition[] = [
   // Supplier Trust
   { id: ParameterType.LAST_APPROVED_TXN,  name: 'Last Approved Txn',    controlBlock: 'Supplier Trust',   description: 'Time since last approved transaction',   inputType: 'month',       operatorType: 'duration', defaultOperator: '<',  defaultConfig: { value: 6 } },
   { id: ParameterType.CUMULATIVE_APPROVED, name: 'Cumulative Approved', controlBlock: 'Supplier Trust',   description: 'Number of approved PRs within period',  inputType: 'count_month', operatorType: 'numeric',  defaultOperator: '>',  defaultConfig: { count: 5, months: 12 } },
-  { id: ParameterType.ACTIVITY_LEVEL,      name: 'Activity Level',      controlBlock: 'Supplier Trust',   description: 'Supplier activity level assessment',     inputType: 'none',        operatorType: 'enum',     defaultOperator: '=' },
   // Invoice Amount
   { id: ParameterType.AMOUNT_INCL_TAX,    name: 'Amount incl. Tax',     controlBlock: 'Invoice Amount',   description: 'Invoice amount including tax',           inputType: 'currency',    operatorType: 'numeric',  defaultOperator: '<=', defaultConfig: { currency: 'SGD', value: 10000 } },
   // Matching Quality
@@ -1599,7 +1597,6 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
           operator: 'OR',
           children: [
             { type: 'condition', id: 'cond-004-1', parameterId: ParameterType.LAST_APPROVED_TXN, operator: '<', config: { value: 3 } },
-            { type: 'condition', id: 'cond-004-2', parameterId: ParameterType.ACTIVITY_LEVEL, operator: '=', config: {} },
           ],
         },
         { type: 'condition', id: 'cond-004-3', parameterId: ParameterType.AMOUNT_INCL_TAX, operator: '<=', config: { currency: 'MYR', value: 50000 } },
