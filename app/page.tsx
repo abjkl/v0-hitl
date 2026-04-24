@@ -423,7 +423,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
           {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id, isNew) => goToRiskLayerDetail(id, true, isNew)} />}
-          {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && (
+          {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId) && (
             <RiskLayerConfigDetail
               config={riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId)!}
               isEditMode={isRiskLayerEditMode}

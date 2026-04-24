@@ -7,7 +7,6 @@ import type { ColumnsType } from "antd/es/table"
 import type { RiskLayerConfig } from "@/lib/mock-data"
 
 const { Text } = Typography
-const { TextArea } = Input
 
 // Mock PR data pool – keyed by PR id
 const PR_DATA_POOL: Record<string, PRRecord> = {
