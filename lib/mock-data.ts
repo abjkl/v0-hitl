@@ -161,29 +161,29 @@ export type GoldenCasesState = Record<'INVOICE_REVIEW' | 'MATCH' | 'AP_VOUCHER',
 
 export const INITIAL_GOLDEN_CASES: GoldenCasesState = {
   INVOICE_REVIEW: [
-    { key: "1",  caseId: "CASE-001", paymentRequestId: "PR-2025-00134", paymentGroupId: "PG-2025-0021", invoiceNo: "INV-2025-0001", supplier: "Accenture Pte Ltd",         region: "SG", groundTruth: "Pass", patterns: ["header-check"], amount: 48500, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-01-10" },
-    { key: "2",  caseId: "CASE-002", paymentRequestId: "PR-2025-00157", paymentGroupId: "PG-2025-0022", invoiceNo: "INV-2025-0002", supplier: "AWS Singapore Pte Ltd",   region: "SG", groundTruth: "Fail", patterns: ["supplier-name-mismatch"], amount: 12300, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-01-15" },
-    { key: "3",  caseId: "CASE-012", paymentRequestId: "PR-2025-00198", paymentGroupId: "PG-2025-0031", invoiceNo: "INV-2025-0012", supplier: "Accenture Pte Ltd",         region: "SG", groundTruth: "Pass", patterns: ["date-out-of-range"], amount: 76200, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-01-22" },
-    { key: "4",  caseId: "CASE-014", paymentRequestId: "PR-2025-00203", paymentGroupId: "PG-2025-0033", invoiceNo: "INV-2025-0014", supplier: "Google Asia Pacific",     region: "SG", groundTruth: "Fail", patterns: ["amount-mismatch"], amount: 9850, currency: "SGD", addedBy: { name: "Tan Mei Ling", email: "tanml@shopee.com" }, addedDate: "2025-02-03" },
-    { key: "5",  caseId: "CASE-021", paymentRequestId: "PR-2025-00245", paymentGroupId: "PG-2025-0041", invoiceNo: "INV-2025-0021", supplier: "DHL Express Pte Ltd",      region: "SG", groundTruth: "Pass", patterns: ["gst-calculation-error"], amount: 3200, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-02-11" },
-    { key: "6",  caseId: "CASE-033", paymentRequestId: "PR-2025-00312", paymentGroupId: "PG-2025-0052", invoiceNo: "INV-2025-0033", supplier: "Deloitte Singapore",       region: "SG", groundTruth: "Fail", patterns: ["duplicate-invoice"], amount: 128000, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-02-18" },
-    { key: "7",  caseId: "CASE-045", paymentRequestId: "PR-2025-00389", paymentGroupId: "PG-2025-0061", invoiceNo: "INV-2025-0045", supplier: "Grab Singapore Pte Ltd",   region: "SG", groundTruth: "Pass", patterns: ["header-check"], amount: 5670, currency: "SGD", addedBy: { name: "Tan Mei Ling", email: "tanml@shopee.com" }, addedDate: "2025-03-01" },
-    { key: "8",  caseId: "CASE-058", paymentRequestId: "PR-2025-00421", paymentGroupId: "PG-2025-0074", invoiceNo: "INV-2025-0058", supplier: "Microsoft Singapore",     region: "SG", groundTruth: "Pass", patterns: ["gst-calculation-error", "header-check"], amount: 34900, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-03-12" },
+    { key: "1",  caseId: "CASE-001", paymentRequestId: "PR-2025-00134", paymentGroupId: "PG-2025-0021", invoiceNo: "INV-2025-0001", supplier: "Accenture Pte Ltd",         region: "SG", groundTruth: "Pass", patterns: ["header-check"], amount: 48500, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-01-10" },
+    { key: "2",  caseId: "CASE-002", paymentRequestId: "PR-2025-00157", paymentGroupId: "PG-2025-0022", invoiceNo: "INV-2025-0002", supplier: "AWS Singapore Pte Ltd",   region: "SG", groundTruth: "Fail", patterns: ["supplier-name-mismatch"], amount: 12300, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-01-15" },
+    { key: "3",  caseId: "CASE-012", paymentRequestId: "PR-2025-00198", paymentGroupId: "PG-2025-0031", invoiceNo: "INV-2025-0012", supplier: "Accenture Pte Ltd",         region: "SG", groundTruth: "Pass", patterns: ["date-out-of-range"], amount: 76200, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-01-22" },
+    { key: "4",  caseId: "CASE-014", paymentRequestId: "PR-2025-00203", paymentGroupId: "PG-2025-0033", invoiceNo: "INV-2025-0014", supplier: "Google Asia Pacific",     region: "SG", groundTruth: "Fail", patterns: ["amount-mismatch"], amount: 9850, currency: "SGD", addedBy: { name: "tan.meiling@shopee.com", email: "tanml@shopee.com" }, addedDate: "2025-02-03" },
+    { key: "5",  caseId: "CASE-021", paymentRequestId: "PR-2025-00245", paymentGroupId: "PG-2025-0041", invoiceNo: "INV-2025-0021", supplier: "DHL Express Pte Ltd",      region: "SG", groundTruth: "Pass", patterns: ["gst-calculation-error"], amount: 3200, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-02-11" },
+    { key: "6",  caseId: "CASE-033", paymentRequestId: "PR-2025-00312", paymentGroupId: "PG-2025-0052", invoiceNo: "INV-2025-0033", supplier: "Deloitte Singapore",       region: "SG", groundTruth: "Fail", patterns: ["duplicate-invoice"], amount: 128000, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-02-18" },
+    { key: "7",  caseId: "CASE-045", paymentRequestId: "PR-2025-00389", paymentGroupId: "PG-2025-0061", invoiceNo: "INV-2025-0045", supplier: "Grab Singapore Pte Ltd",   region: "SG", groundTruth: "Pass", patterns: ["header-check"], amount: 5670, currency: "SGD", addedBy: { name: "tan.meiling@shopee.com", email: "tanml@shopee.com" }, addedDate: "2025-03-01" },
+    { key: "8",  caseId: "CASE-058", paymentRequestId: "PR-2025-00421", paymentGroupId: "PG-2025-0074", invoiceNo: "INV-2025-0058", supplier: "Microsoft Singapore",     region: "SG", groundTruth: "Pass", patterns: ["gst-calculation-error", "header-check"], amount: 34900, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-03-12" },
   ],
   MATCH: [
-    { key: "1", caseId: "CASE-003", paymentRequestId: "PR-2025-00161", paymentGroupId: "PG-2025-0023", invoiceNo: "INV-2025-0003", supplier: "Accenture Pte Ltd",       region: "SG", groundTruth: "Matched", patterns: ["three-way-match-fail"], amount: 48500, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-01-11" },
-    { key: "2", caseId: "CASE-008", paymentRequestId: "PR-2025-00175", paymentGroupId: "PG-2025-0027", invoiceNo: "INV-2025-0008", supplier: "Siemens Singapore",      region: "SG", groundTruth: "NA", patterns: ["line-item-qty-mismatch"], amount: 220000, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-01-19" },
-    { key: "3", caseId: "CASE-016", paymentRequestId: "PR-2025-00211", paymentGroupId: "PG-2025-0034", invoiceNo: "INV-2025-0016", supplier: "Salesforce Singapore",   region: "SG", groundTruth: "Matched", patterns: ["unit-price-discrepancy"], amount: 67400, currency: "SGD", addedBy: { name: "Tan Mei Ling", email: "tanml@shopee.com" }, addedDate: "2025-02-05" },
-    { key: "4", caseId: "CASE-024", paymentRequestId: "PR-2025-00267", paymentGroupId: "PG-2025-0043", invoiceNo: "INV-2025-0024", supplier: "DHL Express Pte Ltd",     region: "SG", groundTruth: "NA", patterns: ["three-way-match-fail"], amount: 3200, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-02-14" },
-    { key: "5", caseId: "CASE-039", paymentRequestId: "PR-2025-00341", paymentGroupId: "PG-2025-0057", invoiceNo: "INV-2025-0039", supplier: "Oracle Singapore",        region: "SG", groundTruth: "Matched", patterns: ["line-item-qty-mismatch"], amount: 95000, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-02-25" },
-    { key: "6", caseId: "CASE-052", paymentRequestId: "PR-2025-00401", paymentGroupId: "PG-2025-0069", invoiceNo: "INV-2025-0052", supplier: "SAP Asia Pacific",       region: "SG", groundTruth: "Matched", patterns: ["unit-price-discrepancy"], amount: 183500, currency: "SGD", addedBy: { name: "Tan Mei Ling", email: "tanml@shopee.com" }, addedDate: "2025-03-08" },
+    { key: "1", caseId: "CASE-003", paymentRequestId: "PR-2025-00161", paymentGroupId: "PG-2025-0023", invoiceNo: "INV-2025-0003", supplier: "Accenture Pte Ltd",       region: "SG", groundTruth: "Matched", patterns: ["three-way-match-fail"], amount: 48500, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-01-11" },
+    { key: "2", caseId: "CASE-008", paymentRequestId: "PR-2025-00175", paymentGroupId: "PG-2025-0027", invoiceNo: "INV-2025-0008", supplier: "Siemens Singapore",      region: "SG", groundTruth: "NA", patterns: ["line-item-qty-mismatch"], amount: 220000, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-01-19" },
+    { key: "3", caseId: "CASE-016", paymentRequestId: "PR-2025-00211", paymentGroupId: "PG-2025-0034", invoiceNo: "INV-2025-0016", supplier: "Salesforce Singapore",   region: "SG", groundTruth: "Matched", patterns: ["unit-price-discrepancy"], amount: 67400, currency: "SGD", addedBy: { name: "tan.meiling@shopee.com", email: "tanml@shopee.com" }, addedDate: "2025-02-05" },
+    { key: "4", caseId: "CASE-024", paymentRequestId: "PR-2025-00267", paymentGroupId: "PG-2025-0043", invoiceNo: "INV-2025-0024", supplier: "DHL Express Pte Ltd",     region: "SG", groundTruth: "NA", patterns: ["three-way-match-fail"], amount: 3200, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-02-14" },
+    { key: "5", caseId: "CASE-039", paymentRequestId: "PR-2025-00341", paymentGroupId: "PG-2025-0057", invoiceNo: "INV-2025-0039", supplier: "Oracle Singapore",        region: "SG", groundTruth: "Matched", patterns: ["line-item-qty-mismatch"], amount: 95000, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-02-25" },
+    { key: "6", caseId: "CASE-052", paymentRequestId: "PR-2025-00401", paymentGroupId: "PG-2025-0069", invoiceNo: "INV-2025-0052", supplier: "SAP Asia Pacific",       region: "SG", groundTruth: "Matched", patterns: ["unit-price-discrepancy"], amount: 183500, currency: "SGD", addedBy: { name: "tan.meiling@shopee.com", email: "tanml@shopee.com" }, addedDate: "2025-03-08" },
   ],
   AP_VOUCHER: [
-    { key: "1", caseId: "CASE-005", paymentRequestId: "PR-2025-00168", paymentGroupId: "PG-2025-0025", invoiceNo: "INV-2025-0005", supplier: "AWS Singapore Pte Ltd",    region: "SG", groundTruth: "Submitted to EBS", patterns: ["gl-account-wrong"], amount: 12300, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-01-13" },
-    { key: "2", caseId: "CASE-011", paymentRequestId: "PR-2025-00193", paymentGroupId: "PG-2025-0030", invoiceNo: "INV-2025-0011", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Pending", patterns: ["cost-center-mismatch"], amount: 9850, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-01-20" },
-    { key: "3", caseId: "CASE-027", paymentRequestId: "PR-2025-00278", paymentGroupId: "PG-2025-0047", invoiceNo: "INV-2025-0027", supplier: "Deloitte Singapore",     region: "SG", groundTruth: "Submitted to EBS", patterns: ["gl-account-wrong"], amount: 128000, currency: "SGD", addedBy: { name: "Tan Mei Ling", email: "tanml@shopee.com" }, addedDate: "2025-02-17" },
-    { key: "4", caseId: "CASE-041", paymentRequestId: "PR-2025-00355", paymentGroupId: "PG-2025-0059", invoiceNo: "INV-2025-0041", supplier: "Microsoft Singapore",    region: "SG", groundTruth: "Submitted to EBS", patterns: ["cost-center-mismatch"], amount: 34900, currency: "SGD", addedBy: { name: "Li Wei", email: "liwei@shopee.com" }, addedDate: "2025-02-28" },
-    { key: "5", caseId: "CASE-063", paymentRequestId: "PR-2025-00438", paymentGroupId: "PG-2025-0081", invoiceNo: "INV-2025-0063", supplier: "Grab Singapore Pte Ltd",  region: "SG", groundTruth: "Pending", patterns: ["gl-account-wrong", "cost-center-mismatch"], amount: 5670, currency: "SGD", addedBy: { name: "Chen Jing", email: "chenjing@shopee.com" }, addedDate: "2025-03-15" },
+    { key: "1", caseId: "CASE-005", paymentRequestId: "PR-2025-00168", paymentGroupId: "PG-2025-0025", invoiceNo: "INV-2025-0005", supplier: "AWS Singapore Pte Ltd",    region: "SG", groundTruth: "Submitted to EBS", patterns: ["gl-account-wrong"], amount: 12300, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-01-13" },
+    { key: "2", caseId: "CASE-011", paymentRequestId: "PR-2025-00193", paymentGroupId: "PG-2025-0030", invoiceNo: "INV-2025-0011", supplier: "Google Asia Pacific",    region: "SG", groundTruth: "Pending", patterns: ["cost-center-mismatch"], amount: 9850, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-01-20" },
+    { key: "3", caseId: "CASE-027", paymentRequestId: "PR-2025-00278", paymentGroupId: "PG-2025-0047", invoiceNo: "INV-2025-0027", supplier: "Deloitte Singapore",     region: "SG", groundTruth: "Submitted to EBS", patterns: ["gl-account-wrong"], amount: 128000, currency: "SGD", addedBy: { name: "tan.meiling@shopee.com", email: "tanml@shopee.com" }, addedDate: "2025-02-17" },
+    { key: "4", caseId: "CASE-041", paymentRequestId: "PR-2025-00355", paymentGroupId: "PG-2025-0059", invoiceNo: "INV-2025-0041", supplier: "Microsoft Singapore",    region: "SG", groundTruth: "Submitted to EBS", patterns: ["cost-center-mismatch"], amount: 34900, currency: "SGD", addedBy: { name: "li.wei@shopee.com", email: "liwei@shopee.com" }, addedDate: "2025-02-28" },
+    { key: "5", caseId: "CASE-063", paymentRequestId: "PR-2025-00438", paymentGroupId: "PG-2025-0081", invoiceNo: "INV-2025-0063", supplier: "Grab Singapore Pte Ltd",  region: "SG", groundTruth: "Pending", patterns: ["gl-account-wrong", "cost-center-mismatch"], amount: 5670, currency: "SGD", addedBy: { name: "chen.jing@shopee.com", email: "chenjing@shopee.com" }, addedDate: "2025-03-15" },
   ],
 }
 
@@ -1332,7 +1332,7 @@ export interface AgentBRunOverview {
 export const agentBRunOverviewData: Record<string, AgentBRunOverview> = {
   'RUN-OV-001': {
     runId: 'RUN-OV-001',
-    triggeredBy: 'Li Wei',
+    triggeredBy: 'li.wei@shopee.com',
     triggeredAt: '2025-03-20 10:28',
     feedbackCount: 3,
     agentCount: 2,
@@ -1499,7 +1499,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPXSG',
     description: 'Standard risk assessment rules for SPX Singapore with supplier trust and amount checks.',
     status: 'Active',
-    lastUpdatedBy: 'Li Wei',
+    lastUpdatedBy: 'li.wei@shopee.com',
     lastUpdatedAt: '2025-04-15 14:30',
     rootRuleNode: {
       type: 'group',
@@ -1520,9 +1520,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-15 14:30', user: 'Li Wei', action: 'Updated', details: 'Adjusted amount threshold from 30,000 to 50,000 SGD' },
-      { timestamp: '2025-04-10 09:15', user: 'Chen Jing', action: 'Activated' },
-      { timestamp: '2025-04-08 16:45', user: 'Li Wei', action: 'Created' },
+      { timestamp: '2025-04-15 14:30', user: 'li.wei@shopee.com', action: 'Updated', details: 'Adjusted amount threshold from 30,000 to 50,000 SGD' },
+      { timestamp: '2025-04-10 09:15', user: 'chen.jing@shopee.com', action: 'Activated' },
+      { timestamp: '2025-04-08 16:45', user: 'li.wei@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1531,7 +1531,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPSG',
     description: 'SPE Singapore risk rules focusing on matching quality and document strength.',
     status: 'Active',
-    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedBy: 'tan.meiling@shopee.com',
     lastUpdatedAt: '2025-04-12 11:20',
     rootRuleNode: {
       type: 'group',
@@ -1544,8 +1544,8 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-12 11:20', user: 'Tan Mei Ling', action: 'Updated', details: 'Added content validation check' },
-      { timestamp: '2025-04-05 10:00', user: 'Tan Mei Ling', action: 'Created' },
+      { timestamp: '2025-04-12 11:20', user: 'tan.meiling@shopee.com', action: 'Updated', details: 'Added content validation check' },
+      { timestamp: '2025-04-05 10:00', user: 'tan.meiling@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1554,7 +1554,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPXMY',
     description: 'SPX Malaysia rules with compliance and anomaly detection focus.',
     status: 'Inactive',
-    lastUpdatedBy: 'Chen Jing',
+    lastUpdatedBy: 'chen.jing@shopee.com',
     lastUpdatedAt: '2025-04-08 16:00',
     rootRuleNode: {
       type: 'group',
@@ -1574,8 +1574,8 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-08 16:00', user: 'Chen Jing', action: 'Deactivated', details: 'Pending review of cross-border rules' },
-      { timestamp: '2025-04-02 14:30', user: 'Chen Jing', action: 'Created' },
+      { timestamp: '2025-04-08 16:00', user: 'chen.jing@shopee.com', action: 'Deactivated', details: 'Pending review of cross-border rules' },
+      { timestamp: '2025-04-02 14:30', user: 'chen.jing@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1584,7 +1584,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPEMY',
     description: 'SPE Malaysia comprehensive risk assessment with nested conditions.',
     status: 'Active',
-    lastUpdatedBy: 'Li Wei',
+    lastUpdatedBy: 'li.wei@shopee.com',
     lastUpdatedAt: '2025-04-18 09:45',
     rootRuleNode: {
       type: 'group',
@@ -1612,9 +1612,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-18 09:45', user: 'Li Wei', action: 'Updated', details: 'Added anomaly check group' },
-      { timestamp: '2025-04-14 11:00', user: 'Li Wei', action: 'Activated' },
-      { timestamp: '2025-04-12 15:30', user: 'Li Wei', action: 'Created' },
+      { timestamp: '2025-04-18 09:45', user: 'li.wei@shopee.com', action: 'Updated', details: 'Added anomaly check group' },
+      { timestamp: '2025-04-14 11:00', user: 'li.wei@shopee.com', action: 'Activated' },
+      { timestamp: '2025-04-12 15:30', user: 'li.wei@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1623,7 +1623,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPXTW',
     description: "SPX Taiwan draft configuration for new risk parameters.",
     status: 'Draft',
-    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedBy: 'tan.meiling@shopee.com',
     lastUpdatedAt: '2025-04-20 10:00',
     rootRuleNode: {
       type: 'group',
@@ -1635,7 +1635,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-20 10:00', user: 'Tan Mei Ling', action: 'Created' },
+      { timestamp: '2025-04-20 10:00', user: 'tan.meiling@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1644,7 +1644,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPETW',
     description: 'SPE Taiwan risk assessment with strict document and compliance checks.',
     status: 'Active',
-    lastUpdatedBy: 'Chen Jing',
+    lastUpdatedBy: 'chen.jing@shopee.com',
     lastUpdatedAt: '2025-04-17 14:15',
     rootRuleNode: {
       type: 'group',
@@ -1659,9 +1659,9 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-17 14:15', user: 'Chen Jing', action: 'Updated', details: 'Extended last approved txn period to 12 months' },
-      { timestamp: '2025-04-10 09:30', user: 'Chen Jing', action: 'Activated' },
-      { timestamp: '2025-04-06 16:00', user: 'Chen Jing', action: 'Created' },
+      { timestamp: '2025-04-17 14:15', user: 'chen.jing@shopee.com', action: 'Updated', details: 'Extended last approved txn period to 12 months' },
+      { timestamp: '2025-04-10 09:30', user: 'chen.jing@shopee.com', action: 'Activated' },
+      { timestamp: '2025-04-06 16:00', user: 'chen.jing@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1670,7 +1670,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPXBR',
     description: "SPX Brazil risk configuration with comprehensive anomaly detection.",
     status: 'Draft',
-    lastUpdatedBy: 'Tan Mei Ling',
+    lastUpdatedBy: 'tan.meiling@shopee.com',
     lastUpdatedAt: '2025-04-19 15:00',
     rootRuleNode: {
       type: 'group',
@@ -1691,7 +1691,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-19 15:00', user: 'Tan Mei Ling', action: 'Created' },
+      { timestamp: '2025-04-19 15:00', user: 'tan.meiling@shopee.com', action: 'Created' },
     ],
   },
   {
@@ -1700,7 +1700,7 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
     entity: 'SPEBR',
     description: 'SPE Brazil entity rules with supplier trust and compliance focus.',
     status: 'Active',
-    lastUpdatedBy: 'Li Wei',
+    lastUpdatedBy: 'li.wei@shopee.com',
     lastUpdatedAt: '2025-04-16 11:30',
     rootRuleNode: {
       type: 'group',
@@ -1721,8 +1721,8 @@ export const INITIAL_RISK_LAYER_CONFIGS: RiskLayerConfig[] = [
       ],
     },
     changeLog: [
-      { timestamp: '2025-04-16 11:30', user: 'Li Wei', action: 'Updated', details: 'Added amount threshold' },
-      { timestamp: '2025-04-11 10:00', user: 'Li Wei', action: 'Created' },
+      { timestamp: '2025-04-16 11:30', user: 'li.wei@shopee.com', action: 'Updated', details: 'Added amount threshold' },
+      { timestamp: '2025-04-11 10:00', user: 'li.wei@shopee.com', action: 'Created' },
     ],
   },
 ]
