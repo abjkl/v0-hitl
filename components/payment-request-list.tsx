@@ -10,7 +10,6 @@ import {
   Typography,
   Space,
   Button,
-  Checkbox,
   Tabs,
   Tooltip,
 } from "antd"
@@ -65,7 +64,7 @@ export function PaymentRequestList({
   const [statusFilter, setStatusFilter] = useState<PRStatus | "All">("All")
   const [regionFilter, setRegionFilter] = useState<string>("")
   const [departmentFilter, setDepartmentFilter] = useState<string>("")
-  const [riskOnly, setRiskOnly] = useState(false)
+  const [riskFilter, setRiskFilter] = useState<string>("all")
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
 
   const regions = getPRRegions()
@@ -75,7 +74,6 @@ export function PaymentRequestList({
   // Filter data
   const filteredData = useMemo(() => {
     return purchaseRequests.filter((pr) => {
-      // Search filter
       if (search) {
         const s = search.toLowerCase()
         const matchesSearch =
@@ -86,36 +84,30 @@ export function PaymentRequestList({
         if (!matchesSearch) return false
       }
 
-      // Status filter
-      if (statusFilter !== "All" && pr.status !== statusFilter) {
-        return false
-      }
+      if (statusFilter !== "All" && pr.status !== statusFilter) return false
+      if (regionFilter && pr.region !== regionFilter) return false
+      if (departmentFilter && pr.department !== departmentFilter) return false
 
-      // Region filter
-      if (regionFilter && pr.region !== regionFilter) {
-        return false
-      }
-
-      // Department filter
-      if (departmentFilter && pr.department !== departmentFilter) {
-        return false
-      }
-
-      // Risk only filter
-      if (riskOnly && !pr.isRisk) {
-        return false
+      // Risk Layer filter
+      if (riskFilter === "risk_only") {
+        if (!pr.isRisk) return false
+      } else if (riskFilter === "no_risk") {
+        if (pr.isRisk) return false
+      } else if (riskFilter !== "all") {
+        // specific rule code
+        if (!pr.riskRules.includes(riskFilter as RiskRuleCode)) return false
       }
 
       return true
     })
-  }, [purchaseRequests, search, statusFilter, regionFilter, departmentFilter, riskOnly])
+  }, [purchaseRequests, search, statusFilter, regionFilter, departmentFilter, riskFilter])
 
   const handleReset = () => {
     setSearch("")
     setStatusFilter("All")
     setRegionFilter("")
     setDepartmentFilter("")
-    setRiskOnly(false)
+    setRiskFilter("all")
   }
 
   const statusTabs = [
@@ -321,11 +313,28 @@ export function PaymentRequestList({
               />
             </div>
 
-            {/* Risk Only */}
-            <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 4 }}>
-              <Checkbox checked={riskOnly} onChange={(e) => setRiskOnly(e.target.checked)}>
-                Show Risk PRs Only
-              </Checkbox>
+            {/* Risk Layer */}
+            <div>
+              <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 6 }}>
+                Risk Layer
+              </Text>
+              <Select
+                value={riskFilter}
+                onChange={(v) => setRiskFilter(v)}
+                style={{ width: "100%" }}
+                options={[
+                  { value: "all", label: "All" },
+                  { value: "risk_only", label: "Risk Triggered" },
+                  { value: "no_risk", label: "No Risk" },
+                  {
+                    label: "Specific Rule",
+                    options: Object.values(riskRulesDefinition).map((rule) => ({
+                      value: rule.code,
+                      label: rule.uiName,
+                    })),
+                  },
+                ]}
+              />
             </div>
           </div>
 
