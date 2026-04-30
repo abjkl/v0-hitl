@@ -27,8 +27,8 @@ import { AgentBRunDetail } from "@/components/agent-b-run-detail"
 import { Statistics } from "@/components/statistics"
 import { RiskLayerConfigList } from "@/components/risk-layer-config-list"
 import { RiskLayerConfigDetail } from "@/components/risk-layer-config-detail"
-import { PurchaseRequestList } from "@/components/purchase-request-list"
-import { PurchaseRequestDetail } from "@/components/purchase-request-detail"
+import { PaymentRequestList } from "@/components/payment-request-list"
+import { PaymentRequestDetail } from "@/components/payment-request-detail"
 import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, INITIAL_RISK_LAYER_CONFIGS, INITIAL_PURCHASE_REQUESTS, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock, type RiskLayerConfig, type PurchaseRequest } from "@/lib/mock-data"
 
 const { Sider, Header, Content } = Layout
@@ -55,8 +55,8 @@ type Page =
   | "statistics"
   | "risk-layer-config-list"
   | "risk-layer-config-detail"
-  | "purchase-request-list"
-  | "purchase-request-detail"
+  | "payment-request-list"
+  | "payment-request-detail"
 
 const BREADCRUMBS: Record<Page, string[]> = {
   "knowledge-detail":        ["Knowledge Base", "Knowledge Detail"],
@@ -77,8 +77,8 @@ const BREADCRUMBS: Record<Page, string[]> = {
   "statistics":              ["Statistics"],
   "risk-layer-config-list":  ["Risk Layer", "Configuration List"],
   "risk-layer-config-detail":["Risk Layer", "Configuration List", "Configuration Detail"],
-  "purchase-request-list":   ["Purchase Request", "PR List"],
-  "purchase-request-detail": ["Purchase Request", "PR List", "PR Detail"],
+  "payment-request-list":   ["Payment Request", "PR List"],
+  "payment-request-detail": ["Payment Request", "PR List", "PR Detail"],
 }
 
 function AppShell() {
@@ -153,7 +153,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     if (key === "feedback-list") setPage("feedback-list")
     if (key === "feedback-suggestion-list") setPage("feedback-suggestion-list")
     if (key === "risk-layer-config-list") setPage("risk-layer-config-list")
-    if (key === "purchase-request-list") setPage("purchase-request-list")
+    if (key === "payment-request-list") setPage("payment-request-list")
   }
 
   function goToFeedbackList() {
@@ -271,15 +271,15 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     setRiskLayerConfigs((prev) => prev.filter((c) => c.id !== id))
   }
 
-  function goToPurchaseRequestList() {
-    setPage("purchase-request-list")
-    setSelectedKey("purchase-request-list")
+  function goToPaymentRequestList() {
+    setPage("payment-request-list")
+    setSelectedKey("payment-request-list")
   }
 
-  function goToPurchaseRequestDetail(pr: PurchaseRequest) {
+  function goToPaymentRequestDetail(pr: PurchaseRequest) {
     setSelectedPR(pr)
-    setPage("purchase-request-detail")
-    setSelectedKey("purchase-request-list")
+    setPage("payment-request-detail")
+    setSelectedKey("payment-request-list")
   }
 
 
@@ -326,9 +326,9 @@ function handleArchive(newly: ArchivedCaseMock[]) {
               ],
             },
             {
-              key: "purchase-request-list",
+              key: "payment-request-list",
               icon: <ShoppingCartOutlined />,
-              label: "Purchase Request",
+              label: "Payment Request",
             },
             {
               key: "risk-layer-config-list",
@@ -460,8 +460,8 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
           {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} currentUser={CURRENT_USER_EMAIL} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id, isNew) => goToRiskLayerDetail(id, true, isNew)} />}
-          {page === "purchase-request-list" && <PurchaseRequestList purchaseRequests={purchaseRequests} onViewDetail={goToPurchaseRequestDetail} />}
-          {page === "purchase-request-detail" && selectedPR && <PurchaseRequestDetail pr={selectedPR} onBack={goToPurchaseRequestList} />}
+          {page === "payment-request-list" && <PaymentRequestList purchaseRequests={purchaseRequests} onViewDetail={goToPaymentRequestDetail} />}
+          {page === "payment-request-detail" && selectedPR && <PaymentRequestDetail pr={selectedPR} onBack={goToPaymentRequestList} />}
           {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId) && (
             <RiskLayerConfigDetail
               config={riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId)!}

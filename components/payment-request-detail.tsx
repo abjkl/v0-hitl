@@ -40,12 +40,12 @@ const STATUS_TAG_COLORS: Record<PRStatus, string> = {
   Completed: "cyan",
 }
 
-interface PurchaseRequestDetailProps {
+interface PaymentRequestDetailProps {
   pr: PurchaseRequest
   onBack: () => void
 }
 
-export function PurchaseRequestDetail({ pr, onBack }: PurchaseRequestDetailProps) {
+export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) {
   const riskRules = getRiskRulesByPR(pr)
 
   const itemColumns: ColumnsType<PRItem> = [

@@ -52,15 +52,15 @@ const URGENCY_COLORS: Record<string, string> = {
   Critical: "red",
 }
 
-interface PurchaseRequestListProps {
+interface PaymentRequestListProps {
   purchaseRequests: PurchaseRequest[]
   onViewDetail: (pr: PurchaseRequest) => void
 }
 
-export function PurchaseRequestList({
+export function PaymentRequestList({
   purchaseRequests,
   onViewDetail,
-}: PurchaseRequestListProps) {
+}: PaymentRequestListProps) {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<PRStatus | "All">("All")
   const [regionFilter, setRegionFilter] = useState<string>("")
