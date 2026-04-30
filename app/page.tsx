@@ -5,7 +5,7 @@ import { Layout, Menu, Typography, Select, Breadcrumb, Space, Avatar } from "ant
 import {
   DatabaseOutlined, RobotOutlined,
   FolderOpenOutlined, FolderOutlined, ExperimentOutlined, TableOutlined, CodeOutlined, InboxOutlined,
-  ApartmentOutlined, FileTextOutlined, GlobalOutlined, StarOutlined, AppstoreOutlined, UserOutlined,
+  ApartmentOutlined, FileTextOutlined, GlobalOutlined, StarOutlined, AppstoreOutlined, UserOutlined, ShoppingCartOutlined,
 } from "@ant-design/icons"
 import { RoleProvider } from "@/lib/role-context"
 import { RegionProvider, useRegion, REGIONS, type RegionCode } from "@/lib/region-context"
@@ -27,7 +27,9 @@ import { AgentBRunDetail } from "@/components/agent-b-run-detail"
 import { Statistics } from "@/components/statistics"
 import { RiskLayerConfigList } from "@/components/risk-layer-config-list"
 import { RiskLayerConfigDetail } from "@/components/risk-layer-config-detail"
-import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, INITIAL_RISK_LAYER_CONFIGS, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock, type RiskLayerConfig } from "@/lib/mock-data"
+import { PaymentRequestList } from "@/components/payment-request-list"
+import { PaymentRequestDetail } from "@/components/payment-request-detail"
+import { agentListData, INITIAL_GOLDEN_CASES, INITIAL_ARCHIVED_CASES, INITIAL_RISK_LAYER_CONFIGS, INITIAL_PURCHASE_REQUESTS, type Agent, type AuditCase, type GoldenCasesState, type ArchivedCaseMock, type RiskLayerConfig, type PurchaseRequest } from "@/lib/mock-data"
 
 const { Sider, Header, Content } = Layout
 const { Text } = Typography
@@ -53,6 +55,8 @@ type Page =
   | "statistics"
   | "risk-layer-config-list"
   | "risk-layer-config-detail"
+  | "payment-request-list"
+  | "payment-request-detail"
 
 const BREADCRUMBS: Record<Page, string[]> = {
   "knowledge-detail":        ["Knowledge Base", "Knowledge Detail"],
@@ -73,6 +77,8 @@ const BREADCRUMBS: Record<Page, string[]> = {
   "statistics":              ["Statistics"],
   "risk-layer-config-list":  ["Risk Layer", "Configuration List"],
   "risk-layer-config-detail":["Risk Layer", "Configuration List", "Configuration Detail"],
+  "payment-request-list":   ["Payment Request", "PR List"],
+  "payment-request-detail": ["Payment Request", "PR List", "PR Detail"],
 }
 
 function AppShell() {
@@ -92,6 +98,8 @@ function AppShell() {
   const [selectedRiskLayerConfigId, setSelectedRiskLayerConfigId] = useState<string | null>(null)
   const [isRiskLayerEditMode, setIsRiskLayerEditMode] = useState(false)
   const [isRiskLayerNew, setIsRiskLayerNew] = useState(false)
+  const [purchaseRequests] = useState<PurchaseRequest[]>(INITIAL_PURCHASE_REQUESTS)
+  const [selectedPR, setSelectedPR] = useState<PurchaseRequest | null>(null)
   const { region, setRegion } = useRegion()
 
   // Golden case IDs across all steps — used for archive retention
@@ -145,6 +153,7 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     if (key === "feedback-list") setPage("feedback-list")
     if (key === "feedback-suggestion-list") setPage("feedback-suggestion-list")
     if (key === "risk-layer-config-list") setPage("risk-layer-config-list")
+    if (key === "payment-request-list") setPage("payment-request-list")
   }
 
   function goToFeedbackList() {
@@ -262,6 +271,17 @@ function handleArchive(newly: ArchivedCaseMock[]) {
     setRiskLayerConfigs((prev) => prev.filter((c) => c.id !== id))
   }
 
+  function goToPaymentRequestList() {
+    setPage("payment-request-list")
+    setSelectedKey("payment-request-list")
+  }
+
+  function goToPaymentRequestDetail(pr: PurchaseRequest) {
+    setSelectedPR(pr)
+    setPage("payment-request-detail")
+    setSelectedKey("payment-request-list")
+  }
+
 
   const crumbs = BREADCRUMBS[page]
 
@@ -304,6 +324,11 @@ function handleArchive(newly: ArchivedCaseMock[]) {
                 { key: "knowledge-detail",   icon: <TableOutlined />, label: "Knowledge Detail" },
                 { key: "knowledge-endpoint", icon: <CodeOutlined />,  label: "Endpoint" },
               ],
+            },
+            {
+              key: "payment-request-list",
+              icon: <ShoppingCartOutlined />,
+              label: "Payment Request",
             },
             {
               key: "risk-layer-config-list",
@@ -435,6 +460,8 @@ function handleArchive(newly: ArchivedCaseMock[]) {
           {page === "feedback-suggestion-list"&& <FeedbackSuggestionList onViewRunDetail={goToAgentBRunDetail} />}
           {page === "agent-b-run-detail"      && selectedAgentBRunId && <AgentBRunDetail runId={selectedAgentBRunId} onBack={goToFeedbackSuggestionList} onViewAgentDetail={() => { setPage("agent-detail"); setSelectedKey("agent-detail"); }} />}
           {page === "risk-layer-config-list" && <RiskLayerConfigList configs={riskLayerConfigs} setConfigs={setRiskLayerConfigs} currentUser={CURRENT_USER_EMAIL} onView={(id) => goToRiskLayerDetail(id, false)} onEdit={(id, isNew) => goToRiskLayerDetail(id, true, isNew)} />}
+          {page === "payment-request-list" && <PaymentRequestList purchaseRequests={purchaseRequests} onViewDetail={goToPaymentRequestDetail} />}
+          {page === "payment-request-detail" && selectedPR && <PaymentRequestDetail pr={selectedPR} onBack={goToPaymentRequestList} />}
           {page === "risk-layer-config-detail" && selectedRiskLayerConfigId && riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId) && (
             <RiskLayerConfigDetail
               config={riskLayerConfigs.find((c) => c.id === selectedRiskLayerConfigId)!}

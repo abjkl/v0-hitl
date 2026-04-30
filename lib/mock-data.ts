@@ -1748,3 +1748,564 @@ export function generateLogicSummary(node: RuleNode, depth = 0): string {
   const joined = childSummaries.join(` ${node.operator} `)
   return depth > 0 ? `(${joined})` : joined
 }
+
+// =====================================================
+// Purchase Request (PR) Types and Data
+// =====================================================
+
+export type PRStatus =
+  | 'Draft'
+  | 'Pending Approval'
+  | 'Approved'
+  | 'Rejected'
+  | 'Processing'
+  | 'Completed'
+
+export type RiskRuleCode =
+  | 'LAST_APPROVED_TXN'
+  | 'CUMULATIVE_APPROVED'
+  | 'AMOUNT_INCL_TAX'
+  | 'MATCH_VARIANCE'
+  | 'CROSS_BORDER'
+  | 'DUPLICATE_INV'
+  | 'NEAR_DUPLICATE'
+  | 'BANK_ACCT_CHANGE'
+
+export interface RiskRule {
+  code: RiskRuleCode
+  name: string
+  description: string
+  severity: 'high' | 'medium' | 'low'
+  uiName: string
+  threshold: string
+  actualValue: string
+  riskMessage: string
+  triggeredExpression: string
+}
+
+export interface PRItem {
+  id: string
+  itemNumber: string
+  description: string
+  quantity: number
+  unit: string
+  unitPrice: number
+  totalPrice: number
+  deliveryDate: string
+}
+
+export interface PRAttachment {
+  id: string
+  fileName: string
+  fileSize: string
+  uploadedAt: string
+  uploadedBy: string
+}
+
+export interface PurchaseRequest {
+  id: string
+  prNumber: string
+  title: string
+  description: string
+  requestor: string
+  requestorEmail: string
+  department: string
+  region: string
+  createdAt: string
+  updatedAt: string
+  status: PRStatus
+  totalAmount: number
+  currency: string
+  vendor: string
+  vendorCode: string
+  isRisk: boolean
+  riskRules: RiskRuleCode[]
+  items: PRItem[]
+  attachments: PRAttachment[]
+  approver: string
+  approverEmail: string
+  urgency: 'Low' | 'Medium' | 'High' | 'Critical'
+}
+
+// Risk Rules Definition based on Risk Layer Check Parameters
+export const riskRulesDefinition: Record<RiskRuleCode, RiskRule> = {
+  LAST_APPROVED_TXN: {
+    code: 'LAST_APPROVED_TXN',
+    name: 'Last Approved Txn',
+    description: 'Supplier Trust check: Last approved transaction is older than threshold.',
+    severity: 'medium',
+    uiName: 'Last Approved Txn',
+    threshold: '< 6 months',
+    actualValue: '8 months ago',
+    riskMessage: 'Supplier Trust: Last approved transaction was 8 months ago, exceeds 6 month threshold',
+    triggeredExpression: 'Last Approved Txn > 6 months',
+  },
+  CUMULATIVE_APPROVED: {
+    code: 'CUMULATIVE_APPROVED',
+    name: 'Cumulative Approved',
+    description: 'Supplier Trust check: Too many PRs approved within a short period.',
+    severity: 'medium',
+    uiName: 'Cumulative Approved',
+    threshold: '> 5 PRs within 3 months',
+    actualValue: '8 PRs in 2 months',
+    riskMessage: 'Supplier Trust: 8 PRs approved within 2 months, exceeds threshold of 5 PRs per 3 months',
+    triggeredExpression: 'Cumulative Approved > 5 PRs within 3 months',
+  },
+  AMOUNT_INCL_TAX: {
+    code: 'AMOUNT_INCL_TAX',
+    name: 'Amount incl. Tax',
+    description: 'Invoice Amount check: Amount including tax exceeds threshold.',
+    severity: 'high',
+    uiName: 'Amount incl. Tax',
+    threshold: '<= USD 50,000',
+    actualValue: 'USD 75,000',
+    riskMessage: 'Invoice Amount: USD 75,000 exceeds threshold of USD 50,000',
+    triggeredExpression: 'Amount incl. Tax > USD 50,000',
+  },
+  MATCH_VARIANCE: {
+    code: 'MATCH_VARIANCE',
+    name: 'Match Variance',
+    description: 'Matching Quality check: Invoice and Receipt step difference exceeds threshold.',
+    severity: 'medium',
+    uiName: 'Match Variance',
+    threshold: '<= USD 500',
+    actualValue: 'USD 1,200 difference',
+    riskMessage: 'Matching Quality: Inv & Rec step difference is USD 1,200, exceeds threshold of USD 500',
+    triggeredExpression: 'Match Variance > USD 500',
+  },
+  CROSS_BORDER: {
+    code: 'CROSS_BORDER',
+    name: 'Cross Border',
+    description: 'Compliance check: Supplier registered country differs from buyer legal entity country.',
+    severity: 'high',
+    uiName: 'Cross Border',
+    threshold: 'Supplier country = Buyer country',
+    actualValue: 'Supplier: MY, Buyer: SG',
+    riskMessage: 'Compliance: Supplier registered in Malaysia, Buyer entity in Singapore',
+    triggeredExpression: 'Supplier reg. address country ≠ Buyer legal entity country',
+  },
+  DUPLICATE_INV: {
+    code: 'DUPLICATE_INV',
+    name: 'Duplicate Inv',
+    description: 'Anomaly Check: Supplier x invoice number combination is not unique within 3 working months.',
+    severity: 'high',
+    uiName: 'Duplicate Inv',
+    threshold: 'Unique within 3WM',
+    actualValue: 'Matched PR-2026-001100',
+    riskMessage: 'Anomaly: Same supplier x invoice# found in PR-2026-001100 within 3 working months',
+    triggeredExpression: '[supplier × invoice number] is not unique within 3WM',
+  },
+  NEAR_DUPLICATE: {
+    code: 'NEAR_DUPLICATE',
+    name: 'Near Duplicate',
+    description: 'Anomaly Check (AI): High similarity detected with existing records based on Supplier/Amt/Date/Desc.',
+    severity: 'medium',
+    uiName: 'Near Duplicate',
+    threshold: 'No high similarity',
+    actualValue: '92% similarity with PR-2026-000998',
+    riskMessage: 'Anomaly (AI): 92% similarity detected with PR-2026-000998 based on Supplier/Amt/Date/Desc',
+    triggeredExpression: 'Supplier/Amt/Date/Desc: High similarity with existing records',
+  },
+  BANK_ACCT_CHANGE: {
+    code: 'BANK_ACCT_CHANGE',
+    name: 'Bank Acct Change',
+    description: 'Anomaly Check (AI): Bank account information differs from EBS supplier master.',
+    severity: 'high',
+    uiName: 'Bank Acct Change',
+    threshold: 'No discrepancy with EBS',
+    actualValue: 'Bank account mismatch',
+    riskMessage: 'Anomaly (AI): Supplier bank account differs from EBS supplier master record',
+    triggeredExpression: 'Discrepancy with EBS supplier master',
+  },
+}
+
+// Mock PR Data
+export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
+  {
+    id: '1',
+    prNumber: 'PR-2026-001234',
+    title: 'Office Equipment Procurement',
+    description: 'Procurement of office equipment including monitors, keyboards and mice for new hires in Q2.',
+    requestor: 'John Smith',
+    requestorEmail: 'john.smith@company.com',
+    department: 'IT Department',
+    region: 'SG',
+    createdAt: '2026-04-20',
+    updatedAt: '2026-04-22',
+    status: 'Pending Approval',
+    totalAmount: 75000,
+    currency: 'USD',
+    vendor: 'Tech Solutions Inc.',
+    vendorCode: 'VND-001',
+    isRisk: true,
+    riskRules: ['AMOUNT_INCL_TAX', 'CROSS_BORDER'],
+    items: [
+      { id: '1-1', itemNumber: 'IT-001', description: '27" 4K Monitor', quantity: 50, unit: 'PCS', unitPrice: 800, totalPrice: 40000, deliveryDate: '2026-04-25' },
+      { id: '1-2', itemNumber: 'IT-002', description: 'Mechanical Keyboard', quantity: 50, unit: 'PCS', unitPrice: 200, totalPrice: 10000, deliveryDate: '2026-04-25' },
+      { id: '1-3', itemNumber: 'IT-003', description: 'Wireless Mouse', quantity: 50, unit: 'PCS', unitPrice: 100, totalPrice: 5000, deliveryDate: '2026-04-25' },
+      { id: '1-4', itemNumber: 'IT-004', description: 'Laptop Stand', quantity: 50, unit: 'PCS', unitPrice: 150, totalPrice: 7500, deliveryDate: '2026-04-25' },
+      { id: '1-5', itemNumber: 'IT-005', description: 'USB-C Hub', quantity: 50, unit: 'PCS', unitPrice: 250, totalPrice: 12500, deliveryDate: '2026-04-25' },
+    ],
+    attachments: [
+      { id: 'a1', fileName: 'quotation.pdf', fileSize: '2.3 MB', uploadedAt: '2026-04-20', uploadedBy: 'John Smith' },
+      { id: 'a2', fileName: 'vendor_profile.pdf', fileSize: '1.1 MB', uploadedAt: '2026-04-20', uploadedBy: 'John Smith' },
+    ],
+    approver: 'Sarah Johnson',
+    approverEmail: 'sarah.johnson@company.com',
+    urgency: 'High',
+  },
+  {
+    id: '2',
+    prNumber: 'PR-2026-001235',
+    title: 'Marketing Campaign Materials',
+    description: 'Promotional materials for upcoming product launch event.',
+    requestor: 'Emily Chen',
+    requestorEmail: 'emily.chen@company.com',
+    department: 'Marketing',
+    region: 'ID',
+    createdAt: '2026-04-19',
+    updatedAt: '2026-04-21',
+    status: 'Approved',
+    totalAmount: 12500,
+    currency: 'USD',
+    vendor: 'Creative Designs Co.',
+    vendorCode: 'VND-015',
+    isRisk: false,
+    riskRules: [],
+    items: [
+      { id: '2-1', itemNumber: 'MK-001', description: 'Banner Stands', quantity: 20, unit: 'PCS', unitPrice: 250, totalPrice: 5000, deliveryDate: '2026-05-01' },
+      { id: '2-2', itemNumber: 'MK-002', description: 'Brochures', quantity: 5000, unit: 'PCS', unitPrice: 1.5, totalPrice: 7500, deliveryDate: '2026-05-01' },
+    ],
+    attachments: [
+      { id: 'a3', fileName: 'design_mockup.pdf', fileSize: '5.2 MB', uploadedAt: '2026-04-19', uploadedBy: 'Emily Chen' },
+    ],
+    approver: 'Michael Brown',
+    approverEmail: 'michael.brown@company.com',
+    urgency: 'Medium',
+  },
+  {
+    id: '3',
+    prNumber: 'PR-2026-001236',
+    title: 'Server Infrastructure Upgrade',
+    description: 'Critical server hardware upgrade for data center expansion.',
+    requestor: 'David Wilson',
+    requestorEmail: 'david.wilson@company.com',
+    department: 'IT Infrastructure',
+    region: 'TH',
+    createdAt: '2026-04-18',
+    updatedAt: '2026-04-20',
+    status: 'Processing',
+    totalAmount: 250000,
+    currency: 'USD',
+    vendor: 'Enterprise Systems Ltd.',
+    vendorCode: 'VND-003',
+    isRisk: true,
+    riskRules: ['AMOUNT_INCL_TAX'],
+    items: [
+      { id: '3-1', itemNumber: 'SRV-001', description: 'Rack Server', quantity: 10, unit: 'PCS', unitPrice: 15000, totalPrice: 150000, deliveryDate: '2026-05-15' },
+      { id: '3-2', itemNumber: 'SRV-002', description: 'Storage Array', quantity: 4, unit: 'PCS', unitPrice: 25000, totalPrice: 100000, deliveryDate: '2026-05-15' },
+    ],
+    attachments: [
+      { id: 'a4', fileName: 'technical_specs.pdf', fileSize: '3.8 MB', uploadedAt: '2026-04-18', uploadedBy: 'David Wilson' },
+      { id: 'a5', fileName: 'vendor_contract.pdf', fileSize: '1.5 MB', uploadedAt: '2026-04-18', uploadedBy: 'David Wilson' },
+    ],
+    approver: 'Lisa Anderson',
+    approverEmail: 'lisa.anderson@company.com',
+    urgency: 'Critical',
+  },
+  {
+    id: '4',
+    prNumber: 'PR-2026-001237',
+    title: 'Office Supplies Restocking',
+    description: 'Monthly office supplies for headquarters.',
+    requestor: 'Anna Martinez',
+    requestorEmail: 'anna.martinez@company.com',
+    department: 'Administration',
+    region: 'MY',
+    createdAt: '2026-04-17',
+    updatedAt: '2026-04-17',
+    status: 'Completed',
+    totalAmount: 3500,
+    currency: 'USD',
+    vendor: 'Office Depot',
+    vendorCode: 'VND-008',
+    isRisk: false,
+    riskRules: [],
+    items: [
+      { id: '4-1', itemNumber: 'OFF-001', description: 'A4 Paper (Box)', quantity: 100, unit: 'BOX', unitPrice: 25, totalPrice: 2500, deliveryDate: '2026-04-20' },
+      { id: '4-2', itemNumber: 'OFF-002', description: 'Pens (Pack)', quantity: 50, unit: 'PACK', unitPrice: 20, totalPrice: 1000, deliveryDate: '2026-04-20' },
+    ],
+    attachments: [],
+    approver: 'Robert Taylor',
+    approverEmail: 'robert.taylor@company.com',
+    urgency: 'Low',
+  },
+  {
+    id: '5',
+    prNumber: 'PR-2026-001238',
+    title: 'Software Licenses Renewal',
+    description: 'Annual renewal of enterprise software licenses.',
+    requestor: 'James Lee',
+    requestorEmail: 'james.lee@company.com',
+    department: 'IT Department',
+    region: 'PH',
+    createdAt: '2026-04-16',
+    updatedAt: '2026-04-18',
+    status: 'Pending Approval',
+    totalAmount: 45000,
+    currency: 'USD',
+    vendor: 'Software Corp',
+    vendorCode: 'VND-NEW-001',
+    isRisk: true,
+    riskRules: ['DUPLICATE_INV', 'LAST_APPROVED_TXN'],
+    items: [
+      { id: '5-1', itemNumber: 'SW-001', description: 'Enterprise License (Annual)', quantity: 500, unit: 'LICENSE', unitPrice: 90, totalPrice: 45000, deliveryDate: '2026-05-01' },
+    ],
+    attachments: [
+      { id: 'a6', fileName: 'license_agreement.pdf', fileSize: '890 KB', uploadedAt: '2026-04-16', uploadedBy: 'James Lee' },
+    ],
+    approver: 'Sarah Johnson',
+    approverEmail: 'sarah.johnson@company.com',
+    urgency: 'High',
+  },
+  {
+    id: '6',
+    prNumber: 'PR-2026-001239',
+    title: 'Lab Equipment Purchase',
+    description: 'Laboratory equipment for R&D department expansion.',
+    requestor: 'Dr. Maria Garcia',
+    requestorEmail: 'maria.garcia@company.com',
+    department: 'R&D',
+    region: 'VN',
+    createdAt: '2026-04-15',
+    updatedAt: '2026-04-17',
+    status: 'Rejected',
+    totalAmount: 180000,
+    currency: 'USD',
+    vendor: 'Scientific Instruments GmbH',
+    vendorCode: 'VND-022',
+    isRisk: true,
+    riskRules: ['AMOUNT_INCL_TAX', 'NEAR_DUPLICATE'],
+    items: [
+      { id: '6-1', itemNumber: 'LAB-001', description: 'Spectrophotometer', quantity: 2, unit: 'PCS', unitPrice: 45000, totalPrice: 90000, deliveryDate: '2026-06-01' },
+      { id: '6-2', itemNumber: 'LAB-002', description: 'Centrifuge', quantity: 3, unit: 'PCS', unitPrice: 30000, totalPrice: 90000, deliveryDate: '2026-06-01' },
+    ],
+    attachments: [
+      { id: 'a7', fileName: 'equipment_specs.pdf', fileSize: '4.2 MB', uploadedAt: '2026-04-15', uploadedBy: 'Dr. Maria Garcia' },
+    ],
+    approver: 'Dr. Thomas White',
+    approverEmail: 'thomas.white@company.com',
+    urgency: 'Medium',
+  },
+  {
+    id: '7',
+    prNumber: 'PR-2026-001240',
+    title: 'Employee Training Program',
+    description: 'Professional development training sessions for engineering team.',
+    requestor: 'Kevin Park',
+    requestorEmail: 'kevin.park@company.com',
+    department: 'HR',
+    region: 'SG',
+    createdAt: '2026-04-14',
+    updatedAt: '2026-04-16',
+    status: 'Approved',
+    totalAmount: 28000,
+    currency: 'USD',
+    vendor: 'Learning Academy',
+    vendorCode: 'VND-011',
+    isRisk: false,
+    riskRules: [],
+    items: [
+      { id: '7-1', itemNumber: 'TR-001', description: 'Leadership Workshop', quantity: 2, unit: 'SESSION', unitPrice: 8000, totalPrice: 16000, deliveryDate: '2026-05-10' },
+      { id: '7-2', itemNumber: 'TR-002', description: 'Technical Certification', quantity: 20, unit: 'PERSON', unitPrice: 600, totalPrice: 12000, deliveryDate: '2026-05-15' },
+    ],
+    attachments: [
+      { id: 'a8', fileName: 'training_proposal.pdf', fileSize: '1.8 MB', uploadedAt: '2026-04-14', uploadedBy: 'Kevin Park' },
+    ],
+    approver: 'Jennifer Liu',
+    approverEmail: 'jennifer.liu@company.com',
+    urgency: 'Low',
+  },
+  {
+    id: '8',
+    prNumber: 'PR-2026-001241',
+    title: 'Warehouse Shelving Units',
+    description: 'Industrial shelving for new warehouse facility.',
+    requestor: 'Carlos Rodriguez',
+    requestorEmail: 'carlos.rodriguez@company.com',
+    department: 'Operations',
+    region: 'ID',
+    createdAt: '2026-04-13',
+    updatedAt: '2026-04-15',
+    status: 'Draft',
+    totalAmount: 55000,
+    currency: 'USD',
+    vendor: 'Industrial Storage Solutions',
+    vendorCode: 'VND-NEW-002',
+    isRisk: true,
+    riskRules: ['AMOUNT_INCL_TAX', 'CUMULATIVE_APPROVED', 'CROSS_BORDER'],
+    items: [
+      { id: '8-1', itemNumber: 'WH-001', description: 'Heavy Duty Rack', quantity: 50, unit: 'PCS', unitPrice: 800, totalPrice: 40000, deliveryDate: '2026-04-18' },
+      { id: '8-2', itemNumber: 'WH-002', description: 'Pallet Shelving', quantity: 30, unit: 'PCS', unitPrice: 500, totalPrice: 15000, deliveryDate: '2026-04-18' },
+    ],
+    attachments: [],
+    approver: 'Antonio Santos',
+    approverEmail: 'antonio.santos@company.com',
+    urgency: 'High',
+  },
+  {
+    id: '9',
+    prNumber: 'PR-2026-001242',
+    title: 'Security System Upgrade',
+    description: 'Access control and surveillance system upgrade.',
+    requestor: 'Michelle Thompson',
+    requestorEmail: 'michelle.thompson@company.com',
+    department: 'Facilities',
+    region: 'TH',
+    createdAt: '2026-04-12',
+    updatedAt: '2026-04-14',
+    status: 'Pending Approval',
+    totalAmount: 92000,
+    currency: 'USD',
+    vendor: 'SecureTech Systems',
+    vendorCode: 'VND-019',
+    isRisk: true,
+    riskRules: ['AMOUNT_INCL_TAX', 'BANK_ACCT_CHANGE'],
+    items: [
+      { id: '9-1', itemNumber: 'SEC-001', description: 'IP Camera', quantity: 40, unit: 'PCS', unitPrice: 1200, totalPrice: 48000, deliveryDate: '2026-05-01' },
+      { id: '9-2', itemNumber: 'SEC-002', description: 'Access Control Panel', quantity: 10, unit: 'PCS', unitPrice: 2500, totalPrice: 25000, deliveryDate: '2026-05-01' },
+      { id: '9-3', itemNumber: 'SEC-003', description: 'Card Reader', quantity: 38, unit: 'PCS', unitPrice: 500, totalPrice: 19000, deliveryDate: '2026-05-01' },
+    ],
+    attachments: [
+      { id: 'a9', fileName: 'security_proposal.pdf', fileSize: '3.1 MB', uploadedAt: '2026-04-12', uploadedBy: 'Michelle Thompson' },
+      { id: 'a10', fileName: 'floor_plan.pdf', fileSize: '6.5 MB', uploadedAt: '2026-04-12', uploadedBy: 'Michelle Thompson' },
+    ],
+    approver: 'William Harris',
+    approverEmail: 'william.harris@company.com',
+    urgency: 'High',
+  },
+  {
+    id: '10',
+    prNumber: 'PR-2026-001243',
+    title: 'Catering Services Contract',
+    description: 'Annual catering services for corporate events.',
+    requestor: 'Sophie Williams',
+    requestorEmail: 'sophie.williams@company.com',
+    department: 'Administration',
+    region: 'MY',
+    createdAt: '2026-04-11',
+    updatedAt: '2026-04-13',
+    status: 'Completed',
+    totalAmount: 18000,
+    currency: 'USD',
+    vendor: 'Gourmet Catering Ltd.',
+    vendorCode: 'VND-025',
+    isRisk: false,
+    riskRules: [],
+    items: [
+      { id: '10-1', itemNumber: 'CAT-001', description: 'Annual Catering Contract', quantity: 1, unit: 'CONTRACT', unitPrice: 18000, totalPrice: 18000, deliveryDate: '2026-04-15' },
+    ],
+    attachments: [
+      { id: 'a11', fileName: 'catering_menu.pdf', fileSize: '2.0 MB', uploadedAt: '2026-04-11', uploadedBy: 'Sophie Williams' },
+    ],
+    approver: 'Robert Taylor',
+    approverEmail: 'robert.taylor@company.com',
+    urgency: 'Low',
+  },
+  {
+    id: '11',
+    prNumber: 'PR-2026-001244',
+    title: 'Fleet Vehicle Maintenance',
+    description: 'Quarterly maintenance for company vehicle fleet.',
+    requestor: 'Daniel Kim',
+    requestorEmail: 'daniel.kim@company.com',
+    department: 'Logistics',
+    region: 'PH',
+    createdAt: '2026-04-10',
+    updatedAt: '2026-04-12',
+    status: 'Processing',
+    totalAmount: 32000,
+    currency: 'USD',
+    vendor: 'AutoCare Services',
+    vendorCode: 'VND-007',
+    isRisk: false,
+    riskRules: [],
+    items: [
+      { id: '11-1', itemNumber: 'FLT-001', description: 'Vehicle Maintenance', quantity: 20, unit: 'VEHICLE', unitPrice: 1600, totalPrice: 32000, deliveryDate: '2026-04-30' },
+    ],
+    attachments: [
+      { id: 'a12', fileName: 'maintenance_schedule.xlsx', fileSize: '156 KB', uploadedAt: '2026-04-10', uploadedBy: 'Daniel Kim' },
+    ],
+    approver: 'Jennifer Liu',
+    approverEmail: 'jennifer.liu@company.com',
+    urgency: 'Medium',
+  },
+  {
+    id: '12',
+    prNumber: 'PR-2026-001245',
+    title: 'Cloud Computing Resources',
+    description: 'Additional cloud computing capacity for Q2 projects.',
+    requestor: 'Alex Turner',
+    requestorEmail: 'alex.turner@company.com',
+    department: 'IT Infrastructure',
+    region: 'VN',
+    createdAt: '2026-04-09',
+    updatedAt: '2026-04-11',
+    status: 'Approved',
+    totalAmount: 65000,
+    currency: 'USD',
+    vendor: 'CloudScale Inc.',
+    vendorCode: 'VND-004',
+    isRisk: true,
+    riskRules: ['AMOUNT_INCL_TAX', 'MATCH_VARIANCE'],
+    items: [
+      { id: '12-1', itemNumber: 'CLD-001', description: 'Compute Instances (Monthly)', quantity: 6, unit: 'MONTH', unitPrice: 8000, totalPrice: 48000, deliveryDate: '2026-04-15' },
+      { id: '12-2', itemNumber: 'CLD-002', description: 'Storage (TB/Month)', quantity: 6, unit: 'MONTH', unitPrice: 2000, totalPrice: 12000, deliveryDate: '2026-04-15' },
+      { id: '12-3', itemNumber: 'CLD-003', description: 'Network Bandwidth', quantity: 6, unit: 'MONTH', unitPrice: 833, totalPrice: 5000, deliveryDate: '2026-04-15' },
+    ],
+    attachments: [
+      { id: 'a13', fileName: 'cloud_architecture.pdf', fileSize: '2.8 MB', uploadedAt: '2026-04-09', uploadedBy: 'Alex Turner' },
+    ],
+    approver: 'Lisa Anderson',
+    approverEmail: 'lisa.anderson@company.com',
+    urgency: 'High',
+  },
+]
+
+// Helper functions for PR
+export function getPRByNumber(prNumber: string): PurchaseRequest | undefined {
+  return INITIAL_PURCHASE_REQUESTS.find((pr) => pr.prNumber === prNumber)
+}
+
+export function formatPRCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+export function getRiskRuleDetail(code: string): RiskRule | undefined {
+  return riskRulesDefinition[code as RiskRuleCode]
+}
+
+export function getRiskRulesByPR(pr: PurchaseRequest): RiskRule[] {
+  return pr.riskRules.map((code) => riskRulesDefinition[code]).filter(Boolean)
+}
+
+export function getPRRegions(): string[] {
+  return [...new Set(INITIAL_PURCHASE_REQUESTS.map((pr) => pr.region))]
+}
+
+export function getPRDepartments(): string[] {
+  return [...new Set(INITIAL_PURCHASE_REQUESTS.map((pr) => pr.department))]
+}
+
+export function getPRStatusCounts(): Record<PRStatus | 'All', number> {
+  const counts: Record<string, number> = { All: INITIAL_PURCHASE_REQUESTS.length }
+  for (const pr of INITIAL_PURCHASE_REQUESTS) {
+    counts[pr.status] = (counts[pr.status] || 0) + 1
+  }
+  return counts as Record<PRStatus | 'All', number>
+}
