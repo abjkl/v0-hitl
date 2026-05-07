@@ -13,6 +13,8 @@ import {
   Dropdown,
   Tooltip,
   Popconfirm,
+  Modal,
+  Form,
   message,
 } from "antd"
 import {
@@ -25,6 +27,7 @@ import {
   CheckCircleOutlined,
   StopOutlined,
   DeleteOutlined,
+  ExportOutlined,
 } from "@ant-design/icons"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -77,6 +80,19 @@ export function RiskLayerConfigList({
   const [filterEntities, setFilterEntities] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState<RiskLayerStatus | null>(null)
 
+  // Copy To state
+  const [copyModalOpen, setCopyModalOpen] = useState(false)
+  const [copySource, setCopySource] = useState<RiskLayerConfig | null>(null)
+  const [copyTargetRegion, setCopyTargetRegion] = useState<string>("")
+  const [copyTargetEntity, setCopyTargetEntity] = useState<string>("")
+
+  const copyTargetEntityOptions = useMemo(() => {
+    if (!copyTargetRegion) return []
+    return (REGION_ENTITIES[copyTargetRegion as keyof typeof REGION_ENTITIES] ?? []).map(
+      (e) => ({ value: e, label: e })
+    )
+  }, [copyTargetRegion])
+
   const filteredConfigs = useMemo(() => {
     return configs.filter((c) => {
       const matchSearch =
@@ -91,6 +107,43 @@ export function RiskLayerConfigList({
       return matchSearch && matchRegion && matchEntity && matchStatus
     })
   }, [configs, searchText, filterRegions, filterEntities, filterStatus])
+
+  function openCopyModal(record: RiskLayerConfig) {
+    setCopySource(record)
+    setCopyTargetRegion("")
+    setCopyTargetEntity("")
+    setCopyModalOpen(true)
+  }
+
+  function handleCopyTo() {
+    if (!copySource || !copyTargetRegion || !copyTargetEntity) return
+
+    const now = new Date()
+    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+    const newId = `RL-${String(configs.length + 1).padStart(3, "0")}`
+
+    const newConfig: RiskLayerConfig = {
+      ...JSON.parse(JSON.stringify(copySource)),
+      id: newId,
+      region: copyTargetRegion,
+      entity: copyTargetEntity,
+      status: "Draft",
+      lastUpdatedBy: currentUser,
+      lastUpdatedAt: timestamp,
+      changeLog: [
+        {
+          timestamp,
+          user: currentUser,
+          action: "Created",
+          details: `Copied from ${copySource.id} (${copySource.region} / ${copySource.entity})`,
+        },
+      ],
+    }
+
+    setConfigs((prev) => [...prev, newConfig])
+    setCopyModalOpen(false)
+    message.success(`Configuration copied to ${copyTargetRegion} / ${copyTargetEntity}`)
+  }
 
   function handleDuplicate(record: RiskLayerConfig) {
     const now = new Date()
@@ -269,6 +322,12 @@ export function RiskLayerConfigList({
             menu={{
               items: [
                 {
+                  key: "copy-to",
+                  icon: <ExportOutlined />,
+                  label: "Copy To",
+                  onClick: () => openCopyModal(record),
+                },
+                {
                   key: "duplicate",
                   icon: <CopyOutlined />,
                   label: "Duplicate",
@@ -406,6 +465,58 @@ export function RiskLayerConfigList({
           style={{ fontSize: 13 }}
         />
       </Card>
+
+      {/* Copy To Modal */}
+      <Modal
+        title={
+          <Space direction="vertical" size={2}>
+            <span>Copy To</span>
+            {copySource && (
+              <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
+                Source: {copySource.id} ({copySource.region} / {copySource.entity})
+              </Text>
+            )}
+          </Space>
+        }
+        open={copyModalOpen}
+        onCancel={() => setCopyModalOpen(false)}
+        onOk={handleCopyTo}
+        okText="Copy"
+        okButtonProps={{ disabled: !copyTargetRegion || !copyTargetEntity }}
+        width={400}
+        destroyOnClose
+      >
+        <Form layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item
+            label="Target Region"
+            required
+          >
+            <Select
+              placeholder="Select region"
+              value={copyTargetRegion || undefined}
+              onChange={(v) => {
+                setCopyTargetRegion(v)
+                setCopyTargetEntity("")
+              }}
+              options={REGION_OPTIONS}
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Target Entity"
+            required
+          >
+            <Select
+              placeholder={copyTargetRegion ? "Select entity" : "Select a region first"}
+              value={copyTargetEntity || undefined}
+              onChange={setCopyTargetEntity}
+              options={copyTargetEntityOptions}
+              disabled={!copyTargetRegion}
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }
