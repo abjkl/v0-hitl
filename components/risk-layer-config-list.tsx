@@ -307,7 +307,7 @@ export function RiskLayerConfigList({
               type="text"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => onView(record.id)}
+              onClick={(e) => { e.stopPropagation(); onView(record.id) }}
             />
           </Tooltip>
           <Tooltip title="Edit">
@@ -315,7 +315,7 @@ export function RiskLayerConfigList({
               type="text"
               size="small"
               icon={<EditOutlined />}
-              onClick={() => onEdit(record.id)}
+              onClick={(e) => { e.stopPropagation(); onEdit(record.id) }}
             />
           </Tooltip>
           <Dropdown
@@ -325,7 +325,7 @@ export function RiskLayerConfigList({
                   key: "copy-to",
                   icon: <ExportOutlined />,
                   label: "Copy To",
-                  onClick: () => openCopyModal(record),
+                  onClick: ({ domEvent }) => { domEvent.stopPropagation(); openCopyModal(record) },
                 },
                 {
                   key: "duplicate",
@@ -360,7 +360,7 @@ export function RiskLayerConfigList({
             }}
             trigger={["click"]}
           >
-            <Button type="text" size="small" icon={<MoreOutlined />} />
+            <Button type="text" size="small" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
           </Dropdown>
         </Space>
       ),
