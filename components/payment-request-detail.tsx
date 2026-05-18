@@ -331,7 +331,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
         </Col>
 
         {/* Right Column - Risk Layer / AI Review */}
-        <Col span={8}>
+        <Col span={8} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Risk Layer Assessment Panel */}
           <Card
             title="AI Review"
@@ -468,6 +468,75 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               </div>
             </div>
           </Card>
+
+          {/* Risk Layer Detail Section - Show all risk rules */}
+          {pr.isRisk && pr.riskRules.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <Title level={5} style={{ margin: 0 }}>Parsing Invoice Retry</Title>
+              {riskRules.map((rule) => (
+                <Card key={rule.code} size="small" style={{ borderRadius: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div>
+                      <Text strong style={{ fontSize: 14 }}>
+                        {rule.uiName}
+                      </Text>
+                      <br />
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        {rule.code}
+                      </Text>
+                    </div>
+                    <Tag
+                      color={
+                        rule.severity === "high"
+                          ? "red"
+                          : rule.severity === "medium"
+                            ? "orange"
+                            : "blue"
+                      }
+                    >
+                      {rule.severity.toUpperCase()}
+                    </Tag>
+                  </div>
+
+                  <Divider style={{ margin: "8px 0" }} />
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 11 }}>Description:</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <Text style={{ fontSize: 12 }}>{rule.description}</Text>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Threshold:</Text>
+                        <div style={{ marginTop: 2 }}>
+                          <Text style={{ fontSize: 12, fontWeight: 500 }}>
+                            {rule.threshold}
+                          </Text>
+                        </div>
+                      </div>
+                      <div>
+                        <Text type="secondary" style={{ fontSize: 11 }}>Actual Value:</Text>
+                        <div style={{ marginTop: 2 }}>
+                          <Text style={{ fontSize: 12, fontWeight: 500, color: "#ff4d4f" }}>
+                            {rule.actualValue}
+                          </Text>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: 10, background: "#fff1f0", borderRadius: 6, border: "1px solid #ffccc7" }}>
+                      <Text style={{ fontSize: 11, color: "#cf1322" }}>
+                        {rule.riskMessage}
+                      </Text>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </Col>
       </Row>
     </div>
