@@ -146,13 +146,43 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             <Title level={3} style={{ margin: 0, fontWeight: 600 }}>
               Payment Request
             </Title>
-            <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, marginTop: 4, alignItems: "center", flexWrap: "wrap" }}>
               <LeftOutlined style={{ fontSize: 12, color: "#8c8c8c" }} />
               <Text type="secondary" style={{ fontSize: 13 }}>
                 {pr.prNumber}
               </Text>
               <RightOutlined style={{ fontSize: 12, color: "#8c8c8c" }} />
               <Tag color="blue">{pr.status}</Tag>
+              {/* Risk Layer Tag */}
+              {pr.isRisk && pr.riskRules.length > 0 && (
+                <Tooltip
+                  title={
+                    <div style={{ maxWidth: 280 }}>
+                      {riskRules.map((rule) => (
+                        <div key={rule.code} style={{ marginBottom: 4 }}>
+                          <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#ff4d4f", marginRight: 8 }} />
+                          <span style={{ fontSize: 12 }}>{rule.uiName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  }
+                  placement="bottom"
+                >
+                  <Tag
+                    color="red"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 10px",
+                      cursor: "help",
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ff4d4f" }} />
+                    Risk Layer: Yes
+                  </Tag>
+                </Tooltip>
+              )}
               <RightOutlined style={{ fontSize: 12, color: "#8c8c8c" }} />
             </div>
           </div>
