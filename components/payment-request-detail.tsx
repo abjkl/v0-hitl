@@ -848,24 +848,64 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   )}
                 </div>
               ) : (
-                /* AI cannot provide decision — show only feedback input */
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your feedback</Text>
-                  <Input.TextArea
-                    placeholder="Please provide your feedback to help process this request..."
-                    rows={4}
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    style={{ fontSize: 12, borderRadius: 6 }}
-                  />
-                  <Button
-                    type="primary"
-                    size="small"
-                    onClick={handleSubmit}
-                    style={{ alignSelf: "flex-end", borderRadius: 6 }}
-                  >
-                    Submit
-                  </Button>
+                /* AI cannot provide decision — show feedback button like Accept/Not Accept */
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your decision</Text>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {(["Accept", "Not Accept"] as UserAction[]).map((action) => {
+                      const isAccept = action === "Accept"
+                      const isSelected = selectedAction === action
+                      return (
+                        <Button
+                          key={action}
+                          size="small"
+                          onClick={() => handleActionClick(action)}
+                          style={{
+                            borderRadius: 6,
+                            fontSize: 12,
+                            height: "auto",
+                            padding: "6px 10px",
+                            whiteSpace: "normal",
+                            textAlign: "center",
+                            lineHeight: 1.4,
+                            borderColor: isSelected
+                              ? isAccept ? "#52c41a" : "#ff4d4f"
+                              : "#d9d9d9",
+                            background: isSelected
+                              ? isAccept ? "#f6ffed" : "#fff2f0"
+                              : "#ffffff",
+                            color: isSelected
+                              ? isAccept ? "#389e0d" : "#cf1322"
+                              : "#595959",
+                            fontWeight: isSelected ? 600 : 400,
+                          }}
+                        >
+                          {action}
+                        </Button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Optional extra feedback textarea after selecting */}
+                  {selectedAction && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                      <Input.TextArea
+                        placeholder="Add your feedback (optional)..."
+                        rows={3}
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                        style={{ fontSize: 12, borderRadius: 6 }}
+                      />
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={handleSubmit}
+                        style={{ alignSelf: "flex-end", borderRadius: 6 }}
+                      >
+                        Submit
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
