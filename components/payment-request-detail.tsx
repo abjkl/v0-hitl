@@ -86,8 +86,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [othersText, setOthersText] = useState("")
   const [acceptInvoiceChoice, setAcceptInvoiceChoice] = useState<'yes' | 'yes-feedback' | null>(null)
   // When AI = Approve: 'reject' | 'reject-with-items' | 'accept-with-feedback'
-  // When AI = Reject:  'approve' | 'still-reject'
-  const [notAcceptChoice, setNotAcceptChoice] = useState<'reject' | 'reject-with-items' | 'accept-with-feedback' | 'approve' | 'still-reject' | null>(null)
+  // When AI = Reject:  'approve-no-issue' | 'approve-exception' | 'still-reject'
+  const [notAcceptChoice, setNotAcceptChoice] = useState<'reject' | 'reject-with-items' | 'accept-with-feedback' | 'approve-no-issue' | 'approve-exception' | 'still-reject' | null>(null)
   const [mockResult, setMockResult] = useState<AIReviewResult>(
     pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
   )
@@ -203,6 +203,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const needsChecklist =
     notAcceptChoice === 'reject-with-items' ||
     notAcceptChoice === 'accept-with-feedback' ||
+    notAcceptChoice === 'approve-exception' ||
     notAcceptChoice === 'still-reject'
 
   const checklistInvalid =
@@ -1117,13 +1118,27 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       })}
                     </>
                   ) : (
-                    /* AI said Reject → user can Approve or Still Reject with different reason */
+                    /* AI said Reject → user can Approve (2 ways) or Still Reject with different reason */
                     <>
                       {([
-                        { key: 'approve', label: 'Approve this invoice', desc: 'Override AI — approve the invoice' },
-                        { key: 'still-reject', label: 'Still reject, but with a different reason', desc: 'Reject the invoice and specify your own check items' },
+                        {
+                          key: 'approve-no-issue',
+                          label: 'Approve — no issue identified',
+                          desc: 'Override AI — approve the invoice as no real issues were found',
+                        },
+                        {
+                          key: 'approve-exception',
+                          label: 'Approve — issues accepted as exception',
+                          desc: 'Approve despite identified issues, flagging them as accepted exceptions',
+                        },
+                        {
+                          key: 'still-reject',
+                          label: 'Still reject, but with a different reason',
+                          desc: 'Reject the invoice and specify your own check items',
+                        },
                       ] as const).map(({ key, label, desc }) => {
                         const isSelected = notAcceptChoice === key
+                        const clearsChecklist = key === 'approve-no-issue'
                         return (
                           <div
                             key={key}
@@ -1132,7 +1147,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
                             onClick={() => {
                               setNotAcceptChoice(key)
-                              if (key === 'approve') { setCheckedItems([]); setItemNotes({}); setOthersChecked(false); setOthersText("") }
+                              if (clearsChecklist) { setCheckedItems([]); setItemNotes({}); setOthersChecked(false); setOthersText("") }
                             }}
                             style={{
                               padding: "10px 14px",
