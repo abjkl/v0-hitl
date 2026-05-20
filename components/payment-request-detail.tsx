@@ -81,6 +81,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [modalOpen, setModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<UserAction>(null)
   const [checkedItems, setCheckedItems] = useState<string[]>([])
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({})
   const [othersChecked, setOthersChecked] = useState(false)
   const [othersText, setOthersText] = useState("")
   const [mockResult, setMockResult] = useState<AIReviewResult>(
@@ -124,6 +125,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setModalOpen(false)
     setPendingAction(null)
     setCheckedItems([])
+    setItemNotes({})
     setOthersChecked(false)
     setOthersText("")
   }
@@ -132,6 +134,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     if (action === 'Accept with feedback' || action === 'Not Accept but Good Alert') {
       setPendingAction(action)
       setCheckedItems([])
+      setItemNotes({})
       setOthersChecked(false)
       setOthersText("")
       setModalOpen(true)
@@ -788,14 +791,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
                 <Tag color="green">Pass</Tag>
               </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* DO Review Agent */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
-                <Tag color="green">Pass</Tag>
-              </div>
             </div>
           </Card>
 
@@ -821,28 +816,44 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             width={480}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
-              {CHECK_ITEMS.map((item, idx) => (
-                <div
-                  key={item.key}
-                  style={{
-                    padding: "10px 0",
-                    borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
-                  }}
-                >
-                  <Checkbox
-                    checked={checkedItems.includes(item.key)}
-                    onChange={(e) => {
-                      setCheckedItems(
-                        e.target.checked
-                          ? [...checkedItems, item.key]
-                          : checkedItems.filter((k) => k !== item.key)
-                      )
+              {CHECK_ITEMS.map((item, idx) => {
+                const isChecked = checkedItems.includes(item.key)
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      paddingTop: 10,
+                      paddingBottom: isChecked ? 12 : 10,
+                      borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
                     }}
                   >
-                    <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                  </Checkbox>
-                </div>
-              ))}
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const next = e.target.checked
+                          ? [...checkedItems, item.key]
+                          : checkedItems.filter((k) => k !== item.key)
+                        setCheckedItems(next)
+                        if (!e.target.checked) {
+                          const { [item.key]: _, ...rest } = itemNotes
+                          setItemNotes(rest)
+                        }
+                      }}
+                    >
+                      <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                    </Checkbox>
+                    {isChecked && (
+                      <Input.TextArea
+                        placeholder="Describe the specific issue..."
+                        rows={2}
+                        value={itemNotes[item.key] || ""}
+                        onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
+                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                      />
+                    )}
+                  </div>
+                )
+              })}
 
               {/* Others option */}
               <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
