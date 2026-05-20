@@ -858,14 +858,14 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     onChange={(e) => setFeedback(e.target.value)}
                     style={{ fontSize: 12, borderRadius: 6 }}
                   />
-                <Button
-                  type={isAccept ? "primary" : "default"}
-                  danger={!isAccept && isSelected}
-                  style={{ borderRadius: 6, flex: 1 }}
-                  onClick={() => opensModal ? handleActionClick(action) : setSelectedAction(isSelected ? null : action)}
-                >
-                  {action}
-                </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={handleSubmit}
+                    style={{ alignSelf: "flex-end", borderRadius: 6 }}
+                  >
+                    Submit
+                  </Button>
                 </div>
               )}
 
