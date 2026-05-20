@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Input,
+  Segmented,
 } from "antd"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -62,12 +63,45 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [selectedAction, setSelectedAction] = useState<UserAction>(null)
   const [feedback, setFeedback] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [mockResult, setMockResult] = useState<AIReviewResult>(
+    pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
+  )
 
-  const canProvideDecision = (pr.aiReview?.result || 'Approve') !== 'Cannot Provide Decision'
+  const mockConfig: Record<AIReviewResult, { confidence: number; message: string; timestamp: string }> = {
+    'Approve': {
+      confidence: 0.98,
+      message: 'All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed.',
+      timestamp: '2026-05-20 10:15:30',
+    },
+    'Reject': {
+      confidence: 0.63,
+      message: 'Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%).',
+      timestamp: '2026-05-20 12:03:06',
+    },
+    'Require Human Review': {
+      confidence: 0.55,
+      message: 'Confidence level below threshold. Multiple conflicting signals detected. Manual review required for: Amount verification, Vendor validation.',
+      timestamp: '2026-05-20 11:22:45',
+    },
+    'Cannot Provide Decision': {
+      confidence: 0.32,
+      message: 'Unable to process: Missing critical invoice data. Document quality too low for OCR. Please re-upload with clearer image quality.',
+      timestamp: '2026-05-20 09:45:12',
+    },
+  }
+
+  const canProvideDecision = mockResult !== 'Cannot Provide Decision'
   const showFeedbackInput =
     selectedAction === 'Accept with feedback' ||
     selectedAction === 'Not Accept with feedback' ||
     !canProvideDecision
+
+  const handleMockResultChange = (val: AIReviewResult) => {
+    setMockResult(val)
+    setSelectedAction(null)
+    setFeedback("")
+    setSubmitted(false)
+  }
 
   const handleSubmit = () => {
     setSubmitted(true)
@@ -390,17 +424,37 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             extra={<Button type="text">Parsing Invoice Retry</Button>}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* Mock switcher - dev only */}
+              <div style={{
+                padding: "8px 12px",
+                background: "#f5f5f5",
+                borderRadius: 8,
+                border: "1px dashed #d9d9d9",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}>
+                <Text style={{ fontSize: 11, color: "#8c8c8c", fontWeight: 500, letterSpacing: "0.02em" }}>
+                  MOCK — Preview AI result
+                </Text>
+                <Segmented
+                  size="small"
+                  value={mockResult}
+                  onChange={(val) => handleMockResultChange(val as AIReviewResult)}
+                  options={[
+                    { label: "Approve", value: "Approve" },
+                    { label: "Reject", value: "Reject" },
+                    { label: "Human Review", value: "Require Human Review" },
+                    { label: "No Decision", value: "Cannot Provide Decision" },
+                  ]}
+                  style={{ width: "100%" }}
+                />
+              </div>
+
               {/* AI Review Result Status */}
               {(() => {
-                const aiReview = pr.aiReview
-                const result = aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
-                const confidence = aiReview?.confidence || (pr.isRisk ? 0.63 : 0.98)
-                const message = aiReview?.message || (pr.isRisk 
-                  ? 'Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%)'
-                  : 'All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed')
-                const timestamp = aiReview?.timestamp || new Date().toLocaleString()
-
-                const resultConfig: Record<AIReviewResult, { 
+                const resultConfig: Record<AIReviewResult, {
                   icon: React.ReactNode
                   bg: string
                   border: string
@@ -437,7 +491,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   },
                 }
 
-                const config = resultConfig[result]
+                const config = resultConfig[mockResult]
+                const { confidence, message, timestamp } = mockConfig[mockResult]
 
                 return (
                   <div style={{ padding: 16, background: config.bg, borderRadius: 8, border: config.border }}>
@@ -464,7 +519,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{(pr.aiReview?.confidence || 0.48).toFixed(2)} / 1</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
                 </div>
                 <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
               </div>
