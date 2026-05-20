@@ -58,7 +58,7 @@ interface PaymentRequestDetailProps {
   onBack: () => void
 }
 
-type UserAction = 'Accept' | 'Accept with feedback' | 'Not Accept' | 'Not Accept but Good Alert' | null
+type UserAction = 'Accept' | 'Not Accept' | null
 
 const CHECK_ITEMS = [
   { key: "doc_title", label: "Document title" },
@@ -146,10 +146,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   }
 
   const canProvideDecision = mockResult !== 'Cannot Provide Decision'
-  const showFeedbackInput =
-    selectedAction === 'Accept with feedback' ||
-    selectedAction === 'Not Accept but Good Alert' ||
-    !canProvideDecision
+  const showFeedbackInput = false
 
   const handleMockResultChange = (val: AIReviewResult) => {
     setMockResult(val)
@@ -167,12 +164,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   }
 
   const handleActionClick = (action: UserAction) => {
-    if (
-      action === 'Accept' ||
-      action === 'Accept with feedback' ||
-      action === 'Not Accept' ||
-      action === 'Not Accept but Good Alert'
-    ) {
+    if (action === 'Accept' || action === 'Not Accept') {
       setPendingAction(action)
       setCheckedItems([])
       setItemNotes({})
@@ -221,8 +213,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       if (needsChecklist) return checklistInvalid
       return false
     }
-    // 'Accept with feedback' / 'Not Accept but Good Alert'
-    return checklistInvalid
+    return false
   })()
 
   const itemColumns: ColumnsType<PRItem> = [
@@ -655,12 +646,11 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your decision</Text>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {(["Accept", "Accept with feedback", "Not Accept", "Not Accept but Good Alert"] as UserAction[]).map((action) => {
-                      const isAccept = action === "Accept" || action === "Accept with feedback"
-                      const isSelected = selectedAction === action
-                      const hasFeedback = action === "Accept with feedback" || action === "Not Accept but Good Alert"
-                      const opensModal = action === "Accept" || action === "Not Accept" || hasFeedback
-                      return (
+              {(["Accept", "Not Accept"] as UserAction[]).map((action) => {
+                const isAccept = action === "Accept"
+                const isSelected = selectedAction === action
+                const opensModal = true
+                return (
                         <Button
                           key={action}
                           size="small"
@@ -750,15 +740,14 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     onChange={(e) => setFeedback(e.target.value)}
                     style={{ fontSize: 12, borderRadius: 6 }}
                   />
-                  <Button
-                    type="primary"
-                    size="small"
-                    disabled={!feedback.trim()}
-                    onClick={handleSubmit}
-                    style={{ alignSelf: "flex-end", borderRadius: 6 }}
-                  >
-                    Submit
-                  </Button>
+                <Button
+                  type={isAccept ? "primary" : "default"}
+                  danger={!isAccept && isSelected}
+                  style={{ borderRadius: 6, flex: 1 }}
+                  onClick={() => opensModal ? handleActionClick(action) : setSelectedAction(isSelected ? null : action)}
+                >
+                  {action}
+                </Button>
                 </div>
               )}
 
