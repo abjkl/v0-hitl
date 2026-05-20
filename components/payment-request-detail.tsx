@@ -566,102 +566,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
               <Divider style={{ margin: 0 }} />
 
-              {/* Confidence Section */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
-                </div>
-                <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Document Validity Section */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Document Validity</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Document title</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Invoice Regulatory Compliance (ATP)</Text>
-                </div>
-                <div style={{ padding: 12, background: "#fff1f0", borderRadius: 6, marginTop: 8 }}>
-                  <Text style={{ fontSize: 11, color: "#cf1322" }}>
-                    Authority to Print (ATP) is missing/empty and is required for a "SERVICE INVOICE"
-                  </Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Invoice Key Info */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Invoice Key Info</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Invoice date match and range</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Buyer Identity */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Buyer Identity</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Billing name match (Entity Info)</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Billing address match (Entity Info)</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Billing TIN match (Entity Info)</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Supplier Identity */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Supplier Identity</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Supplier name match (PO)</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Financial Accuracy */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Financial Accuracy</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Total after tax equals submission amount</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Total after tax equals net plus VAT (12%)</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* DO Review Agent */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
-                <Tag color="green">Pass</Tag>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* User Action Area */}
+              {/* User Action Area - Decision buttons */}
               {submitted ? (
                 <div style={{
                   padding: "12px 16px",
@@ -788,6 +693,109 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   </Button>
                 </div>
               )}
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* Confidence Section */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
+                </div>
+                <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* Document Validity Section */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Document Validity</Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Document title</Text>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Invoice Regulatory Compliance (ATP)</Text>
+                </div>
+                <div style={{ padding: 12, background: "#fff1f0", borderRadius: 6, marginTop: 8 }}>
+                  <Text style={{ fontSize: 11, color: "#cf1322" }}>
+                    Authority to Print (ATP) is missing/empty and is required for a "SERVICE INVOICE"
+                  </Text>
+                </div>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* Invoice Key Info */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Invoice Key Info</Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Invoice date match and range</Text>
+                </div>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* Buyer Identity */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Buyer Identity</Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Billing name match (Entity Info)</Text>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Billing address match (Entity Info)</Text>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Billing TIN match (Entity Info)</Text>
+                </div>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* Supplier Identity */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Supplier Identity</Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Supplier name match (PO)</Text>
+                </div>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* Financial Accuracy */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Financial Accuracy</Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Total after tax equals submission amount</Text>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                  <Text style={{ fontSize: 12 }}>Total after tax equals net plus VAT (12%)</Text>
+                </div>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* DO Review Agent */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
+                <Tag color="green">Pass</Tag>
+              </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* DO Review Agent */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
+                <Tag color="green">Pass</Tag>
+              </div>
             </div>
           </Card>
 
