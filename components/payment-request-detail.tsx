@@ -58,7 +58,7 @@ interface PaymentRequestDetailProps {
   onBack: () => void
 }
 
-type UserAction = 'Accept' | 'Accept with feedback' | 'Not Accept' | 'Not Accept with feedback' | null
+type UserAction = 'Accept' | 'Accept with feedback' | 'Not Accept' | 'Not Accept but Good Alert' | null
 
 const CHECK_ITEMS = [
   { key: "doc_title", label: "Document title" },
@@ -113,7 +113,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const canProvideDecision = mockResult !== 'Cannot Provide Decision'
   const showFeedbackInput =
     selectedAction === 'Accept with feedback' ||
-    selectedAction === 'Not Accept with feedback' ||
+    selectedAction === 'Not Accept but Good Alert' ||
     !canProvideDecision
 
   const handleMockResultChange = (val: AIReviewResult) => {
@@ -129,7 +129,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   }
 
   const handleActionClick = (action: UserAction) => {
-    if (action === 'Accept with feedback' || action === 'Not Accept with feedback') {
+    if (action === 'Accept with feedback' || action === 'Not Accept but Good Alert') {
       setPendingAction(action)
       setCheckedItems([])
       setOthersChecked(false)
@@ -683,10 +683,10 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your decision</Text>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {(["Accept", "Accept with feedback", "Not Accept", "Not Accept with feedback"] as UserAction[]).map((action) => {
+                    {(["Accept", "Accept with feedback", "Not Accept", "Not Accept but Good Alert"] as UserAction[]).map((action) => {
                       const isAccept = action === "Accept" || action === "Accept with feedback"
                       const isSelected = selectedAction === action
-                      const hasFeedback = action === "Accept with feedback" || action === "Not Accept with feedback"
+                      const hasFeedback = action === "Accept with feedback" || action === "Not Accept but Good Alert"
                       return (
                         <Button
                           key={action}
