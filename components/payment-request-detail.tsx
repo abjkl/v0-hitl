@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Card,
   Button,
@@ -13,6 +14,7 @@ import {
   Divider,
   Row,
   Col,
+  Input,
 } from "antd"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -53,8 +55,23 @@ interface PaymentRequestDetailProps {
   onBack: () => void
 }
 
+type UserAction = 'Accept' | 'Accept with feedback' | 'Not Accept' | 'Not Accept with feedback' | null
+
 export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) {
   const riskRules = getRiskRulesByPR(pr)
+  const [selectedAction, setSelectedAction] = useState<UserAction>(null)
+  const [feedback, setFeedback] = useState("")
+  const [submitted, setSubmitted] = useState(false)
+
+  const canProvideDecision = (pr.aiReview?.result || 'Approve') !== 'Cannot Provide Decision'
+  const showFeedbackInput =
+    selectedAction === 'Accept with feedback' ||
+    selectedAction === 'Not Accept with feedback' ||
+    !canProvideDecision
+
+  const handleSubmit = () => {
+    setSubmitted(true)
+  }
 
   const itemColumns: ColumnsType<PRItem> = [
     {
@@ -535,6 +552,119 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
                 <Tag color="green">Pass</Tag>
               </div>
+
+              <Divider style={{ margin: 0 }} />
+
+              {/* User Action Area */}
+              {submitted ? (
+                <div style={{
+                  padding: "12px 16px",
+                  background: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                  <Text style={{ fontSize: 13, color: "#389e0d" }}>
+                    Response submitted
+                    {selectedAction && `: ${selectedAction}`}
+                  </Text>
+                </div>
+              ) : canProvideDecision ? (
+                /* AI gave a decision — show 4 action buttons */
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your decision</Text>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {(["Accept", "Accept with feedback", "Not Accept", "Not Accept with feedback"] as UserAction[]).map((action) => {
+                      const isAccept = action === "Accept" || action === "Accept with feedback"
+                      const isSelected = selectedAction === action
+                      return (
+                        <Button
+                          key={action}
+                          size="small"
+                          onClick={() => setSelectedAction(isSelected ? null : action)}
+                          style={{
+                            borderRadius: 6,
+                            fontSize: 12,
+                            height: "auto",
+                            padding: "6px 10px",
+                            whiteSpace: "normal",
+                            textAlign: "center",
+                            lineHeight: 1.4,
+                            borderColor: isSelected
+                              ? isAccept ? "#52c41a" : "#ff4d4f"
+                              : "#d9d9d9",
+                            background: isSelected
+                              ? isAccept ? "#f6ffed" : "#fff2f0"
+                              : "#ffffff",
+                            color: isSelected
+                              ? isAccept ? "#389e0d" : "#cf1322"
+                              : "#595959",
+                            fontWeight: isSelected ? 600 : 400,
+                          }}
+                        >
+                          {action}
+                        </Button>
+                      )
+                    })}
+                  </div>
+
+                  {showFeedbackInput && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                      <Input.TextArea
+                        placeholder="Add your feedback here..."
+                        rows={3}
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                        style={{ fontSize: 12, borderRadius: 6 }}
+                      />
+                      <Button
+                        type="primary"
+                        size="small"
+                        disabled={!selectedAction || !feedback.trim()}
+                        onClick={handleSubmit}
+                        style={{ alignSelf: "flex-end", borderRadius: 6 }}
+                      >
+                        Submit
+                      </Button>
+                    </div>
+                  )}
+
+                  {selectedAction && !showFeedbackInput && (
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={handleSubmit}
+                      style={{ borderRadius: 6 }}
+                    >
+                      Submit
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                /* AI cannot provide decision — show only feedback input */
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your feedback</Text>
+                  <Input.TextArea
+                    placeholder="Please provide your feedback to help process this request..."
+                    rows={4}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    style={{ fontSize: 12, borderRadius: 6 }}
+                  />
+                  <Button
+                    type="primary"
+                    size="small"
+                    disabled={!feedback.trim()}
+                    onClick={handleSubmit}
+                    style={{ alignSelf: "flex-end", borderRadius: 6 }}
+                  >
+                    Submit
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
         </Col>
