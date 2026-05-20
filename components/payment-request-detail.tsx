@@ -203,7 +203,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [acceptInvoiceChoice, setAcceptInvoiceChoice] = useState<'yes' | 'yes-feedback' | null>(null)
   // When AI = Approve: 'reject-with-items' | 'approve-exception'
   // When AI = Reject:  'approve-no-issue' | 'approve-exception' | 'still-reject'
-  const [notAcceptChoice, setNotAcceptChoice] = useState<'reject-with-items' | 'approve-no-issue' | 'approve-exception' | 'still-reject' | null>(null)
+  // When AI = Require Human Review: 'hr-approve-wrong-issues' | 'hr-reject-wrong-issues'
+  const [notAcceptChoice, setNotAcceptChoice] = useState<'reject-with-items' | 'approve-no-issue' | 'approve-exception' | 'still-reject' | 'hr-approve-wrong-issues' | 'hr-reject-wrong-issues' | null>(null)
   const [mockResult, setMockResult] = useState<AIReviewResult>(
     pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
   )
@@ -311,7 +312,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const needsChecklist =
     notAcceptChoice === 'reject-with-items' ||
     notAcceptChoice === 'approve-exception' ||
-    notAcceptChoice === 'still-reject'
+    notAcceptChoice === 'still-reject' ||
+    notAcceptChoice === 'hr-approve-wrong-issues' ||
+    notAcceptChoice === 'hr-reject-wrong-issues'
 
   const checklistInvalid =
     (checkedItems.length === 0 && !othersChecked) ||
@@ -1191,6 +1194,58 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                           key: 'approve-exception',
                           label: 'Still approve — issues accepted as exception',
                           desc: 'Approve despite issues, flagging them as accepted exceptions',
+                        },
+                      ] as const).map(({ key, label, desc }) => {
+                        const isSelected = notAcceptChoice === key
+                        return (
+                          <div
+                            key={key}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
+                            onClick={() => setNotAcceptChoice(key)}
+                            style={{
+                              padding: "10px 14px",
+                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                              borderRadius: 8,
+                              background: isSelected ? "#e6f4ff" : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            <div style={{
+                              width: 16, height: 16, borderRadius: "50%",
+                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                              background: isSelected ? "#1677ff" : "#fff",
+                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                            }}>
+                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
+                            </div>
+                            <div>
+                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
+                              <br />
+                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
+                  ) : mockResult === 'Require Human Review' ? (
+                    /* AI said Require Human Review → user provides own decision with correct issues */
+                    <>
+                      {([
+                        {
+                          key: 'hr-approve-wrong-issues',
+                          label: 'Approve — wrong issues identified by AI',
+                          desc: 'Approve the invoice and specify the actual issues (if any)',
+                        },
+                        {
+                          key: 'hr-reject-wrong-issues',
+                          label: 'Reject — wrong issues identified by AI',
+                          desc: 'Reject the invoice and specify the actual issues',
                         },
                       ] as const).map(({ key, label, desc }) => {
                         const isSelected = notAcceptChoice === key
