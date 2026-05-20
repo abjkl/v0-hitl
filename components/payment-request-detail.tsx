@@ -85,6 +85,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [othersChecked, setOthersChecked] = useState(false)
   const [othersText, setOthersText] = useState("")
   const [acceptInvoiceChoice, setAcceptInvoiceChoice] = useState<'yes' | 'yes-feedback' | null>(null)
+  // When AI = Approve: 'reject' | 'reject-with-items' | 'accept-with-feedback'
+  // When AI = Reject:  'approve' | 'still-reject'
+  const [notAcceptChoice, setNotAcceptChoice] = useState<'reject' | 'reject-with-items' | 'accept-with-feedback' | 'approve' | 'still-reject' | null>(null)
   const [mockResult, setMockResult] = useState<AIReviewResult>(
     pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
   )
@@ -160,12 +163,14 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setOthersChecked(false)
     setOthersText("")
     setAcceptInvoiceChoice(null)
+    setNotAcceptChoice(null)
   }
 
   const handleActionClick = (action: UserAction) => {
     if (
       action === 'Accept' ||
       action === 'Accept with feedback' ||
+      action === 'Not Accept' ||
       action === 'Not Accept but Good Alert'
     ) {
       setPendingAction(action)
@@ -174,6 +179,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       setOthersChecked(false)
       setOthersText("")
       setAcceptInvoiceChoice(null)
+      setNotAcceptChoice(null)
       setModalOpen(true)
     } else {
       setSelectedAction(action)
@@ -194,19 +200,28 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setSubmitted(true)
   }
 
-  // For 'Accept': must choose Yes or Yes with feedback; if yes-feedback, checklist rules apply
-  // For 'Accept with feedback' / 'Not Accept but Good Alert': at least one item must be selected
+  const needsChecklist =
+    notAcceptChoice === 'reject-with-items' ||
+    notAcceptChoice === 'accept-with-feedback' ||
+    notAcceptChoice === 'still-reject'
+
+  const checklistInvalid =
+    (checkedItems.length === 0 && !othersChecked) ||
+    (othersChecked && !othersText.trim())
+
   const isModalConfirmDisabled = (() => {
     if (pendingAction === 'Accept') {
       if (!acceptInvoiceChoice) return true
-      if (acceptInvoiceChoice === 'yes-feedback') {
-        return (checkedItems.length === 0 && !othersChecked) ||
-          (othersChecked && !othersText.trim())
-      }
+      if (acceptInvoiceChoice === 'yes-feedback') return checklistInvalid
       return false
     }
-    return (checkedItems.length === 0 && !othersChecked) ||
-      (othersChecked && !othersText.trim())
+    if (pendingAction === 'Not Accept') {
+      if (!notAcceptChoice) return true
+      if (needsChecklist) return checklistInvalid
+      return false
+    }
+    // 'Accept with feedback' / 'Not Accept but Good Alert'
+    return checklistInvalid
   })()
 
   const itemColumns: ColumnsType<PRItem> = [
@@ -643,7 +658,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       const isAccept = action === "Accept" || action === "Accept with feedback"
                       const isSelected = selectedAction === action
                       const hasFeedback = action === "Accept with feedback" || action === "Not Accept but Good Alert"
-                      const opensModal = action === "Accept" || hasFeedback
+                      const opensModal = action === "Accept" || action === "Not Accept" || hasFeedback
                       return (
                         <Button
                           key={action}
@@ -997,19 +1012,210 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title={
               <div>
                 <Text strong style={{ fontSize: 15 }}>
-                  {pendingAction === 'Accept' ? 'Accept' : pendingAction === 'Accept with feedback' ? 'Accept with Feedback' : 'Not Accept but Good Alert'}
+                  {pendingAction === 'Accept'
+                    ? 'Accept'
+                    : pendingAction === 'Not Accept'
+                    ? 'Not Accept'
+                    : pendingAction === 'Accept with feedback'
+                    ? 'Accept with Feedback'
+                    : 'Not Accept but Good Alert'}
                 </Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                   {pendingAction === 'Accept'
                     ? 'Review the AI conclusion on this invoice'
+                    : pendingAction === 'Not Accept'
+                    ? 'How would you like to handle this invoice?'
                     : 'Select the check items you believe AI judged incorrectly'}
                 </Text>
               </div>
             }
             width={480}
           >
-            {pendingAction === 'Accept' ? (
+            {pendingAction === 'Not Accept' ? (
+              /* ── Not Accept Modal ── */
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
+                {/* AI conclusion banner */}
+                <div style={{
+                  padding: "12px 14px",
+                  background: mockResult === 'Approve' ? "#f6ffed" : "#fff2f0",
+                  border: `1px solid ${mockResult === 'Approve' ? "#b7eb8f" : "#ffccc7"}`,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}>
+                  {mockResult === 'Approve'
+                    ? <CheckCircleOutlined style={{ fontSize: 18, color: "#52c41a" }} />
+                    : <CloseCircleOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
+                  }
+                  <div>
+                    <Text style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: mockResult === 'Approve' ? "#389e0d" : "#cf1322",
+                    }}>
+                      AI Decision: {mockResult}
+                    </Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {mockResult === 'Approve'
+                        ? 'You disagree — choose how to proceed with this invoice.'
+                        : 'You disagree — choose how to proceed with this invoice.'}
+                    </Text>
+                  </div>
+                </div>
+
+                {/* Options — differ by AI result */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {mockResult === 'Approve' ? (
+                    /* AI said Approve → user can Reject or Accept with feedback */
+                    <>
+                      {([
+                        { key: 'reject', label: 'Reject this invoice', desc: 'Override AI — reject the invoice outright' },
+                        { key: 'reject-with-items', label: 'Reject and flag check items', desc: 'Reject and specify which check items have issues' },
+                        { key: 'accept-with-feedback', label: 'Accept with feedback', desc: 'Still approve, but flag check items for review' },
+                      ] as const).map(({ key, label, desc }) => {
+                        const isSelected = notAcceptChoice === key
+                        return (
+                          <div
+                            key={key}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
+                            onClick={() => {
+                              setNotAcceptChoice(key)
+                              if (key === 'reject') { setCheckedItems([]); setItemNotes({}); setOthersChecked(false); setOthersText("") }
+                            }}
+                            style={{
+                              padding: "10px 14px",
+                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                              borderRadius: 8,
+                              background: isSelected ? "#e6f4ff" : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            <div style={{
+                              width: 16, height: 16, borderRadius: "50%",
+                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                              background: isSelected ? "#1677ff" : "#fff",
+                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                            }}>
+                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
+                            </div>
+                            <div>
+                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
+                              <br />
+                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
+                  ) : (
+                    /* AI said Reject → user can Approve or Still Reject with different reason */
+                    <>
+                      {([
+                        { key: 'approve', label: 'Approve this invoice', desc: 'Override AI — approve the invoice' },
+                        { key: 'still-reject', label: 'Still reject, but with a different reason', desc: 'Reject the invoice and specify your own check items' },
+                      ] as const).map(({ key, label, desc }) => {
+                        const isSelected = notAcceptChoice === key
+                        return (
+                          <div
+                            key={key}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
+                            onClick={() => {
+                              setNotAcceptChoice(key)
+                              if (key === 'approve') { setCheckedItems([]); setItemNotes({}); setOthersChecked(false); setOthersText("") }
+                            }}
+                            style={{
+                              padding: "10px 14px",
+                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                              borderRadius: 8,
+                              background: isSelected ? "#e6f4ff" : "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            <div style={{
+                              width: 16, height: 16, borderRadius: "50%",
+                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                              background: isSelected ? "#1677ff" : "#fff",
+                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                            }}>
+                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
+                            </div>
+                            <div>
+                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
+                              <br />
+                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
+                  )}
+                </div>
+
+                {/* Checklist — shown when option requires flagging items */}
+                {needsChecklist && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
+                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
+                      SELECT CHECK ITEMS WITH ISSUES
+                    </Text>
+                    {CHECK_ITEMS.map((item, idx) => {
+                      const isChecked = checkedItems.includes(item.key)
+                      return (
+                        <div key={item.key} style={{ paddingTop: 10, paddingBottom: isChecked ? 12 : 10, borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none" }}>
+                          <Checkbox
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const next = e.target.checked ? [...checkedItems, item.key] : checkedItems.filter(k => k !== item.key)
+                              setCheckedItems(next)
+                              if (!e.target.checked) { const { [item.key]: _, ...rest } = itemNotes; setItemNotes(rest) }
+                            }}
+                          >
+                            <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                          </Checkbox>
+                          {isChecked && (
+                            <Input.TextArea
+                              placeholder="Describe the specific issue..."
+                              rows={2}
+                              value={itemNotes[item.key] || ""}
+                              onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
+                              style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                            />
+                          )}
+                        </div>
+                      )
+                    })}
+                    <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
+                      <Checkbox checked={othersChecked} onChange={(e) => { setOthersChecked(e.target.checked); if (!e.target.checked) setOthersText("") }}>
+                        <Text style={{ fontSize: 13 }}>Others</Text>
+                      </Checkbox>
+                      {othersChecked && (
+                        <Input.TextArea
+                          placeholder="Please describe the issue..."
+                          rows={2}
+                          value={othersText}
+                          onChange={(e) => setOthersText(e.target.value)}
+                          style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : pendingAction === 'Accept' ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
                 {/* AI conclusion display */}
                 <div style={{
