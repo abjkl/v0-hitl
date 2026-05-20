@@ -131,7 +131,11 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   }
 
   const handleActionClick = (action: UserAction) => {
-    if (action === 'Accept with feedback' || action === 'Not Accept but Good Alert') {
+    if (
+      action === 'Accept' ||
+      action === 'Accept with feedback' ||
+      action === 'Not Accept but Good Alert'
+    ) {
       setPendingAction(action)
       setCheckedItems([])
       setItemNotes({})
@@ -157,9 +161,14 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setSubmitted(true)
   }
 
+  // For 'Accept', feedback is optional — Confirm is always enabled
+  // For 'Accept with feedback' / 'Not Accept but Good Alert', at least one item must be selected
   const isModalConfirmDisabled =
-    checkedItems.length === 0 && !othersChecked ||
-    (othersChecked && !othersText.trim())
+    pendingAction !== 'Accept' &&
+    (
+      (checkedItems.length === 0 && !othersChecked) ||
+      (othersChecked && !othersText.trim())
+    )
 
   const itemColumns: ColumnsType<PRItem> = [
     {
@@ -595,11 +604,12 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       const isAccept = action === "Accept" || action === "Accept with feedback"
                       const isSelected = selectedAction === action
                       const hasFeedback = action === "Accept with feedback" || action === "Not Accept but Good Alert"
+                      const opensModal = action === "Accept" || hasFeedback
                       return (
                         <Button
                           key={action}
                           size="small"
-                          onClick={() => hasFeedback ? handleActionClick(action) : setSelectedAction(isSelected ? null : action)}
+                          onClick={() => opensModal ? handleActionClick(action) : setSelectedAction(isSelected ? null : action)}
                           style={{
                             borderRadius: 6,
                             fontSize: 12,
@@ -805,11 +815,13 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title={
               <div>
                 <Text strong style={{ fontSize: 15 }}>
-                  {pendingAction === 'Accept with feedback' ? 'Accept with Feedback' : 'Not Accept with Feedback'}
+                  {pendingAction === 'Accept' ? 'Accept' : pendingAction === 'Accept with feedback' ? 'Accept with Feedback' : 'Not Accept but Good Alert'}
                 </Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
-                  Select the check items you believe AI judged incorrectly
+                  {pendingAction === 'Accept'
+                    ? 'Do you have any feedback on the AI review? (optional)'
+                    : 'Select the check items you believe AI judged incorrectly'}
                 </Text>
               </div>
             }
