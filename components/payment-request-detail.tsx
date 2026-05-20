@@ -37,6 +37,7 @@ import {
   type PRItem,
   type PRStatus,
   type AIReviewResult,
+  type AICheckItemResult,
   formatPRCurrency,
   getRiskRulesByPR,
   riskRulesDefinition,
@@ -72,6 +73,121 @@ const CHECK_ITEMS = [
   { key: "total_tax", label: "Total after tax equals submission amount" },
   { key: "total_vat", label: "Total after tax equals net plus VAT (12%)" },
 ]
+
+const AI_STATUS_CONFIG = {
+  pass:    { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f", icon: "✓" },
+  fail:    { color: "#ff4d4f", bg: "#fff2f0", border: "#ffccc7", icon: "✗" },
+  warning: { color: "#fa8c16", bg: "#fff7e6", border: "#ffd591", icon: "!" },
+}
+
+interface ChecklistSectionProps {
+  checkedItems: string[]
+  itemNotes: Record<string, string>
+  othersChecked: boolean
+  othersText: string
+  aiCheckItems?: AICheckItemResult[]
+  onToggleItem: (key: string, checked: boolean) => void
+  onNoteChange: (key: string, value: string) => void
+  onToggleOthers: (checked: boolean) => void
+  onOthersTextChange: (value: string) => void
+  label?: string
+}
+
+function ChecklistSection({
+  checkedItems,
+  itemNotes,
+  othersChecked,
+  othersText,
+  aiCheckItems,
+  onToggleItem,
+  onNoteChange,
+  onToggleOthers,
+  onOthersTextChange,
+  label = "SELECT CHECK ITEMS WITH ISSUES",
+}: ChecklistSectionProps) {
+  const aiMap = Object.fromEntries((aiCheckItems ?? []).map(i => [i.key, i]))
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
+      <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
+        {label}
+      </Text>
+      {CHECK_ITEMS.map((item, idx) => {
+        const isChecked = checkedItems.includes(item.key)
+        const ai = aiMap[item.key]
+        const cfg = ai ? AI_STATUS_CONFIG[ai.status] : null
+        return (
+          <div
+            key={item.key}
+            style={{
+              paddingTop: 10,
+              paddingBottom: 10,
+              borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+            }}
+          >
+            <Checkbox
+              checked={isChecked}
+              onChange={(e) => onToggleItem(item.key, e.target.checked)}
+            >
+              <Text style={{ fontSize: 13 }}>{item.label}</Text>
+            </Checkbox>
+
+            {/* AI feedback badge */}
+            {ai && (
+              <div style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 6,
+                marginTop: 5,
+                marginLeft: 24,
+                padding: "5px 8px",
+                background: cfg!.bg,
+                border: `1px solid ${cfg!.border}`,
+                borderRadius: 6,
+              }}>
+                <Text style={{ fontSize: 11, color: cfg!.color, fontWeight: 700, flexShrink: 0, lineHeight: "16px" }}>
+                  AI {ai.status.toUpperCase()}
+                </Text>
+                <Text style={{ fontSize: 11, color: "#595959", lineHeight: "16px" }}>
+                  {ai.feedback}
+                </Text>
+              </div>
+            )}
+
+            {/* User note — shown when item is checked */}
+            {isChecked && (
+              <Input.TextArea
+                placeholder="Add your note..."
+                rows={2}
+                value={itemNotes[item.key] || ""}
+                onChange={(e) => onNoteChange(item.key, e.target.value)}
+                style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+              />
+            )}
+          </div>
+        )
+      })}
+
+      {/* Others */}
+      <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
+        <Checkbox
+          checked={othersChecked}
+          onChange={(e) => onToggleOthers(e.target.checked)}
+        >
+          <Text style={{ fontSize: 13 }}>Others</Text>
+        </Checkbox>
+        {othersChecked && (
+          <Input.TextArea
+            placeholder="Please describe the issue..."
+            rows={2}
+            value={othersText}
+            onChange={(e) => onOthersTextChange(e.target.value)}
+            style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) {
   const riskRules = getRiskRulesByPR(pr)
@@ -916,78 +1032,83 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             }
             width={480}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
-              {CHECK_ITEMS.map((item, idx) => {
-                const isChecked = hrCheckedItems.includes(item.key)
-                return (
-                  <div
-                    key={item.key}
-                    style={{
-                      paddingTop: 10,
-                      paddingBottom: isChecked && hrModalType === 'reject' ? 12 : 10,
-                      borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
-                    }}
-                  >
+            {(() => {
+              const hrAiMap = Object.fromEntries((pr.aiReview?.checkItems ?? []).map(i => [i.key, i]))
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
+                  {CHECK_ITEMS.map((item, idx) => {
+                    const isChecked = hrCheckedItems.includes(item.key)
+                    const ai = hrAiMap[item.key]
+                    const cfg = ai ? AI_STATUS_CONFIG[ai.status] : null
+                    const showNote = (hrModalType === 'reject' && isChecked) || (hrModalType === 'approve' && !isChecked)
+                    return (
+                      <div
+                        key={item.key}
+                        style={{
+                          paddingTop: 10,
+                          paddingBottom: 10,
+                          borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+                        }}
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...hrCheckedItems, item.key]
+                              : hrCheckedItems.filter(k => k !== item.key)
+                            setHrCheckedItems(next)
+                            if (!e.target.checked) {
+                              const { [item.key]: _, ...rest } = hrItemNotes
+                              setHrItemNotes(rest)
+                            }
+                          }}
+                        >
+                          <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                        </Checkbox>
+                        {ai && cfg && (
+                          <div style={{
+                            display: "flex", alignItems: "flex-start", gap: 6,
+                            marginTop: 5, marginLeft: 24, padding: "5px 8px",
+                            background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 6,
+                          }}>
+                            <Text style={{ fontSize: 11, color: cfg.color, fontWeight: 700, flexShrink: 0, lineHeight: "16px" }}>
+                              AI {ai.status.toUpperCase()}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: "#595959", lineHeight: "16px" }}>{ai.feedback}</Text>
+                          </div>
+                        )}
+                        {showNote && (
+                          <Input.TextArea
+                            placeholder="Add your note..."
+                            rows={2}
+                            value={hrItemNotes[item.key] || ""}
+                            onChange={(e) => setHrItemNotes({ ...hrItemNotes, [item.key]: e.target.value })}
+                            style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                  <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
                     <Checkbox
-                      checked={isChecked}
-                      onChange={(e) => {
-                        const next = e.target.checked
-                          ? [...hrCheckedItems, item.key]
-                          : hrCheckedItems.filter(k => k !== item.key)
-                        setHrCheckedItems(next)
-                        if (!e.target.checked) {
-                          const { [item.key]: _, ...rest } = hrItemNotes
-                          setHrItemNotes(rest)
-                        }
-                      }}
+                      checked={hrOthersChecked}
+                      onChange={(e) => { setHrOthersChecked(e.target.checked); if (!e.target.checked) setHrOthersText("") }}
                     >
-                      <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                      <Text style={{ fontSize: 13 }}>Others</Text>
                     </Checkbox>
-                    {/* For reject: show note input when checked. For approve: show note when unchecked (issue flagged) */}
-                    {hrModalType === 'reject' && isChecked && (
+                    {hrOthersChecked && (
                       <Input.TextArea
-                        placeholder="Describe the specific issue..."
+                        placeholder="Please describe the issue..."
                         rows={2}
-                        value={hrItemNotes[item.key] || ""}
-                        onChange={(e) => setHrItemNotes({ ...hrItemNotes, [item.key]: e.target.value })}
-                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-                      />
-                    )}
-                    {hrModalType === 'approve' && !isChecked && (
-                      <Input.TextArea
-                        placeholder="Describe the issue with this item..."
-                        rows={2}
-                        value={hrItemNotes[item.key] || ""}
-                        onChange={(e) => setHrItemNotes({ ...hrItemNotes, [item.key]: e.target.value })}
-                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                        value={hrOthersText}
+                        onChange={(e) => setHrOthersText(e.target.value)}
+                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
                       />
                     )}
                   </div>
-                )
-              })}
-
-              {/* Others */}
-              <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
-                <Checkbox
-                  checked={hrOthersChecked}
-                  onChange={(e) => {
-                    setHrOthersChecked(e.target.checked)
-                    if (!e.target.checked) setHrOthersText("")
-                  }}
-                >
-                  <Text style={{ fontSize: 13 }}>Others</Text>
-                </Checkbox>
-                {hrOthersChecked && (
-                  <Input.TextArea
-                    placeholder="Please describe the issue..."
-                    rows={2}
-                    value={hrOthersText}
-                    onChange={(e) => setHrOthersText(e.target.value)}
-                    style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
-                  />
-                )}
-              </div>
-            </div>
+                </div>
+              )
+            })()}
           </Modal>
 
           {/* Feedback Modal — select which check items AI got wrong */}
@@ -1175,51 +1296,21 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
                 {/* Checklist — shown when option requires flagging items */}
                 {needsChecklist && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
-                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
-                      SELECT CHECK ITEMS WITH ISSUES
-                    </Text>
-                    {CHECK_ITEMS.map((item, idx) => {
-                      const isChecked = checkedItems.includes(item.key)
-                      return (
-                        <div key={item.key} style={{ paddingTop: 10, paddingBottom: isChecked ? 12 : 10, borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none" }}>
-                          <Checkbox
-                            checked={isChecked}
-                            onChange={(e) => {
-                              const next = e.target.checked ? [...checkedItems, item.key] : checkedItems.filter(k => k !== item.key)
-                              setCheckedItems(next)
-                              if (!e.target.checked) { const { [item.key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                            }}
-                          >
-                            <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                          </Checkbox>
-                          {isChecked && (
-                            <Input.TextArea
-                              placeholder="Describe the specific issue..."
-                              rows={2}
-                              value={itemNotes[item.key] || ""}
-                              onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
-                              style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-                            />
-                          )}
-                        </div>
-                      )
-                    })}
-                    <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
-                      <Checkbox checked={othersChecked} onChange={(e) => { setOthersChecked(e.target.checked); if (!e.target.checked) setOthersText("") }}>
-                        <Text style={{ fontSize: 13 }}>Others</Text>
-                      </Checkbox>
-                      {othersChecked && (
-                        <Input.TextArea
-                          placeholder="Please describe the issue..."
-                          rows={2}
-                          value={othersText}
-                          onChange={(e) => setOthersText(e.target.value)}
-                          style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
-                        />
-                      )}
-                    </div>
-                  </div>
+                  <ChecklistSection
+                    checkedItems={checkedItems}
+                    itemNotes={itemNotes}
+                    othersChecked={othersChecked}
+                    othersText={othersText}
+                    aiCheckItems={pr.aiReview?.checkItems}
+                    onToggleItem={(key, checked) => {
+                      const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                      setCheckedItems(next)
+                      if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
+                    }}
+                    onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
+                    onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                    onOthersTextChange={setOthersText}
+                  />
                 )}
               </div>
             ) : pendingAction === 'Accept' ? (
@@ -1317,133 +1408,40 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
                 {/* Checklist — only shown when "yes with feedback" selected */}
                 {acceptInvoiceChoice === 'yes-feedback' && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
-                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
-                      SELECT CHECK ITEMS WITH ISSUES
-                    </Text>
-                    {CHECK_ITEMS.map((item, idx) => {
-                      const isChecked = checkedItems.includes(item.key)
-                      return (
-                        <div
-                          key={item.key}
-                          style={{
-                            paddingTop: 10,
-                            paddingBottom: isChecked ? 12 : 10,
-                            borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
-                          }}
-                        >
-                          <Checkbox
-                            checked={isChecked}
-                            onChange={(e) => {
-                              const next = e.target.checked
-                                ? [...checkedItems, item.key]
-                                : checkedItems.filter((k) => k !== item.key)
-                              setCheckedItems(next)
-                              if (!e.target.checked) {
-                                const { [item.key]: _, ...rest } = itemNotes
-                                setItemNotes(rest)
-                              }
-                            }}
-                          >
-                            <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                          </Checkbox>
-                          {isChecked && (
-                            <Input.TextArea
-                              placeholder="Describe the specific issue..."
-                              rows={2}
-                              value={itemNotes[item.key] || ""}
-                              onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
-                              style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-                            />
-                          )}
-                        </div>
-                      )
-                    })}
-                    <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
-                      <Checkbox
-                        checked={othersChecked}
-                        onChange={(e) => {
-                          setOthersChecked(e.target.checked)
-                          if (!e.target.checked) setOthersText("")
-                        }}
-                      >
-                        <Text style={{ fontSize: 13 }}>Others</Text>
-                      </Checkbox>
-                      {othersChecked && (
-                        <Input.TextArea
-                          placeholder="Please describe the issue..."
-                          rows={2}
-                          value={othersText}
-                          onChange={(e) => setOthersText(e.target.value)}
-                          style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
-                        />
-                      )}
-                    </div>
-                  </div>
+                  <ChecklistSection
+                    checkedItems={checkedItems}
+                    itemNotes={itemNotes}
+                    othersChecked={othersChecked}
+                    othersText={othersText}
+                    aiCheckItems={pr.aiReview?.checkItems}
+                    onToggleItem={(key, checked) => {
+                      const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                      setCheckedItems(next)
+                      if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
+                    }}
+                    onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
+                    onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                    onOthersTextChange={setOthersText}
+                  />
                 )}
               </div>
             ) : (
-              /* Accept with feedback / Not Accept but Good Alert — original checklist */
-              <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
-                {CHECK_ITEMS.map((item, idx) => {
-                  const isChecked = checkedItems.includes(item.key)
-                  return (
-                    <div
-                      key={item.key}
-                      style={{
-                        paddingTop: 10,
-                        paddingBottom: isChecked ? 12 : 10,
-                        borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
-                      }}
-                    >
-                      <Checkbox
-                        checked={isChecked}
-                        onChange={(e) => {
-                          const next = e.target.checked
-                            ? [...checkedItems, item.key]
-                            : checkedItems.filter((k) => k !== item.key)
-                          setCheckedItems(next)
-                          if (!e.target.checked) {
-                            const { [item.key]: _, ...rest } = itemNotes
-                            setItemNotes(rest)
-                          }
-                        }}
-                      >
-                        <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                      </Checkbox>
-                      {isChecked && (
-                        <Input.TextArea
-                          placeholder="Describe the specific issue..."
-                          rows={2}
-                          value={itemNotes[item.key] || ""}
-                          onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
-                          style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-                        />
-                      )}
-                    </div>
-                  )
-                })}
-                <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
-                  <Checkbox
-                    checked={othersChecked}
-                    onChange={(e) => {
-                      setOthersChecked(e.target.checked)
-                      if (!e.target.checked) setOthersText("")
-                    }}
-                  >
-                    <Text style={{ fontSize: 13 }}>Others</Text>
-                  </Checkbox>
-                  {othersChecked && (
-                    <Input.TextArea
-                      placeholder="Please describe the issue..."
-                      rows={2}
-                      value={othersText}
-                      onChange={(e) => setOthersText(e.target.value)}
-                      style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
-                    />
-                  )}
-                </div>
-              </div>
+              /* fallback — original checklist */
+              <ChecklistSection
+                checkedItems={checkedItems}
+                itemNotes={itemNotes}
+                othersChecked={othersChecked}
+                othersText={othersText}
+                aiCheckItems={pr.aiReview?.checkItems}
+                onToggleItem={(key, checked) => {
+                  const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                  setCheckedItems(next)
+                  if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
+                }}
+                onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
+                onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                onOthersTextChange={setOthersText}
+              />
             )}
           </Modal>
         </Col>

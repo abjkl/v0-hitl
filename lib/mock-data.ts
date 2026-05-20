@@ -1805,11 +1805,18 @@ export interface PRAttachment {
 // AI Review Result Types
 export type AIReviewResult = 'Approve' | 'Reject' | 'Require Human Review' | 'Cannot Provide Decision'
 
+export interface AICheckItemResult {
+  key: string           // matches CHECK_ITEMS key in payment-request-detail
+  status: 'pass' | 'fail' | 'warning'
+  feedback: string
+}
+
 export interface AIReviewInfo {
   result: AIReviewResult
   confidence: number
   message: string
   timestamp: string
+  checkItems?: AICheckItemResult[]
 }
 
 export interface PurchaseRequest {
@@ -1969,6 +1976,18 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
       confidence: 0.63,
       message: 'Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%)',
       timestamp: '2026-05-20 12:03:06',
+      checkItems: [
+        { key: 'doc_title', status: 'pass', feedback: 'Document title matches the purchase order reference.' },
+        { key: 'atp', status: 'fail', feedback: 'Invoice does not include required ATP regulatory compliance stamp. Missing BIR authority to print notation.' },
+        { key: 'invoice_date', status: 'pass', feedback: 'Invoice date 2026-04-20 is within the acceptable 90-day submission window.' },
+        { key: 'invoice_number', status: 'fail', feedback: 'Invoice number INV-2026-0042 does not match the PA entry INV-2026-042A recorded in the system.' },
+        { key: 'billing_name', status: 'pass', feedback: 'Billing name "John Smith" matches the entity information on record.' },
+        { key: 'billing_address', status: 'warning', feedback: 'Billing address contains abbreviation "SG" — could not fully verify against entity master. Manual check recommended.' },
+        { key: 'billing_tin', status: 'pass', feedback: 'TIN matches entity info on record.' },
+        { key: 'supplier_name', status: 'fail', feedback: 'Supplier name "Tech Solutions Inc." does not match PO record "Tech Solutions Incorporated". Possible name discrepancy.' },
+        { key: 'total_tax', status: 'fail', feedback: 'Total after tax (USD 9,000) does not equal the submission amount (USD 9,180). Discrepancy of USD 180.' },
+        { key: 'total_vat', status: 'fail', feedback: 'Total after tax (USD 9,000) does not equal net amount plus 12% VAT (USD 8,035.71 × 1.12 = USD 9,000.00). Calculation mismatch detected.' },
+      ],
     },
   },
   {
@@ -2004,6 +2023,18 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
       confidence: 0.98,
       message: 'All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed.',
       timestamp: '2026-05-19 10:15:30',
+      checkItems: [
+        { key: 'doc_title', status: 'pass', feedback: 'Document title matches the purchase order reference.' },
+        { key: 'atp', status: 'pass', feedback: 'ATP regulatory compliance stamp present and valid.' },
+        { key: 'invoice_date', status: 'pass', feedback: 'Invoice date is within the acceptable submission window.' },
+        { key: 'invoice_number', status: 'pass', feedback: 'Invoice number matches PA entry exactly.' },
+        { key: 'billing_name', status: 'pass', feedback: 'Billing name matches entity information on record.' },
+        { key: 'billing_address', status: 'pass', feedback: 'Billing address verified against entity master.' },
+        { key: 'billing_tin', status: 'pass', feedback: 'TIN matches entity info on record.' },
+        { key: 'supplier_name', status: 'pass', feedback: 'Supplier name matches PO record exactly.' },
+        { key: 'total_tax', status: 'pass', feedback: 'Total after tax equals submission amount.' },
+        { key: 'total_vat', status: 'pass', feedback: 'Total after tax equals net plus 12% VAT as expected.' },
+      ],
     },
   },
   {
