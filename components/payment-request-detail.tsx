@@ -88,6 +88,36 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
   )
 
+  // Human Review state
+  const [hrModalOpen, setHrModalOpen] = useState(false)
+  const [hrModalType, setHrModalType] = useState<'approve' | 'reject' | null>(null)
+  const [hrCheckedItems, setHrCheckedItems] = useState<string[]>([])
+  const [hrItemNotes, setHrItemNotes] = useState<Record<string, string>>({})
+  const [hrOthersChecked, setHrOthersChecked] = useState(false)
+  const [hrOthersText, setHrOthersText] = useState("")
+  const [hrSubmitted, setHrSubmitted] = useState(false)
+
+  const openHrModal = (type: 'approve' | 'reject') => {
+    setHrModalType(type)
+    setHrCheckedItems(type === 'approve' ? CHECK_ITEMS.map(i => i.key) : [])
+    setHrItemNotes({})
+    setHrOthersChecked(false)
+    setHrOthersText("")
+    setHrModalOpen(true)
+  }
+
+  const handleHrConfirm = () => {
+    setHrSubmitted(true)
+    setHrModalOpen(false)
+  }
+
+  const isHrConfirmDisabled =
+    hrModalType === 'reject' &&
+    (
+      (hrCheckedItems.length === 0 && !hrOthersChecked) ||
+      (hrOthersChecked && !hrOthersText.trim())
+    )
+
   const mockConfig: Record<AIReviewResult, { confidence: number; message: string; timestamp: string }> = {
     'Approve': {
       confidence: 0.98,
@@ -803,6 +833,149 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               </div>
             </div>
           </Card>
+
+          {/* Human Review Card */}
+          <Card
+            title="Human Review"
+            size="small"
+            style={{ borderRadius: 8 }}
+          >
+            {hrSubmitted ? (
+              <div style={{
+                padding: "12px 16px",
+                background: hrModalType === 'approve' ? "#f6ffed" : "#fff2f0",
+                border: `1px solid ${hrModalType === 'approve' ? "#b7eb8f" : "#ffccc7"}`,
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}>
+                {hrModalType === 'approve'
+                  ? <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                  : <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 16 }} />
+                }
+                <Text style={{ fontSize: 13, color: hrModalType === 'approve' ? "#389e0d" : "#cf1322", fontWeight: 500 }}>
+                  {hrModalType === 'approve' ? 'Approved' : 'Rejected'}
+                </Text>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button
+                  type="primary"
+                  style={{ flex: 1, borderRadius: 6 }}
+                  onClick={() => openHrModal('approve')}
+                  icon={<CheckCircleOutlined />}
+                >
+                  Approve
+                </Button>
+                <Button
+                  danger
+                  style={{ flex: 1, borderRadius: 6 }}
+                  onClick={() => openHrModal('reject')}
+                  icon={<CloseCircleOutlined />}
+                >
+                  Reject
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          {/* Human Review Modal */}
+          <Modal
+            open={hrModalOpen}
+            onCancel={() => setHrModalOpen(false)}
+            onOk={handleHrConfirm}
+            okText="Confirm"
+            cancelText="Cancel"
+            okButtonProps={{ disabled: isHrConfirmDisabled, danger: hrModalType === 'reject' }}
+            title={
+              <div>
+                <Text strong style={{ fontSize: 15 }}>
+                  {hrModalType === 'approve' ? 'Approve' : 'Reject'}
+                </Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
+                  {hrModalType === 'approve'
+                    ? 'All check items are confirmed. You may uncheck any items with issues.'
+                    : 'Select the check items that have issues.'}
+                </Text>
+              </div>
+            }
+            width={480}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
+              {CHECK_ITEMS.map((item, idx) => {
+                const isChecked = hrCheckedItems.includes(item.key)
+                return (
+                  <div
+                    key={item.key}
+                    style={{
+                      paddingTop: 10,
+                      paddingBottom: isChecked && hrModalType === 'reject' ? 12 : 10,
+                      borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+                    }}
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const next = e.target.checked
+                          ? [...hrCheckedItems, item.key]
+                          : hrCheckedItems.filter(k => k !== item.key)
+                        setHrCheckedItems(next)
+                        if (!e.target.checked) {
+                          const { [item.key]: _, ...rest } = hrItemNotes
+                          setHrItemNotes(rest)
+                        }
+                      }}
+                    >
+                      <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                    </Checkbox>
+                    {/* For reject: show note input when checked. For approve: show note when unchecked (issue flagged) */}
+                    {hrModalType === 'reject' && isChecked && (
+                      <Input.TextArea
+                        placeholder="Describe the specific issue..."
+                        rows={2}
+                        value={hrItemNotes[item.key] || ""}
+                        onChange={(e) => setHrItemNotes({ ...hrItemNotes, [item.key]: e.target.value })}
+                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                      />
+                    )}
+                    {hrModalType === 'approve' && !isChecked && (
+                      <Input.TextArea
+                        placeholder="Describe the issue with this item..."
+                        rows={2}
+                        value={hrItemNotes[item.key] || ""}
+                        onChange={(e) => setHrItemNotes({ ...hrItemNotes, [item.key]: e.target.value })}
+                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                      />
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Others */}
+              <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
+                <Checkbox
+                  checked={hrOthersChecked}
+                  onChange={(e) => {
+                    setHrOthersChecked(e.target.checked)
+                    if (!e.target.checked) setHrOthersText("")
+                  }}
+                >
+                  <Text style={{ fontSize: 13 }}>Others</Text>
+                </Checkbox>
+                {hrOthersChecked && (
+                  <Input.TextArea
+                    placeholder="Please describe the issue..."
+                    rows={2}
+                    value={hrOthersText}
+                    onChange={(e) => setHrOthersText(e.target.value)}
+                    style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
+                  />
+                )}
+              </div>
+            </div>
+          </Modal>
 
           {/* Feedback Modal — select which check items AI got wrong */}
           <Modal
