@@ -672,7 +672,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   options={[
                     { label: "Approve", value: "Approve" },
                     { label: "Reject", value: "Reject" },
-                    { label: "Human Review", value: "Require Human Review" },
+                    { label: "AI Warning", value: "Require Human Review" },
                     { label: "No Decision", value: "Cannot Provide Decision" },
                   ]}
                   style={{ width: "100%" }}
@@ -707,7 +707,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Human Review",
+                    label: "AI Warning",
                   },
                   'Cannot Provide Decision': {
                     icon: <QuestionCircleOutlined style={{ fontSize: 20, color: "#8c8c8c" }} />,
@@ -1008,7 +1008,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
           {/* Human Review Card */}
           <Card
-            title="Human Review"
+            title="AI Warning"
             size="small"
             style={{ borderRadius: 8 }}
           >
