@@ -16,6 +16,8 @@ import {
   Col,
   Input,
   Segmented,
+  Modal,
+  Checkbox,
 } from "antd"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -58,11 +60,29 @@ interface PaymentRequestDetailProps {
 
 type UserAction = 'Accept' | 'Accept with feedback' | 'Not Accept' | 'Not Accept with feedback' | null
 
+const CHECK_ITEMS = [
+  { key: "doc_title", label: "Document title" },
+  { key: "atp", label: "Invoice Regulatory Compliance (ATP)" },
+  { key: "invoice_date", label: "Invoice date match and range" },
+  { key: "invoice_number", label: "Invoice number match PA entry" },
+  { key: "billing_name", label: "Billing name match (Entity Info)" },
+  { key: "billing_address", label: "Billing address match (Entity Info)" },
+  { key: "billing_tin", label: "Billing TIN match (Entity Info)" },
+  { key: "supplier_name", label: "Supplier name match (PO)" },
+  { key: "total_tax", label: "Total after tax equals submission amount" },
+  { key: "total_vat", label: "Total after tax equals net plus VAT (12%)" },
+]
+
 export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) {
   const riskRules = getRiskRulesByPR(pr)
   const [selectedAction, setSelectedAction] = useState<UserAction>(null)
   const [feedback, setFeedback] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<UserAction>(null)
+  const [checkedItems, setCheckedItems] = useState<string[]>([])
+  const [othersChecked, setOthersChecked] = useState(false)
+  const [othersText, setOthersText] = useState("")
   const [mockResult, setMockResult] = useState<AIReviewResult>(
     pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
   )
@@ -101,11 +121,42 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setSelectedAction(null)
     setFeedback("")
     setSubmitted(false)
+    setModalOpen(false)
+    setPendingAction(null)
+    setCheckedItems([])
+    setOthersChecked(false)
+    setOthersText("")
+  }
+
+  const handleActionClick = (action: UserAction) => {
+    if (action === 'Accept with feedback' || action === 'Not Accept with feedback') {
+      setPendingAction(action)
+      setCheckedItems([])
+      setOthersChecked(false)
+      setOthersText("")
+      setModalOpen(true)
+    } else {
+      setSelectedAction(action)
+    }
+  }
+
+  const handleModalConfirm = () => {
+    setSelectedAction(pendingAction)
+    setModalOpen(false)
+  }
+
+  const handleModalCancel = () => {
+    setModalOpen(false)
+    setPendingAction(null)
   }
 
   const handleSubmit = () => {
     setSubmitted(true)
   }
+
+  const isModalConfirmDisabled =
+    checkedItems.length === 0 && !othersChecked ||
+    (othersChecked && !othersText.trim())
 
   const itemColumns: ColumnsType<PRItem> = [
     {
@@ -635,11 +686,12 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     {(["Accept", "Accept with feedback", "Not Accept", "Not Accept with feedback"] as UserAction[]).map((action) => {
                       const isAccept = action === "Accept" || action === "Accept with feedback"
                       const isSelected = selectedAction === action
+                      const hasFeedback = action === "Accept with feedback" || action === "Not Accept with feedback"
                       return (
                         <Button
                           key={action}
                           size="small"
-                          onClick={() => setSelectedAction(isSelected ? null : action)}
+                          onClick={() => hasFeedback ? handleActionClick(action) : setSelectedAction(isSelected ? null : action)}
                           style={{
                             borderRadius: 6,
                             fontSize: 12,
@@ -666,10 +718,27 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     })}
                   </div>
 
-                  {showFeedbackInput && (
+                  {/* After modal confirm, show a summary of selected issues + optional extra feedback */}
+                  {selectedAction && showFeedbackInput && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+                      {/* Summary chips of what was flagged in modal */}
+                      {(checkedItems.length > 0 || othersChecked) && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {checkedItems.map((key) => {
+                            const item = CHECK_ITEMS.find((c) => c.key === key)
+                            return item ? (
+                              <Tag key={key} color="orange" style={{ fontSize: 11, margin: 0 }}>
+                                {item.label}
+                              </Tag>
+                            ) : null
+                          })}
+                          {othersChecked && othersText && (
+                            <Tag color="orange" style={{ fontSize: 11, margin: 0 }}>Others: {othersText}</Tag>
+                          )}
+                        </div>
+                      )}
                       <Input.TextArea
-                        placeholder="Add your feedback here..."
+                        placeholder="Add additional comments (optional)..."
                         rows={3}
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
@@ -678,7 +747,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       <Button
                         type="primary"
                         size="small"
-                        disabled={!selectedAction || !feedback.trim()}
                         onClick={handleSubmit}
                         style={{ alignSelf: "flex-end", borderRadius: 6 }}
                       >
@@ -722,6 +790,75 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               )}
             </div>
           </Card>
+
+          {/* Feedback Modal — select which check items AI got wrong */}
+          <Modal
+            open={modalOpen}
+            onCancel={handleModalCancel}
+            onOk={handleModalConfirm}
+            okText="Confirm"
+            cancelText="Cancel"
+            okButtonProps={{ disabled: isModalConfirmDisabled }}
+            title={
+              <div>
+                <Text strong style={{ fontSize: 15 }}>
+                  {pendingAction === 'Accept with feedback' ? 'Accept with Feedback' : 'Not Accept with Feedback'}
+                </Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
+                  Select the check items you believe AI judged incorrectly
+                </Text>
+              </div>
+            }
+            width={480}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
+              {CHECK_ITEMS.map((item, idx) => (
+                <div
+                  key={item.key}
+                  style={{
+                    padding: "10px 0",
+                    borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+                  }}
+                >
+                  <Checkbox
+                    checked={checkedItems.includes(item.key)}
+                    onChange={(e) => {
+                      setCheckedItems(
+                        e.target.checked
+                          ? [...checkedItems, item.key]
+                          : checkedItems.filter((k) => k !== item.key)
+                      )
+                    }}
+                  >
+                    <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                  </Checkbox>
+                </div>
+              ))}
+
+              {/* Others option */}
+              <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
+                <Checkbox
+                  checked={othersChecked}
+                  onChange={(e) => {
+                    setOthersChecked(e.target.checked)
+                    if (!e.target.checked) setOthersText("")
+                  }}
+                >
+                  <Text style={{ fontSize: 13 }}>Others</Text>
+                </Checkbox>
+                {othersChecked && (
+                  <Input.TextArea
+                    placeholder="Please describe the issue..."
+                    rows={2}
+                    value={othersText}
+                    onChange={(e) => setOthersText(e.target.value)}
+                    style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
+                  />
+                )}
+              </div>
+            </div>
+          </Modal>
         </Col>
       </Row>
     </div>
