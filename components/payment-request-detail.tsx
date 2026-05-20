@@ -24,11 +24,14 @@ import {
   InfoCircleOutlined,
   LeftOutlined,
   RightOutlined,
+  ExclamationCircleOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons"
 import {
   type PurchaseRequest,
   type PRItem,
   type PRStatus,
+  type AIReviewResult,
   formatPRCurrency,
   getRiskRulesByPR,
   riskRulesDefinition,
@@ -370,37 +373,73 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             extra={<Button type="text">Parsing Invoice Retry</Button>}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Risk Status */}
-              {pr.isRisk && pr.riskRules.length > 0 ? (
-                <div style={{ padding: 16, background: "#fff2f0", borderRadius: 8, border: "1px solid #ffccc7" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <CloseCircleOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />
-                    <Title level={4} style={{ margin: 0, color: "#cf1322" }}>
-                      Reject
-                    </Title>
-                    <Text style={{ fontSize: 12, color: "#666" }}>0.63 / 1</Text>
+              {/* AI Review Result Status */}
+              {(() => {
+                const aiReview = pr.aiReview
+                const result = aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
+                const confidence = aiReview?.confidence || (pr.isRisk ? 0.63 : 0.98)
+                const message = aiReview?.message || (pr.isRisk 
+                  ? 'Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%)'
+                  : 'All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed')
+                const timestamp = aiReview?.timestamp || new Date().toLocaleString()
+
+                const resultConfig: Record<AIReviewResult, { 
+                  icon: React.ReactNode
+                  bg: string
+                  border: string
+                  titleColor: string
+                  label: string
+                }> = {
+                  'Approve': {
+                    icon: <CheckCircleOutlined style={{ fontSize: 20, color: "#52c41a" }} />,
+                    bg: "#f6ffed",
+                    border: "1px solid #b7eb8f",
+                    titleColor: "#389e0d",
+                    label: "Approve",
+                  },
+                  'Reject': {
+                    icon: <CloseCircleOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />,
+                    bg: "#fff2f0",
+                    border: "1px solid #ffccc7",
+                    titleColor: "#cf1322",
+                    label: "Reject",
+                  },
+                  'Require Human Review': {
+                    icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+                    bg: "#fff7e6",
+                    border: "1px solid #ffd591",
+                    titleColor: "#d46b08",
+                    label: "Require Human Review",
+                  },
+                  'Cannot Provide Decision': {
+                    icon: <QuestionCircleOutlined style={{ fontSize: 20, color: "#8c8c8c" }} />,
+                    bg: "#fafafa",
+                    border: "1px solid #d9d9d9",
+                    titleColor: "#595959",
+                    label: "Cannot Provide Decision",
+                  },
+                }
+
+                const config = resultConfig[result]
+
+                return (
+                  <div style={{ padding: 16, background: config.bg, borderRadius: 8, border: config.border }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      {config.icon}
+                      <Title level={4} style={{ margin: 0, color: config.titleColor }}>
+                        {config.label}
+                      </Title>
+                      <Text style={{ fontSize: 12, color: "#666" }}>{confidence.toFixed(2)} / 1</Text>
+                    </div>
+                    <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
+                      {message}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 11, display: "block" }}>
+                      {timestamp}
+                    </Text>
                   </div>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
-                    Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%)
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: 11, display: "block" }}>
-                    {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
-                  </Text>
-                </div>
-              ) : (
-                <div style={{ padding: 16, background: "#f6ffed", borderRadius: 8, border: "1px solid #b7eb8f" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <CheckCircleOutlined style={{ fontSize: 20, color: "#52c41a" }} />
-                    <Title level={4} style={{ margin: 0, color: "#389e0d" }}>
-                      Pass
-                    </Title>
-                    <Text style={{ fontSize: 12, color: "#666" }}>0.98 / 1</Text>
-                  </div>
-                  <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-                    All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed
-                  </Text>
-                </div>
-              )}
+                )
+              })()}
 
               <Divider style={{ margin: 0 }} />
 
@@ -408,7 +447,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                   <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 600 }}>0.48 / 1</Text>
+                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{(pr.aiReview?.confidence || 0.48).toFixed(2)} / 1</Text>
                 </div>
                 <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
               </div>

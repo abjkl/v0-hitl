@@ -1802,6 +1802,16 @@ export interface PRAttachment {
   uploadedBy: string
 }
 
+// AI Review Result Types
+export type AIReviewResult = 'Approve' | 'Reject' | 'Require Human Review' | 'Cannot Provide Decision'
+
+export interface AIReviewInfo {
+  result: AIReviewResult
+  confidence: number
+  message: string
+  timestamp: string
+}
+
 export interface PurchaseRequest {
   id: string
   prNumber: string
@@ -1825,6 +1835,7 @@ export interface PurchaseRequest {
   approver: string
   approverEmail: string
   urgency: 'Low' | 'Medium' | 'High' | 'Critical'
+  aiReview?: AIReviewInfo
 }
 
 // Risk Rules Definition based on Risk Layer Check Parameters
@@ -1953,6 +1964,12 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Sarah Johnson',
     approverEmail: 'sarah.johnson@company.com',
     urgency: 'High',
+    aiReview: {
+      result: 'Reject',
+      confidence: 0.63,
+      message: 'Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%)',
+      timestamp: '2026-05-20 12:03:06',
+    },
   },
   {
     id: '2',
@@ -1982,6 +1999,12 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Michael Brown',
     approverEmail: 'michael.brown@company.com',
     urgency: 'Medium',
+    aiReview: {
+      result: 'Approve',
+      confidence: 0.98,
+      message: 'All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed.',
+      timestamp: '2026-05-19 10:15:30',
+    },
   },
   {
     id: '3',
@@ -2012,6 +2035,12 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Lisa Anderson',
     approverEmail: 'lisa.anderson@company.com',
     urgency: 'Critical',
+    aiReview: {
+      result: 'Require Human Review',
+      confidence: 0.55,
+      message: 'Confidence level below threshold. Multiple conflicting signals detected. Manual review required for: Amount verification, Vendor validation.',
+      timestamp: '2026-05-18 14:22:45',
+    },
   },
   {
     id: '4',
@@ -2039,6 +2068,12 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Robert Taylor',
     approverEmail: 'robert.taylor@company.com',
     urgency: 'Low',
+    aiReview: {
+      result: 'Approve',
+      confidence: 0.95,
+      message: 'All validation checks passed successfully.',
+      timestamp: '2026-05-17 09:30:00',
+    },
   },
   {
     id: '5',
@@ -2067,6 +2102,12 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Sarah Johnson',
     approverEmail: 'sarah.johnson@company.com',
     urgency: 'High',
+    aiReview: {
+      result: 'Cannot Provide Decision',
+      confidence: 0.32,
+      message: 'Unable to process: Missing critical invoice data. Document quality too low for OCR. Please re-upload with clearer image quality.',
+      timestamp: '2026-05-16 16:45:12',
+    },
   },
   {
     id: '6',
