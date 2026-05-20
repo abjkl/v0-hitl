@@ -84,6 +84,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({})
   const [othersChecked, setOthersChecked] = useState(false)
   const [othersText, setOthersText] = useState("")
+  const [acceptInvoiceChoice, setAcceptInvoiceChoice] = useState<'yes' | 'yes-feedback' | null>(null)
   const [mockResult, setMockResult] = useState<AIReviewResult>(
     pr.aiReview?.result || (pr.isRisk ? 'Reject' : 'Approve')
   )
@@ -158,6 +159,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setItemNotes({})
     setOthersChecked(false)
     setOthersText("")
+    setAcceptInvoiceChoice(null)
   }
 
   const handleActionClick = (action: UserAction) => {
@@ -171,6 +173,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       setItemNotes({})
       setOthersChecked(false)
       setOthersText("")
+      setAcceptInvoiceChoice(null)
       setModalOpen(true)
     } else {
       setSelectedAction(action)
@@ -191,14 +194,20 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setSubmitted(true)
   }
 
-  // For 'Accept', feedback is optional — Confirm is always enabled
-  // For 'Accept with feedback' / 'Not Accept but Good Alert', at least one item must be selected
-  const isModalConfirmDisabled =
-    pendingAction !== 'Accept' &&
-    (
-      (checkedItems.length === 0 && !othersChecked) ||
+  // For 'Accept': must choose Yes or Yes with feedback; if yes-feedback, checklist rules apply
+  // For 'Accept with feedback' / 'Not Accept but Good Alert': at least one item must be selected
+  const isModalConfirmDisabled = (() => {
+    if (pendingAction === 'Accept') {
+      if (!acceptInvoiceChoice) return true
+      if (acceptInvoiceChoice === 'yes-feedback') {
+        return (checkedItems.length === 0 && !othersChecked) ||
+          (othersChecked && !othersText.trim())
+      }
+      return false
+    }
+    return (checkedItems.length === 0 && !othersChecked) ||
       (othersChecked && !othersText.trim())
-    )
+  })()
 
   const itemColumns: ColumnsType<PRItem> = [
     {
@@ -993,75 +1002,236 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                   {pendingAction === 'Accept'
-                    ? 'Do you have any feedback on the AI review? (optional)'
+                    ? 'Review the AI conclusion on this invoice'
                     : 'Select the check items you believe AI judged incorrectly'}
                 </Text>
               </div>
             }
             width={480}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
-              {CHECK_ITEMS.map((item, idx) => {
-                const isChecked = checkedItems.includes(item.key)
-                return (
-                  <div
-                    key={item.key}
-                    style={{
-                      paddingTop: 10,
-                      paddingBottom: isChecked ? 12 : 10,
-                      borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
-                    }}
-                  >
-                    <Checkbox
-                      checked={isChecked}
-                      onChange={(e) => {
-                        const next = e.target.checked
-                          ? [...checkedItems, item.key]
-                          : checkedItems.filter((k) => k !== item.key)
-                        setCheckedItems(next)
-                        if (!e.target.checked) {
-                          const { [item.key]: _, ...rest } = itemNotes
-                          setItemNotes(rest)
-                        }
-                      }}
-                    >
-                      <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                    </Checkbox>
-                    {isChecked && (
-                      <Input.TextArea
-                        placeholder="Describe the specific issue..."
-                        rows={2}
-                        value={itemNotes[item.key] || ""}
-                        onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
-                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-                      />
-                    )}
+            {pendingAction === 'Accept' ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
+                {/* AI conclusion display */}
+                <div style={{
+                  padding: "12px 14px",
+                  background: mockResult === 'Approve' ? "#f6ffed" : mockResult === 'Reject' ? "#fff2f0" : "#fff7e6",
+                  border: `1px solid ${mockResult === 'Approve' ? "#b7eb8f" : mockResult === 'Reject' ? "#ffccc7" : "#ffd591"}`,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}>
+                  {mockResult === 'Approve'
+                    ? <CheckCircleOutlined style={{ fontSize: 18, color: "#52c41a" }} />
+                    : mockResult === 'Reject'
+                    ? <CloseCircleOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
+                    : <ExclamationCircleOutlined style={{ fontSize: 18, color: "#fa8c16" }} />
+                  }
+                  <div>
+                    <Text style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: mockResult === 'Approve' ? "#389e0d" : mockResult === 'Reject' ? "#cf1322" : "#d46b08",
+                    }}>
+                      AI Decision: {mockResult}
+                    </Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Do you agree with this conclusion on the invoice?
+                    </Text>
                   </div>
-                )
-              })}
+                </div>
 
-              {/* Others option */}
-              <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
-                <Checkbox
-                  checked={othersChecked}
-                  onChange={(e) => {
-                    setOthersChecked(e.target.checked)
-                    if (!e.target.checked) setOthersText("")
-                  }}
-                >
-                  <Text style={{ fontSize: 13 }}>Others</Text>
-                </Checkbox>
-                {othersChecked && (
-                  <Input.TextArea
-                    placeholder="Please describe the issue..."
-                    rows={2}
-                    value={othersText}
-                    onChange={(e) => setOthersText(e.target.value)}
-                    style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
-                  />
+                {/* Yes / Yes with feedback choice */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {(['yes', 'yes-feedback'] as const).map((choice) => {
+                    const isSelected = acceptInvoiceChoice === choice
+                    return (
+                      <div
+                        key={choice}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
+                        onClick={() => {
+                          setAcceptInvoiceChoice(choice)
+                          if (choice === 'yes') {
+                            setCheckedItems([])
+                            setItemNotes({})
+                            setOthersChecked(false)
+                            setOthersText("")
+                          }
+                        }}
+                        style={{
+                          padding: "10px 14px",
+                          border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                          borderRadius: 8,
+                          background: isSelected ? "#e6f4ff" : "#fff",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
+                          background: isSelected ? "#1677ff" : "#fff",
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}>
+                          {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
+                        </div>
+                        <div>
+                          <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>
+                            {choice === 'yes' ? 'Yes' : 'Yes with feedback'}
+                          </Text>
+                          <br />
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {choice === 'yes'
+                              ? 'I agree with the AI conclusion'
+                              : 'I agree, but want to flag specific check items'}
+                          </Text>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Checklist — only shown when "yes with feedback" selected */}
+                {acceptInvoiceChoice === 'yes-feedback' && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
+                    <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
+                      SELECT CHECK ITEMS WITH ISSUES
+                    </Text>
+                    {CHECK_ITEMS.map((item, idx) => {
+                      const isChecked = checkedItems.includes(item.key)
+                      return (
+                        <div
+                          key={item.key}
+                          style={{
+                            paddingTop: 10,
+                            paddingBottom: isChecked ? 12 : 10,
+                            borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+                          }}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...checkedItems, item.key]
+                                : checkedItems.filter((k) => k !== item.key)
+                              setCheckedItems(next)
+                              if (!e.target.checked) {
+                                const { [item.key]: _, ...rest } = itemNotes
+                                setItemNotes(rest)
+                              }
+                            }}
+                          >
+                            <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                          </Checkbox>
+                          {isChecked && (
+                            <Input.TextArea
+                              placeholder="Describe the specific issue..."
+                              rows={2}
+                              value={itemNotes[item.key] || ""}
+                              onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
+                              style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                            />
+                          )}
+                        </div>
+                      )
+                    })}
+                    <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
+                      <Checkbox
+                        checked={othersChecked}
+                        onChange={(e) => {
+                          setOthersChecked(e.target.checked)
+                          if (!e.target.checked) setOthersText("")
+                        }}
+                      >
+                        <Text style={{ fontSize: 13 }}>Others</Text>
+                      </Checkbox>
+                      {othersChecked && (
+                        <Input.TextArea
+                          placeholder="Please describe the issue..."
+                          rows={2}
+                          value={othersText}
+                          onChange={(e) => setOthersText(e.target.value)}
+                          style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
+                        />
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+            ) : (
+              /* Accept with feedback / Not Accept but Good Alert — original checklist */
+              <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
+                {CHECK_ITEMS.map((item, idx) => {
+                  const isChecked = checkedItems.includes(item.key)
+                  return (
+                    <div
+                      key={item.key}
+                      style={{
+                        paddingTop: 10,
+                        paddingBottom: isChecked ? 12 : 10,
+                        borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+                      }}
+                    >
+                      <Checkbox
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...checkedItems, item.key]
+                            : checkedItems.filter((k) => k !== item.key)
+                          setCheckedItems(next)
+                          if (!e.target.checked) {
+                            const { [item.key]: _, ...rest } = itemNotes
+                            setItemNotes(rest)
+                          }
+                        }}
+                      >
+                        <Text style={{ fontSize: 13 }}>{item.label}</Text>
+                      </Checkbox>
+                      {isChecked && (
+                        <Input.TextArea
+                          placeholder="Describe the specific issue..."
+                          rows={2}
+                          value={itemNotes[item.key] || ""}
+                          onChange={(e) => setItemNotes({ ...itemNotes, [item.key]: e.target.value })}
+                          style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+                <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
+                  <Checkbox
+                    checked={othersChecked}
+                    onChange={(e) => {
+                      setOthersChecked(e.target.checked)
+                      if (!e.target.checked) setOthersText("")
+                    }}
+                  >
+                    <Text style={{ fontSize: 13 }}>Others</Text>
+                  </Checkbox>
+                  {othersChecked && (
+                    <Input.TextArea
+                      placeholder="Please describe the issue..."
+                      rows={2}
+                      value={othersText}
+                      onChange={(e) => setOthersText(e.target.value)}
+                      style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </Modal>
         </Col>
       </Row>
