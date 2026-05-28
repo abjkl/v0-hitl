@@ -769,10 +769,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       onClick={() => handleActionClick("Accept")}
                       style={{
                         display: "flex",
-                        flexDirection: "column",
                         alignItems: "center",
-                        gap: 4,
-                        padding: "8px 16px",
+                        justifyContent: "center",
+                        padding: "8px 12px",
                         borderRadius: 8,
                         border: `2px solid ${selectedAction === "Accept" ? "#52c41a" : "#e8e8e8"}`,
                         background: selectedAction === "Accept" ? "#f6ffed" : "#fafafa",
@@ -786,13 +785,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         color: selectedAction === "Accept" ? "#52c41a" : "#bfbfbf",
                         transition: "color 0.18s",
                       }} />
-                      <Text style={{
-                        fontSize: 11,
-                        color: selectedAction === "Accept" ? "#389e0d" : "#8c8c8c",
-                        fontWeight: selectedAction === "Accept" ? 600 : 400,
-                      }}>
-                        赞
-                      </Text>
                     </button>
 
                     {/* 踩 = Not Accept → opens modal asking "有什么问题？" */}
@@ -800,10 +792,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       onClick={() => handleActionClick("Not Accept")}
                       style={{
                         display: "flex",
-                        flexDirection: "column",
                         alignItems: "center",
-                        gap: 4,
-                        padding: "8px 16px",
+                        justifyContent: "center",
+                        padding: "8px 12px",
                         borderRadius: 8,
                         border: `2px solid ${selectedAction === "Not Accept" ? "#ff4d4f" : "#e8e8e8"}`,
                         background: selectedAction === "Not Accept" ? "#fff2f0" : "#fafafa",
@@ -817,13 +808,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         color: selectedAction === "Not Accept" ? "#ff4d4f" : "#bfbfbf",
                         transition: "color 0.18s",
                       }} />
-                      <Text style={{
-                        fontSize: 11,
-                        color: selectedAction === "Not Accept" ? "#cf1322" : "#8c8c8c",
-                        fontWeight: selectedAction === "Not Accept" ? 600 : 400,
-                      }}>
-                        踩
-                      </Text>
                     </button>
                   </div>
 
