@@ -1802,6 +1802,23 @@ export interface PRAttachment {
   uploadedBy: string
 }
 
+// AI Review Result Types
+export type AIReviewResult = 'Approve' | 'Reject' | 'Require Human Review' | 'Cannot Provide Decision'
+
+export interface AICheckItemResult {
+  key: string           // matches CHECK_ITEMS key in payment-request-detail
+  status: 'pass' | 'fail' | 'warning'
+  feedback: string
+}
+
+export interface AIReviewInfo {
+  result: AIReviewResult
+  confidence: number
+  message: string
+  timestamp: string
+  checkItems?: AICheckItemResult[]
+}
+
 export interface PurchaseRequest {
   id: string
   prNumber: string
@@ -1825,6 +1842,7 @@ export interface PurchaseRequest {
   approver: string
   approverEmail: string
   urgency: 'Low' | 'Medium' | 'High' | 'Critical'
+  aiReview?: AIReviewInfo
 }
 
 // Risk Rules Definition based on Risk Layer Check Parameters
@@ -1953,6 +1971,24 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Sarah Johnson',
     approverEmail: 'sarah.johnson@company.com',
     urgency: 'High',
+    aiReview: {
+      result: 'Reject',
+      confidence: 0.63,
+      message: 'Rejected due to rule failure: Payment Request Invoice Review Biz Agent - Please check your invoice for Regulatory Compliance (ATP), Invoice number match PA entry, Supplier name match (PO), Total after tax equals submission amount, Total after tax equals net plus VAT (12%)',
+      timestamp: '2026-05-20 12:03:06',
+      checkItems: [
+        { key: 'doc_title', status: 'pass', feedback: 'Document title matches the purchase order reference.' },
+        { key: 'atp', status: 'fail', feedback: 'Invoice does not include required ATP regulatory compliance stamp. Missing BIR authority to print notation.' },
+        { key: 'invoice_date', status: 'pass', feedback: 'Invoice date 2026-04-20 is within the acceptable 90-day submission window.' },
+        { key: 'invoice_number', status: 'fail', feedback: 'Invoice number INV-2026-0042 does not match the PA entry INV-2026-042A recorded in the system.' },
+        { key: 'billing_name', status: 'pass', feedback: 'Billing name "John Smith" matches the entity information on record.' },
+        { key: 'billing_address', status: 'warning', feedback: 'Billing address contains abbreviation "SG" — could not fully verify against entity master. Manual check recommended.' },
+        { key: 'billing_tin', status: 'pass', feedback: 'TIN matches entity info on record.' },
+        { key: 'supplier_name', status: 'fail', feedback: 'Supplier name "Tech Solutions Inc." does not match PO record "Tech Solutions Incorporated". Possible name discrepancy.' },
+        { key: 'total_tax', status: 'fail', feedback: 'Total after tax (USD 9,000) does not equal the submission amount (USD 9,180). Discrepancy of USD 180.' },
+        { key: 'total_vat', status: 'fail', feedback: 'Total after tax (USD 9,000) does not equal net amount plus 12% VAT (USD 8,035.71 × 1.12 = USD 9,000.00). Calculation mismatch detected.' },
+      ],
+    },
   },
   {
     id: '2',
@@ -1982,6 +2018,24 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Michael Brown',
     approverEmail: 'michael.brown@company.com',
     urgency: 'Medium',
+    aiReview: {
+      result: 'Approve',
+      confidence: 0.98,
+      message: 'All sub-agents passed. Payment Request Invoice Review Biz Agent, DO Review Agent passed.',
+      timestamp: '2026-05-19 10:15:30',
+      checkItems: [
+        { key: 'doc_title', status: 'pass', feedback: 'Document title matches the purchase order reference.' },
+        { key: 'atp', status: 'pass', feedback: 'ATP regulatory compliance stamp present and valid.' },
+        { key: 'invoice_date', status: 'pass', feedback: 'Invoice date is within the acceptable submission window.' },
+        { key: 'invoice_number', status: 'pass', feedback: 'Invoice number matches PA entry exactly.' },
+        { key: 'billing_name', status: 'pass', feedback: 'Billing name matches entity information on record.' },
+        { key: 'billing_address', status: 'pass', feedback: 'Billing address verified against entity master.' },
+        { key: 'billing_tin', status: 'pass', feedback: 'TIN matches entity info on record.' },
+        { key: 'supplier_name', status: 'pass', feedback: 'Supplier name matches PO record exactly.' },
+        { key: 'total_tax', status: 'pass', feedback: 'Total after tax equals submission amount.' },
+        { key: 'total_vat', status: 'pass', feedback: 'Total after tax equals net plus 12% VAT as expected.' },
+      ],
+    },
   },
   {
     id: '3',
@@ -2012,6 +2066,24 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Lisa Anderson',
     approverEmail: 'lisa.anderson@company.com',
     urgency: 'Critical',
+    aiReview: {
+      result: 'Require Human Review',
+      confidence: 0.55,
+      message: 'Confidence level below threshold. Multiple conflicting signals detected. Manual review required for: Amount verification, Vendor validation.',
+      timestamp: '2026-05-18 14:22:45',
+      checkItems: [
+        { key: 'doc_title', status: 'pass', feedback: 'Document title matches the purchase order reference.' },
+        { key: 'atp', status: 'warning', feedback: 'ATP stamp present but partially obscured. Manual verification recommended.' },
+        { key: 'invoice_date', status: 'pass', feedback: 'Invoice date is within the acceptable submission window.' },
+        { key: 'invoice_number', status: 'warning', feedback: 'Invoice number format is non-standard. Please verify manually.' },
+        { key: 'billing_name', status: 'pass', feedback: 'Billing name matches entity information on record.' },
+        { key: 'billing_address', status: 'warning', feedback: 'Billing address has minor discrepancies. Manual verification recommended.' },
+        { key: 'billing_tin', status: 'pass', feedback: 'TIN matches entity info on record.' },
+        { key: 'supplier_name', status: 'pass', feedback: 'Supplier name matches PO record.' },
+        { key: 'total_tax', status: 'warning', feedback: 'Total after tax calculation shows minor rounding difference (USD 0.50). Please verify.' },
+        { key: 'total_vat', status: 'pass', feedback: 'VAT calculation appears correct.' },
+      ],
+    },
   },
   {
     id: '4',
@@ -2039,6 +2111,24 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Robert Taylor',
     approverEmail: 'robert.taylor@company.com',
     urgency: 'Low',
+    aiReview: {
+      result: 'Approve',
+      confidence: 0.95,
+      message: 'All validation checks passed successfully.',
+      timestamp: '2026-05-17 09:30:00',
+      checkItems: [
+        { key: 'doc_title', status: 'pass', feedback: 'Document title matches the purchase order reference.' },
+        { key: 'atp', status: 'pass', feedback: 'ATP regulatory compliance stamp present and valid.' },
+        { key: 'invoice_date', status: 'pass', feedback: 'Invoice date is within the acceptable submission window.' },
+        { key: 'invoice_number', status: 'pass', feedback: 'Invoice number matches PA entry exactly.' },
+        { key: 'billing_name', status: 'pass', feedback: 'Billing name matches entity information on record.' },
+        { key: 'billing_address', status: 'pass', feedback: 'Billing address verified against entity master.' },
+        { key: 'billing_tin', status: 'pass', feedback: 'TIN matches entity info on record.' },
+        { key: 'supplier_name', status: 'pass', feedback: 'Supplier name matches PO record exactly.' },
+        { key: 'total_tax', status: 'pass', feedback: 'Total after tax equals submission amount.' },
+        { key: 'total_vat', status: 'pass', feedback: 'Total after tax equals net plus 12% VAT as expected.' },
+      ],
+    },
   },
   {
     id: '5',
@@ -2067,6 +2157,24 @@ export const INITIAL_PURCHASE_REQUESTS: PurchaseRequest[] = [
     approver: 'Sarah Johnson',
     approverEmail: 'sarah.johnson@company.com',
     urgency: 'High',
+    aiReview: {
+      result: 'Cannot Provide Decision',
+      confidence: 0.32,
+      message: 'Unable to process: Missing critical invoice data. Document quality too low for OCR. Please re-upload with clearer image quality.',
+      timestamp: '2026-05-16 16:45:12',
+      checkItems: [
+        { key: 'doc_title', status: 'warning', feedback: 'Document title could not be extracted. OCR quality too low.' },
+        { key: 'atp', status: 'fail', feedback: 'Unable to detect ATP stamp. Image quality insufficient for verification.' },
+        { key: 'invoice_date', status: 'warning', feedback: 'Invoice date partially readable. Manual verification required.' },
+        { key: 'invoice_number', status: 'fail', feedback: 'Invoice number not detected. Please re-upload clearer document.' },
+        { key: 'billing_name', status: 'warning', feedback: 'Billing name partially extracted. Confidence too low.' },
+        { key: 'billing_address', status: 'fail', feedback: 'Billing address not readable. Document quality issue.' },
+        { key: 'billing_tin', status: 'fail', feedback: 'TIN not detected. Please provide clearer image.' },
+        { key: 'supplier_name', status: 'warning', feedback: 'Supplier name extraction uncertain. Manual check needed.' },
+        { key: 'total_tax', status: 'fail', feedback: 'Total amount not extractable due to image quality.' },
+        { key: 'total_vat', status: 'fail', feedback: 'VAT calculation cannot be verified. Missing data.' },
+      ],
+    },
   },
   {
     id: '6',
