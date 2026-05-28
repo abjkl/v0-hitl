@@ -763,7 +763,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               ) : (
                 /* Your decision — thumbs up (赞=Accept) / thumbs down (踩=Not Accept) */
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Done</Text>
                   <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
                     {/* 赞 = Accept */}
                     <button
