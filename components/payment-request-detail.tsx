@@ -763,7 +763,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               ) : (
                 /* Your decision — thumbs up (赞=Accept) / thumbs down (踩=Not Accept) */
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                     {/* 赞 = Accept */}
                     <button
                       onClick={() => handleActionClick("Accept")}
@@ -771,8 +771,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        padding: "8px 12px",
-                        borderRadius: 8,
+                        padding: "6px 10px",
+                        borderRadius: 6,
                         border: `2px solid ${selectedAction === "Accept" ? "#52c41a" : "#e8e8e8"}`,
                         background: selectedAction === "Accept" ? "#f6ffed" : "#fafafa",
                         cursor: "pointer",
@@ -781,7 +781,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       }}
                     >
                       <LikeFilled style={{
-                        fontSize: 20,
+                        fontSize: 16,
                         color: selectedAction === "Accept" ? "#52c41a" : "#bfbfbf",
                         transition: "color 0.18s",
                       }} />
@@ -794,8 +794,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        padding: "8px 12px",
-                        borderRadius: 8,
+                        padding: "6px 10px",
+                        borderRadius: 6,
                         border: `2px solid ${selectedAction === "Not Accept" ? "#ff4d4f" : "#e8e8e8"}`,
                         background: selectedAction === "Not Accept" ? "#fff2f0" : "#fafafa",
                         cursor: "pointer",
@@ -804,7 +804,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       }}
                     >
                       <DislikeFilled style={{
-                        fontSize: 20,
+                        fontSize: 16,
                         color: selectedAction === "Not Accept" ? "#ff4d4f" : "#bfbfbf",
                         transition: "color 0.18s",
                       }} />
