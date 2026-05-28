@@ -773,8 +773,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         flexDirection: "column",
                         alignItems: "center",
                         gap: 4,
-                        padding: "14px 24px",
-                        borderRadius: 10,
+                        padding: "8px 16px",
+                        borderRadius: 8,
                         border: `2px solid ${selectedAction === "Accept" ? "#52c41a" : "#e8e8e8"}`,
                         background: selectedAction === "Accept" ? "#f6ffed" : "#fafafa",
                         cursor: "pointer",
@@ -783,12 +783,12 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       }}
                     >
                       <LikeFilled style={{
-                        fontSize: 28,
+                        fontSize: 20,
                         color: selectedAction === "Accept" ? "#52c41a" : "#bfbfbf",
                         transition: "color 0.18s",
                       }} />
                       <Text style={{
-                        fontSize: 12,
+                        fontSize: 11,
                         color: selectedAction === "Accept" ? "#389e0d" : "#8c8c8c",
                         fontWeight: selectedAction === "Accept" ? 600 : 400,
                       }}>
@@ -804,8 +804,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         flexDirection: "column",
                         alignItems: "center",
                         gap: 4,
-                        padding: "14px 24px",
-                        borderRadius: 10,
+                        padding: "8px 16px",
+                        borderRadius: 8,
                         border: `2px solid ${selectedAction === "Not Accept" ? "#ff4d4f" : "#e8e8e8"}`,
                         background: selectedAction === "Not Accept" ? "#fff2f0" : "#fafafa",
                         cursor: "pointer",
@@ -814,12 +814,12 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       }}
                     >
                       <DislikeFilled style={{
-                        fontSize: 28,
+                        fontSize: 20,
                         color: selectedAction === "Not Accept" ? "#ff4d4f" : "#bfbfbf",
                         transition: "color 0.18s",
                       }} />
                       <Text style={{
-                        fontSize: 12,
+                        fontSize: 11,
                         color: selectedAction === "Not Accept" ? "#cf1322" : "#8c8c8c",
                         fontWeight: selectedAction === "Not Accept" ? 600 : 400,
                       }}>
