@@ -672,9 +672,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   onChange={(val) => handleMockResultChange(val as AIReviewResult)}
                   options={[
                     { label: "Approve", value: "Approve" },
-          { label: "Pending Human Review", value: "Reject" },
-          { label: "Pending Human Review", value: "Require Human Review" },
-          { label: "Pending Human Review", value: "Cannot Provide Decision" },
+          { label: "Reject", value: "Reject" },
+          { label: "AI Warning", value: "Require Human Review" },
+          { label: "No Decision", value: "Cannot Provide Decision" },
                   ]}
                   style={{ width: "100%" }}
                 />
