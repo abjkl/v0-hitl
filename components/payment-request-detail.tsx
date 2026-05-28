@@ -21,16 +21,17 @@ import {
 } from "antd"
 import type { ColumnsType } from "antd/es/table"
 import {
-  ArrowLeftOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  FileTextOutlined,
-  DownloadOutlined,
-  InfoCircleOutlined,
-  LeftOutlined,
-  RightOutlined,
   ExclamationCircleOutlined,
   QuestionCircleOutlined,
+  LikeFilled,
+  DislikeFilled,
+  ArrowLeftOutlined,
+  LeftOutlined,
+  RightOutlined,
+  InfoCircleOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons"
 import {
   type PurchaseRequest,
@@ -671,9 +672,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   onChange={(val) => handleMockResultChange(val as AIReviewResult)}
                   options={[
                     { label: "Approve", value: "Approve" },
-                    { label: "Reject", value: "Reject" },
-                    { label: "AI Warning", value: "Require Human Review" },
-                    { label: "No Decision", value: "Cannot Provide Decision" },
+          { label: "Pending Human Review", value: "Reject" },
+          { label: "Pending Human Review", value: "Require Human Review" },
+          { label: "Pending Human Review", value: "Cannot Provide Decision" },
                   ]}
                   style={{ width: "100%" }}
                 />
@@ -696,25 +697,25 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     label: "Approve",
                   },
                   'Reject': {
-                    icon: <CloseCircleOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />,
-                    bg: "#fff2f0",
-                    border: "1px solid #ffccc7",
-                    titleColor: "#cf1322",
-                    label: "Reject",
+                    icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+                    bg: "#fff7e6",
+                    border: "1px solid #ffd591",
+                    titleColor: "#d46b08",
+                    label: "Pending Human Review",
                   },
                   'Require Human Review': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "AI Warning",
+                    label: "Pending Human Review",
                   },
                   'Cannot Provide Decision': {
-                    icon: <QuestionCircleOutlined style={{ fontSize: 20, color: "#8c8c8c" }} />,
-                    bg: "#fafafa",
-                    border: "1px solid #d9d9d9",
-                    titleColor: "#595959",
-                    label: "Cannot Provide Decision",
+                    icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+                    bg: "#fff7e6",
+                    border: "1px solid #ffd591",
+                    titleColor: "#d46b08",
+                    label: "Pending Human Review",
                   },
                 }
 
@@ -759,50 +760,78 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     {selectedAction && `: ${selectedAction}`}
                   </Text>
                 </div>
-              ) : canProvideDecision ? (
-                /* AI gave a decision — show 4 action buttons */
+              ) : (
+                /* Your decision — thumbs up (赞=Accept) / thumbs down (踩=Not Accept) */
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your decision</Text>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {(["Accept", "Not Accept"] as UserAction[]).map((action) => {
-                const isAccept = action === "Accept"
-                const isSelected = selectedAction === action
-                const opensModal = true
-                return (
-                        <Button
-                          key={action}
-                          size="small"
-                          onClick={() => opensModal ? handleActionClick(action) : setSelectedAction(isSelected ? null : action)}
-                          style={{
-                            borderRadius: 6,
-                            fontSize: 12,
-                            height: "auto",
-                            padding: "6px 10px",
-                            whiteSpace: "normal",
-                            textAlign: "center",
-                            lineHeight: 1.4,
-                            borderColor: isSelected
-                              ? isAccept ? "#52c41a" : "#ff4d4f"
-                              : "#d9d9d9",
-                            background: isSelected
-                              ? isAccept ? "#f6ffed" : "#fff2f0"
-                              : "#ffffff",
-                            color: isSelected
-                              ? isAccept ? "#389e0d" : "#cf1322"
-                              : "#595959",
-                            fontWeight: isSelected ? 600 : 400,
-                          }}
-                        >
-                          {action}
-                        </Button>
-                      )
-                    })}
+                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Done</Text>
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+                    {/* 赞 = Accept */}
+                    <button
+                      onClick={() => handleActionClick("Accept")}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "14px 24px",
+                        borderRadius: 10,
+                        border: `2px solid ${selectedAction === "Accept" ? "#52c41a" : "#e8e8e8"}`,
+                        background: selectedAction === "Accept" ? "#f6ffed" : "#fafafa",
+                        cursor: "pointer",
+                        transition: "all 0.18s",
+                        flex: 1,
+                      }}
+                    >
+                      <LikeFilled style={{
+                        fontSize: 28,
+                        color: selectedAction === "Accept" ? "#52c41a" : "#bfbfbf",
+                        transition: "color 0.18s",
+                      }} />
+                      <Text style={{
+                        fontSize: 12,
+                        color: selectedAction === "Accept" ? "#389e0d" : "#8c8c8c",
+                        fontWeight: selectedAction === "Accept" ? 600 : 400,
+                      }}>
+                        赞
+                      </Text>
+                    </button>
+
+                    {/* 踩 = Not Accept → opens modal asking "有什么问题？" */}
+                    <button
+                      onClick={() => handleActionClick("Not Accept")}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "14px 24px",
+                        borderRadius: 10,
+                        border: `2px solid ${selectedAction === "Not Accept" ? "#ff4d4f" : "#e8e8e8"}`,
+                        background: selectedAction === "Not Accept" ? "#fff2f0" : "#fafafa",
+                        cursor: "pointer",
+                        transition: "all 0.18s",
+                        flex: 1,
+                      }}
+                    >
+                      <DislikeFilled style={{
+                        fontSize: 28,
+                        color: selectedAction === "Not Accept" ? "#ff4d4f" : "#bfbfbf",
+                        transition: "color 0.18s",
+                      }} />
+                      <Text style={{
+                        fontSize: 12,
+                        color: selectedAction === "Not Accept" ? "#cf1322" : "#8c8c8c",
+                        fontWeight: selectedAction === "Not Accept" ? 600 : 400,
+                      }}>
+                        踩
+                      </Text>
+                    </button>
                   </div>
 
-                  {/* After modal confirm, show a summary of selected issues + optional extra feedback */}
-                  {selectedAction && showFeedbackInput && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
-                      {/* Summary chips of what was flagged in modal */}
+                  {/* After accept/not-accept, show submit button */}
+                  {selectedAction && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {/* Summary chips */}
                       {(checkedItems.length > 0 || othersChecked) && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                           {checkedItems.map((key) => {
@@ -818,89 +847,11 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                           )}
                         </div>
                       )}
-                      <Input.TextArea
-                        placeholder="Add additional comments (optional)..."
-                        rows={3}
-                        value={feedback}
-                        onChange={(e) => setFeedback(e.target.value)}
-                        style={{ fontSize: 12, borderRadius: 6 }}
-                      />
                       <Button
                         type="primary"
                         size="small"
                         onClick={handleSubmit}
-                        style={{ alignSelf: "flex-end", borderRadius: 6 }}
-                      >
-                        Submit
-                      </Button>
-                    </div>
-                  )}
-
-                  {selectedAction && !showFeedbackInput && (
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={handleSubmit}
-                      style={{ borderRadius: 6 }}
-                    >
-                      Submit
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                /* AI cannot provide decision — show feedback button like Accept/Not Accept */
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Your decision</Text>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {(["Accept", "Not Accept"] as UserAction[]).map((action) => {
-                      const isAccept = action === "Accept"
-                      const isSelected = selectedAction === action
-                      return (
-                        <Button
-                          key={action}
-                          size="small"
-                          onClick={() => handleActionClick(action)}
-                          style={{
-                            borderRadius: 6,
-                            fontSize: 12,
-                            height: "auto",
-                            padding: "6px 10px",
-                            whiteSpace: "normal",
-                            textAlign: "center",
-                            lineHeight: 1.4,
-                            borderColor: isSelected
-                              ? isAccept ? "#52c41a" : "#ff4d4f"
-                              : "#d9d9d9",
-                            background: isSelected
-                              ? isAccept ? "#f6ffed" : "#fff2f0"
-                              : "#ffffff",
-                            color: isSelected
-                              ? isAccept ? "#389e0d" : "#cf1322"
-                              : "#595959",
-                            fontWeight: isSelected ? 600 : 400,
-                          }}
-                        >
-                          {action}
-                        </Button>
-                      )
-                    })}
-                  </div>
-
-                  {/* Optional extra feedback textarea after selecting */}
-                  {selectedAction && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
-                      <Input.TextArea
-                        placeholder="Add your feedback (optional)..."
-                        rows={3}
-                        value={feedback}
-                        onChange={(e) => setFeedback(e.target.value)}
-                        style={{ fontSize: 12, borderRadius: 6 }}
-                      />
-                      <Button
-                        type="primary"
-                        size="small"
-                        onClick={handleSubmit}
-                        style={{ alignSelf: "flex-end", borderRadius: 6 }}
+                        style={{ borderRadius: 6 }}
                       >
                         Submit
                       </Button>
@@ -1008,7 +959,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
           {/* Human Review Card */}
           <Card
-            title="AI Warning"
+            title="Pending Human Review"
             size="small"
             style={{ borderRadius: 8 }}
           >
@@ -1165,21 +1116,13 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title={
               <div>
                 <Text strong style={{ fontSize: 15 }}>
-                  {pendingAction === 'Accept'
-                    ? 'Accept'
-                    : pendingAction === 'Not Accept'
-                    ? 'Not Accept'
-                    : pendingAction === 'Accept with feedback'
-                    ? 'Accept with Feedback'
-                    : 'Not Accept but Good Alert'}
+                  {pendingAction === 'Accept' ? '赞' : '有什么问题？'}
                 </Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                   {pendingAction === 'Accept'
                     ? 'Review the AI conclusion on this invoice'
-                    : pendingAction === 'Not Accept'
-                    ? 'How would you like to handle this invoice?'
-                    : 'Select the check items you believe AI judged incorrectly'}
+                    : 'How would you like to handle this invoice?'}
                 </Text>
               </div>
             }
