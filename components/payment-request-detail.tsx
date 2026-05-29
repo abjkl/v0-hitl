@@ -1117,17 +1117,19 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   onOthersTextChange={setOthersText}
                 />
 
-                {/* Overall note input */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
-                  <Input.TextArea
-                    placeholder="Add any additional notes or comments..."
-                    rows={4}
-                    value={overallNote}
-                    onChange={(e) => setOverallNote(e.target.value)}
-                    style={{ fontSize: 12, borderRadius: 6 }}
-                  />
-                </div>
+                {/* Overall note — shown when at least one item or Others is selected */}
+                {(checkedItems.length > 0 || othersChecked) && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                    <Input.TextArea
+                      placeholder="Add any additional notes or comments..."
+                      rows={3}
+                      value={overallNote}
+                      onChange={(e) => setOverallNote(e.target.value)}
+                      style={{ fontSize: 12, borderRadius: 6 }}
+                    />
+                  </div>
+                )}
               </div>
             ) : pendingAction === 'Accept' ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
@@ -1207,17 +1209,19 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       label="WHAT ISSUES DID AI IDENTIFY INCORRECTLY?"
                     />
 
-                    {/* Overall note input */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
-                      <Input.TextArea
-                        placeholder="Add any additional notes or comments..."
-                        rows={4}
-                        value={overallNote}
-                        onChange={(e) => setOverallNote(e.target.value)}
-                        style={{ fontSize: 12, borderRadius: 6 }}
-                      />
-                    </div>
+                    {/* Overall note — shown when at least one item or Others is selected */}
+                    {(checkedItems.length > 0 || othersChecked) && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                        <Input.TextArea
+                          placeholder="Add any additional notes or comments..."
+                          rows={3}
+                          value={overallNote}
+                          onChange={(e) => setOverallNote(e.target.value)}
+                          style={{ fontSize: 12, borderRadius: 6 }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1237,17 +1241,19 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   onOthersTextChange={setOthersText}
                 />
 
-                {/* Overall note input */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
-                  <Input.TextArea
-                    placeholder="Add any additional notes or comments..."
-                    rows={4}
-                    value={overallNote}
-                    onChange={(e) => setOverallNote(e.target.value)}
-                    style={{ fontSize: 12, borderRadius: 6 }}
-                  />
-                </div>
+                {/* Overall note — shown when at least one item or Others is selected */}
+                {(checkedItems.length > 0 || othersChecked) && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                    <Input.TextArea
+                      placeholder="Add any additional notes or comments..."
+                      rows={3}
+                      value={overallNote}
+                      onChange={(e) => setOverallNote(e.target.value)}
+                      style={{ fontSize: 12, borderRadius: 6 }}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </Modal>
