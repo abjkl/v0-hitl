@@ -83,12 +83,10 @@ const AI_STATUS_CONFIG = {
 
 interface ChecklistSectionProps {
   checkedItems: string[]
-  itemNotes: Record<string, string>
   othersChecked: boolean
   othersText: string
   aiCheckItems?: AICheckItemResult[]
   onToggleItem: (key: string, checked: boolean) => void
-  onNoteChange: (key: string, value: string) => void
   onToggleOthers: (checked: boolean) => void
   onOthersTextChange: (value: string) => void
   label?: string
@@ -96,12 +94,10 @@ interface ChecklistSectionProps {
 
 function ChecklistSection({
   checkedItems,
-  itemNotes,
   othersChecked,
   othersText,
   aiCheckItems,
   onToggleItem,
-  onNoteChange,
   onToggleOthers,
   onOthersTextChange,
   label = "SELECT CHECK ITEMS WITH ISSUES",
@@ -153,17 +149,6 @@ function ChecklistSection({
                 </Text>
               </div>
             )}
-
-            {/* User note — shown when item is checked */}
-            {isChecked && (
-              <Input.TextArea
-                placeholder="Add your note..."
-                rows={2}
-                value={itemNotes[item.key] || ""}
-                onChange={(e) => onNoteChange(item.key, e.target.value)}
-                style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-              />
-            )}
           </div>
         )
       })}
@@ -198,7 +183,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [modalOpen, setModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<UserAction>(null)
   const [checkedItems, setCheckedItems] = useState<string[]>([])
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({})
+  const [overallNote, setOverallNote] = useState("")
   const [othersChecked, setOthersChecked] = useState(false)
   const [othersText, setOthersText] = useState("")
   const [acceptInvoiceChoice, setAcceptInvoiceChoice] = useState<'yes' | 'yes-feedback' | null>(null)
@@ -1121,19 +1106,28 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
                 <ChecklistSection
                   checkedItems={checkedItems}
-                  itemNotes={itemNotes}
                   othersChecked={othersChecked}
                   othersText={othersText}
                   aiCheckItems={pr.aiReview?.checkItems}
                   onToggleItem={(key, checked) => {
                     const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
                     setCheckedItems(next)
-                    if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
                   }}
-                  onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
                   onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
                   onOthersTextChange={setOthersText}
                 />
+
+                {/* Overall note input */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                  <Input.TextArea
+                    placeholder="Add any additional notes or comments..."
+                    rows={4}
+                    value={overallNote}
+                    onChange={(e) => setOverallNote(e.target.value)}
+                    style={{ fontSize: 12, borderRadius: 6 }}
+                  />
+                </div>
               </div>
             ) : pendingAction === 'Accept' ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
@@ -1151,7 +1145,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                           setAcceptInvoiceChoice(choice)
                           if (choice === 'yes') {
                             setCheckedItems([])
-                            setItemNotes({})
                             setOthersChecked(false)
                             setOthersText("")
                           }
@@ -1199,40 +1192,63 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
                 {/* Checklist — only shown when "yes with feedback" selected */}
                 {acceptInvoiceChoice === 'yes-feedback' && (
-                  <ChecklistSection
-                    checkedItems={checkedItems}
-                    itemNotes={itemNotes}
-                    othersChecked={othersChecked}
-                    othersText={othersText}
-                    aiCheckItems={pr.aiReview?.checkItems}
-                    onToggleItem={(key, checked) => {
-                      const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
-                      setCheckedItems(next)
-                      if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                    }}
-                    onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
-                    onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
-                    onOthersTextChange={setOthersText}
-                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <ChecklistSection
+                      checkedItems={checkedItems}
+                      othersChecked={othersChecked}
+                      othersText={othersText}
+                      aiCheckItems={pr.aiReview?.checkItems}
+                      onToggleItem={(key, checked) => {
+                        const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                        setCheckedItems(next)
+                      }}
+                      onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                      onOthersTextChange={setOthersText}
+                      label="WHAT ISSUES DID AI IDENTIFY INCORRECTLY?"
+                    />
+
+                    {/* Overall note input */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                      <Input.TextArea
+                        placeholder="Add any additional notes or comments..."
+                        rows={4}
+                        value={overallNote}
+                        onChange={(e) => setOverallNote(e.target.value)}
+                        style={{ fontSize: 12, borderRadius: 6 }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
               /* fallback — original checklist */
-              <ChecklistSection
-                checkedItems={checkedItems}
-                itemNotes={itemNotes}
-                othersChecked={othersChecked}
-                othersText={othersText}
-                aiCheckItems={pr.aiReview?.checkItems}
-                onToggleItem={(key, checked) => {
-                  const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
-                  setCheckedItems(next)
-                  if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                }}
-                onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
-                onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
-                onOthersTextChange={setOthersText}
-              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <ChecklistSection
+                  checkedItems={checkedItems}
+                  othersChecked={othersChecked}
+                  othersText={othersText}
+                  aiCheckItems={pr.aiReview?.checkItems}
+                  onToggleItem={(key, checked) => {
+                    const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                    setCheckedItems(next)
+                  }}
+                  onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                  onOthersTextChange={setOthersText}
+                />
+
+                {/* Overall note input */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                  <Input.TextArea
+                    placeholder="Add any additional notes or comments..."
+                    rows={4}
+                    value={overallNote}
+                    onChange={(e) => setOverallNote(e.target.value)}
+                    style={{ fontSize: 12, borderRadius: 6 }}
+                  />
+                </div>
+              </div>
             )}
           </Modal>
         </Col>
