@@ -701,21 +701,21 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Review",
+                    label: "Issues Alert",
                   },
                   'Require Human Review': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Review",
+                    label: "Issues Alert",
                   },
                   'Cannot Provide Decision': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Review",
+                    label: "Issues Alert",
                   },
                 }
 
@@ -942,7 +942,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
           {/* Human Review Card */}
           <Card
-            title="Require Review"
+            title="Issues Alert"
             size="small"
             style={{ borderRadius: 8 }}
           >
