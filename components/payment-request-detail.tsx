@@ -279,7 +279,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   }
 
   const handleActionClick = (action: UserAction) => {
-    if (action === 'Accept' || action === 'Not Accept') {
+    if (action === 'Not Accept') {
       setPendingAction(action)
       setCheckedItems([])
       setOverallNote("")
@@ -289,6 +289,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       setNotAcceptChoice(null)
       setModalOpen(true)
     } else {
+      // 赞 (Accept) and any other action take effect directly — no modal
       setSelectedAction(action)
     }
   }
