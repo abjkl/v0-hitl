@@ -955,6 +955,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   </div>
                 </>
               )}
+            </div>
           </Card>
 
 
