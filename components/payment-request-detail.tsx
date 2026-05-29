@@ -680,10 +680,10 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   label: string
                 }> = {
                   'Approve': {
-                    icon: <CheckCircleOutlined style={{ fontSize: 20, color: "#52c41a" }} />,
-                    bg: "#f6ffed",
-                    border: "1px solid #b7eb8f",
-                    titleColor: "#389e0d",
+                    icon: <CheckCircleOutlined style={{ fontSize: 20, color: "#8c8c8c" }} />,
+                    bg: "#fafafa",
+                    border: "1px solid #d9d9d9",
+                    titleColor: "#595959",
                     label: "No Alert Raised",
                   },
                   'Reject': {
