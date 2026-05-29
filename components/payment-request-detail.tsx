@@ -103,12 +103,17 @@ function ChecklistSection({
   label = "SELECT CHECK ITEMS WITH ISSUES",
 }: ChecklistSectionProps) {
   const aiMap = Object.fromEntries((aiCheckItems ?? []).map(i => [i.key, i]))
+  // Only show items the AI flagged with an issue (fail/warning). AI PASS items are hidden.
+  const visibleItems = CHECK_ITEMS.filter((item) => {
+    const ai = aiMap[item.key]
+    return ai && ai.status !== 'pass'
+  })
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
       <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
         {label}
       </Text>
-      {CHECK_ITEMS.map((item, idx) => {
+      {visibleItems.map((item, idx) => {
         const isChecked = checkedItems.includes(item.key)
         const ai = aiMap[item.key]
         const cfg = ai ? AI_STATUS_CONFIG[ai.status] : null
@@ -118,7 +123,7 @@ function ChecklistSection({
             style={{
               paddingTop: 10,
               paddingBottom: 10,
-              borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+              borderBottom: idx < visibleItems.length - 1 ? "1px solid #f0f0f0" : "none",
             }}
           >
             <Checkbox
@@ -279,7 +284,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   }
 
   const handleActionClick = (action: UserAction) => {
-    if (action === 'Accept' || action === 'Not Accept') {
+    if (action === 'Not Accept') {
       setPendingAction(action)
       setCheckedItems([])
       setOverallNote("")
@@ -289,6 +294,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       setNotAcceptChoice(null)
       setModalOpen(true)
     } else {
+      // 赞 (Accept) and any other action take effect directly — no modal
       setSelectedAction(action)
     }
   }
@@ -821,8 +827,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     </button>
                   </div>
 
-                  {/* After accept/not-accept, show submit button */}
-                  {selectedAction && (
+                  {/* After not-accept, show submit button. 赞 (Accept) takes effect directly with no submit. */}
+                  {selectedAction === 'Not Accept' && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {/* Summary chips */}
                       {(checkedItems.length > 0 || othersChecked) && (
@@ -865,14 +871,16 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
                       <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
                     </div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
+                    {mockResult !== 'Approve' && (
+                      <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
+                    )}
                   </div>
 
                   <Divider style={{ margin: 0 }} />
                 </>
               )}
 
-              {mockResult !== 'High Risk Item' && (() => {
+              {mockResult !== 'High Risk Item' && mockResult !== 'Approve' && (() => {
                 const isIssuesAlert = ['Reject', 'Require Human Review', 'Cannot Provide Decision'].includes(mockResult)
                 return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
