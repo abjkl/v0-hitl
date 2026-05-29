@@ -251,11 +251,11 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       message: 'Not Covered. This invoice contains high-risk patterns that fall outside automated processing scope. Mandatory manual review required.',
       timestamp: '2026-05-20 08:30:00',
       uncovered_reasons: [
-        'International payment with SWIFT transfer flagged as high-risk',
-        'Multiple amendments detected on invoice document',
-        'Supplier registered in high-risk jurisdiction',
-        'Invoice amount exceeds historical trend by 45%',
-        'PO number does not match supplier records in system',
+        'Tax Amount > 100,000',
+        'Invoice Line Item Count > 50',
+        'Supplier Country IN (High-Risk Jurisdiction List)',
+        'Invoice Amount Variance > 40% vs. 3-Month Avg',
+        'PO Mismatch Count > 2 within 30 Days',
       ],
     },
   }
@@ -733,7 +733,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     </Text>
                     {mockResult === 'High Risk Item' && mockConfig['High Risk Item']?.uncovered_reasons && (
                       <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-                        <Text style={{ fontSize: 11, fontWeight: 500, color: "#0050b3" }}>Reasons not covered:</Text>
+                        <Text style={{ fontSize: 11, fontWeight: 500, color: "#0050b3" }}>Triggered Rules:</Text>
                         {mockConfig['High Risk Item'].uncovered_reasons.map((reason, idx) => (
                           <div key={idx} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
                             <div style={{ color: "#1677ff", marginTop: 2, fontSize: 12, fontWeight: 600 }}>•</div>
