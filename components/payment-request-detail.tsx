@@ -769,14 +769,41 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   border: "1px solid #b7eb8f",
                   borderRadius: 8,
                   display: "flex",
-                  alignItems: "center",
+                  flexDirection: "column",
                   gap: 8,
                 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
-                  <Text style={{ fontSize: 13, color: "#389e0d" }}>
-                    Response submitted
-                    {selectedAction && `: ${selectedAction}`}
-                  </Text>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
+                    <Text style={{ fontSize: 13, color: "#389e0d" }}>
+                      Response submitted
+                      {selectedAction && `: ${selectedAction}`}
+                    </Text>
+                  </div>
+                  {/* Show the feedback the user left when disliking (踩) */}
+                  {selectedAction === 'Not Accept' && (checkedItems.length > 0 || (othersChecked && othersText) || overallNote.trim()) && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingLeft: 24 }}>
+                      {(checkedItems.length > 0 || (othersChecked && othersText)) && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {checkedItems.map((key) => {
+                            const item = CHECK_ITEMS.find((c) => c.key === key)
+                            return item ? (
+                              <Tag key={key} color="orange" style={{ fontSize: 11, margin: 0 }}>
+                                {item.label}
+                              </Tag>
+                            ) : null
+                          })}
+                          {othersChecked && othersText && (
+                            <Tag color="orange" style={{ fontSize: 11, margin: 0 }}>Others: {othersText}</Tag>
+                          )}
+                        </div>
+                      )}
+                      {overallNote.trim() && (
+                        <Text style={{ fontSize: 12, color: "#595959" }}>
+                          {`Comment: ${overallNote}`}
+                        </Text>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Your decision — thumbs up (赞=Accept) / thumbs down (踩=Not Accept) */
