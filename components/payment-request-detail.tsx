@@ -866,7 +866,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
                       <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
                     </div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
+                    {mockResult !== 'Approve' && (
+                      <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
+                    )}
                   </div>
 
                   <Divider style={{ margin: 0 }} />
