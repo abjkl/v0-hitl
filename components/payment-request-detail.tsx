@@ -1127,36 +1127,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             {pendingAction === 'Not Accept' ? (
               /* ── Not Accept Modal ── */
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
-                {/* AI conclusion banner */}
-                <div style={{
-                  padding: "12px 14px",
-                  background: mockResult === 'Approve' ? "#f6ffed" : "#fff2f0",
-                  border: `1px solid ${mockResult === 'Approve' ? "#b7eb8f" : "#ffccc7"}`,
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}>
-                  {mockResult === 'Approve'
-                    ? <CheckCircleOutlined style={{ fontSize: 18, color: "#52c41a" }} />
-                    : <CloseCircleOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
-                  }
-                  <div>
-                    <Text style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: mockResult === 'Approve' ? "#389e0d" : "#cf1322",
-                    }}>
-                      AI Decision: {mockResult}
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {mockResult === 'Approve'
-                        ? 'You disagree — choose how to proceed with this invoice.'
-                        : 'You disagree — choose how to proceed with this invoice.'}
-                    </Text>
-                  </div>
-                </div>
 
                 {/* Options — differ by AI result */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1349,37 +1319,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
               </div>
             ) : pendingAction === 'Accept' ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
-                {/* AI conclusion display */}
-                <div style={{
-                  padding: "12px 14px",
-                  background: mockResult === 'Approve' ? "#f6ffed" : mockResult === 'Reject' ? "#fff2f0" : "#fff7e6",
-                  border: `1px solid ${mockResult === 'Approve' ? "#b7eb8f" : mockResult === 'Reject' ? "#ffccc7" : "#ffd591"}`,
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}>
-                  {mockResult === 'Approve'
-                    ? <CheckCircleOutlined style={{ fontSize: 18, color: "#52c41a" }} />
-                    : mockResult === 'Reject'
-                    ? <CloseCircleOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
-                    : <ExclamationCircleOutlined style={{ fontSize: 18, color: "#fa8c16" }} />
-                  }
-                  <div>
-                    <Text style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: mockResult === 'Approve' ? "#389e0d" : mockResult === 'Reject' ? "#cf1322" : "#d46b08",
-                    }}>
-                      AI Decision: {mockResult}
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Do you agree with this conclusion on the invoice?
-                    </Text>
-                  </div>
-                </div>
-
                 {/* Yes / Yes with feedback choice */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {(['yes', 'yes-feedback'] as const).map((choice) => {
