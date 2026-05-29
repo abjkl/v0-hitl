@@ -694,7 +694,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     bg: "#f6ffed",
                     border: "1px solid #b7eb8f",
                     titleColor: "#389e0d",
-                    label: "Approve",
+                    label: "No Alert Raised",
                   },
                   'Reject': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
