@@ -822,8 +822,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     </button>
                   </div>
 
-                  {/* After accept/not-accept, show submit button */}
-                  {selectedAction && (
+                  {/* After not-accept, show submit button. 赞 (Accept) takes effect directly with no submit. */}
+                  {selectedAction === 'Not Accept' && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {/* Summary chips */}
                       {(checkedItems.length > 0 || othersChecked) && (
