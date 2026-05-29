@@ -853,17 +853,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
               <Divider style={{ margin: 0 }} />
 
-              {/* Confidence Section */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
-                </div>
-                <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
               {mockResult !== 'High Risk Item' && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {/* Document Validity Section */}
@@ -943,12 +932,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   <Divider style={{ margin: 0 }} />
                 </div>
               )}
-
-              {/* DO Review Agent */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
-                <Tag color="green">Pass</Tag>
-              </div>
             </div>
           </Card>
 
