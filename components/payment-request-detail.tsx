@@ -775,8 +775,27 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
                     <Text style={{ fontSize: 13, color: "#389e0d" }}>
                       Response submitted
-                      {selectedAction && `: ${selectedAction}`}
                     </Text>
+                    {/* Show which button the user chose (赞=Accept / 踩=Not Accept) */}
+                    {selectedAction && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "4px 8px",
+                          borderRadius: 6,
+                          border: `2px solid ${selectedAction === "Not Accept" ? "#ff4d4f" : "#52c41a"}`,
+                          background: selectedAction === "Not Accept" ? "#fff2f0" : "#f6ffed",
+                        }}
+                      >
+                        {selectedAction === "Not Accept" ? (
+                          <DislikeFilled style={{ fontSize: 14, color: "#ff4d4f" }} />
+                        ) : (
+                          <LikeFilled style={{ fontSize: 14, color: "#52c41a" }} />
+                        )}
+                      </span>
+                    )}
                   </div>
                   {/* Show the feedback the user left when disliking (踩) */}
                   {selectedAction === 'Not Accept' && (checkedItems.length > 0 || (othersChecked && othersText) || overallNote.trim()) && (
