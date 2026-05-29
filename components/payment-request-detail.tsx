@@ -250,6 +250,13 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       confidence: 0.91,
       message: 'Not Covered. This invoice contains high-risk patterns that fall outside automated processing scope. Mandatory manual review required.',
       timestamp: '2026-05-20 08:30:00',
+      uncovered_reasons: [
+        'International payment with SWIFT transfer flagged as high-risk',
+        'Multiple amendments detected on invoice document',
+        'Supplier registered in high-risk jurisdiction',
+        'Invoice amount exceeds historical trend by 45%',
+        'PO number does not match supplier records in system',
+      ],
     },
   }
 
@@ -701,10 +708,10 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     label: "Issues Alert",
                   },
                   'High Risk Item': {
-                    icon: <CloseCircleOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />,
-                    bg: "#fff2f0",
-                    border: "1px solid #ffccc7",
-                    titleColor: "#cf1322",
+                    icon: <CloseCircleOutlined style={{ fontSize: 20, color: "#1677ff" }} />,
+                    bg: "#f0f5ff",
+                    border: "1px solid #adc6ff",
+                    titleColor: "#0050b3",
                     label: "Not Covered",
                   },
                 }
@@ -724,6 +731,17 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
                       {message}
                     </Text>
+                    {mockResult === 'High Risk Item' && mockConfig['High Risk Item']?.uncovered_reasons && (
+                      <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                        <Text style={{ fontSize: 11, fontWeight: 500, color: "#0050b3" }}>Reasons not covered:</Text>
+                        {mockConfig['High Risk Item'].uncovered_reasons.map((reason, idx) => (
+                          <div key={idx} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                            <div style={{ color: "#1677ff", marginTop: 2, fontSize: 12, fontWeight: 600 }}>•</div>
+                            <Text style={{ fontSize: 11, color: "#262626" }}>{reason}</Text>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <Text type="secondary" style={{ fontSize: 11, display: "block" }}>
                       {timestamp}
                     </Text>
