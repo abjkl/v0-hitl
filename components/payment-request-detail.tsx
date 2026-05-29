@@ -947,14 +947,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   <Divider style={{ margin: 0 }} />
                 </div>
               )}
-
-              {/* DO Review Agent */}
-              {mockResult !== 'High Risk Item' && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
-                  <Tag color="green">Pass</Tag>
-                </div>
-              )}
             </div>
           </Card>
 
