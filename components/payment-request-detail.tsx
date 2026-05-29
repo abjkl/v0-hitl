@@ -302,6 +302,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const handleModalConfirm = () => {
     setSelectedAction(pendingAction)
     setModalOpen(false)
+    // Confirming in the modal is the final step — no separate Submit needed.
+    setSubmitted(true)
   }
 
   const handleModalCancel = () => {
