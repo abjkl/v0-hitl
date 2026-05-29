@@ -971,13 +971,13 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title={
               <div>
                 <Text strong style={{ fontSize: 15 }}>
-                  {pendingAction === 'Accept' ? '赞' : 'Please identify the issues wrongly detected'}
+                  {pendingAction === 'Accept' ? '赞' : 'Please identify the items wrongly judged'}
                 </Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                   {pendingAction === 'Accept'
                     ? 'Review the AI conclusion on this invoice'
-                    : 'Select check items that were incorrectly flagged by AI'}
+                    : 'Select check items that were incorrectly judged by AI'}
                 </Text>
               </div>
             }
