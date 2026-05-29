@@ -83,12 +83,10 @@ const AI_STATUS_CONFIG = {
 
 interface ChecklistSectionProps {
   checkedItems: string[]
-  itemNotes: Record<string, string>
   othersChecked: boolean
   othersText: string
   aiCheckItems?: AICheckItemResult[]
   onToggleItem: (key: string, checked: boolean) => void
-  onNoteChange: (key: string, value: string) => void
   onToggleOthers: (checked: boolean) => void
   onOthersTextChange: (value: string) => void
   label?: string
@@ -96,12 +94,10 @@ interface ChecklistSectionProps {
 
 function ChecklistSection({
   checkedItems,
-  itemNotes,
   othersChecked,
   othersText,
   aiCheckItems,
   onToggleItem,
-  onNoteChange,
   onToggleOthers,
   onOthersTextChange,
   label = "SELECT CHECK ITEMS WITH ISSUES",
@@ -153,17 +149,6 @@ function ChecklistSection({
                 </Text>
               </div>
             )}
-
-            {/* User note — shown when item is checked */}
-            {isChecked && (
-              <Input.TextArea
-                placeholder="Add your note..."
-                rows={2}
-                value={itemNotes[item.key] || ""}
-                onChange={(e) => onNoteChange(item.key, e.target.value)}
-                style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-              />
-            )}
           </div>
         )
       })}
@@ -198,7 +183,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
   const [modalOpen, setModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<UserAction>(null)
   const [checkedItems, setCheckedItems] = useState<string[]>([])
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({})
+  const [overallNote, setOverallNote] = useState("")
   const [othersChecked, setOthersChecked] = useState(false)
   const [othersText, setOthersText] = useState("")
   const [acceptInvoiceChoice, setAcceptInvoiceChoice] = useState<'yes' | 'yes-feedback' | null>(null)
@@ -261,6 +246,18 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       message: 'Unable to process: Missing critical invoice data. Document quality too low for OCR. Please re-upload with clearer image quality.',
       timestamp: '2026-05-20 09:45:12',
     },
+    'High Risk Item': {
+      confidence: 0.91,
+      message: 'Not Covered. This invoice contains high-risk patterns that fall outside automated processing scope. Mandatory manual review required.',
+      timestamp: '2026-05-20 08:30:00',
+      uncovered_reasons: [
+        'Tax Amount > 100,000',
+        'Invoice Line Item Count > 50',
+        'Supplier Country IN (High-Risk Jurisdiction List)',
+        'Invoice Amount Variance > 40% vs. 3-Month Avg',
+        'PO Mismatch Count > 2 within 30 Days',
+      ],
+    },
   }
 
   const canProvideDecision = mockResult !== 'Cannot Provide Decision'
@@ -274,7 +271,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setModalOpen(false)
     setPendingAction(null)
     setCheckedItems([])
-    setItemNotes({})
+    setOverallNote("")
     setOthersChecked(false)
     setOthersText("")
     setAcceptInvoiceChoice(null)
@@ -285,7 +282,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     if (action === 'Accept' || action === 'Not Accept') {
       setPendingAction(action)
       setCheckedItems([])
-      setItemNotes({})
+      setOverallNote("")
       setOthersChecked(false)
       setOthersText("")
       setAcceptInvoiceChoice(null)
@@ -310,13 +307,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setSubmitted(true)
   }
 
-  const needsChecklist =
-    notAcceptChoice === 'reject-with-items' ||
-    notAcceptChoice === 'approve-exception' ||
-    notAcceptChoice === 'still-reject' ||
-    notAcceptChoice === 'hr-approve-wrong-issues' ||
-    notAcceptChoice === 'hr-reject-wrong-issues'
-
   const checklistInvalid =
     (checkedItems.length === 0 && !othersChecked) ||
     (othersChecked && !othersText.trim())
@@ -328,9 +318,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       return false
     }
     if (pendingAction === 'Not Accept') {
-      if (!notAcceptChoice) return true
-      if (needsChecklist) return checklistInvalid
-      return false
+      // Directly check if at least one item or Others is selected
+      return checklistInvalid
     }
     return false
   })()
@@ -675,6 +664,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
           { label: "Reject", value: "Reject" },
           { label: "AI Warning", value: "Require Human Review" },
           { label: "No Decision", value: "Cannot Provide Decision" },
+          { label: "High Risk", value: "High Risk Item" },
                   ]}
                   style={{ width: "100%" }}
                 />
@@ -694,28 +684,35 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     bg: "#f6ffed",
                     border: "1px solid #b7eb8f",
                     titleColor: "#389e0d",
-                    label: "Approve",
+                    label: "No Alert Raised",
                   },
                   'Reject': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Review",
+                    label: "Issues Alert",
                   },
                   'Require Human Review': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Review",
+                    label: "Issues Alert",
                   },
                   'Cannot Provide Decision': {
                     icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
-                    label: "Require Review",
+                    label: "Issues Alert",
+                  },
+                  'High Risk Item': {
+                    icon: <CloseCircleOutlined style={{ fontSize: 20, color: "#1677ff" }} />,
+                    bg: "#f0f5ff",
+                    border: "1px solid #adc6ff",
+                    titleColor: "#0050b3",
+                    label: "Not Covered",
                   },
                 }
 
@@ -734,6 +731,17 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
                       {message}
                     </Text>
+                    {mockResult === 'High Risk Item' && mockConfig['High Risk Item']?.uncovered_reasons && (
+                      <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                        <Text style={{ fontSize: 11, fontWeight: 500, color: "#0050b3" }}>Triggered Rules:</Text>
+                        {mockConfig['High Risk Item'].uncovered_reasons.map((reason, idx) => (
+                          <div key={idx} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                            <div style={{ color: "#1677ff", marginTop: 2, fontSize: 12, fontWeight: 600 }}>•</div>
+                            <Text style={{ fontSize: 11, color: "#262626" }}>{reason}</Text>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <Text type="secondary" style={{ fontSize: 11, display: "block" }}>
                       {timestamp}
                     </Text>
@@ -843,250 +851,106 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 </div>
               )}
 
-              <Divider style={{ margin: 0 }} />
+              {mockResult !== 'High Risk Item' && (
+                <>
+                  <Divider style={{ margin: 0 }} />
 
-              {/* Confidence Section */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
-                  <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
+                  {/* Confidence Section */}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Confidence</Text>
+                      <Text style={{ fontSize: 12, fontWeight: 600 }}>{mockConfig[mockResult].confidence.toFixed(2)} / 1</Text>
+                    </div>
+                    <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
+                  </div>
+
+                  <Divider style={{ margin: 0 }} />
+                </>
+              )}
+
+              {mockResult !== 'High Risk Item' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {/* Document Validity Section */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Document Validity</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Document title</Text>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Invoice Regulatory Compliance (ATP)</Text>
+                    </div>
+                    <div style={{ padding: 12, background: "#fff1f0", borderRadius: 6, marginTop: 8 }}>
+                      <Text style={{ fontSize: 11, color: "#cf1322" }}>
+                        Authority to Print (ATP) is missing/empty and is required for a "SERVICE INVOICE"
+                      </Text>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: 0 }} />
+
+                  {/* Invoice Key Info */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Invoice Key Info</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Invoice date match and range</Text>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: 0 }} />
+
+                  {/* Buyer Identity */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Buyer Identity</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Billing name match (Entity Info)</Text>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Billing address match (Entity Info)</Text>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Billing TIN match (Entity Info)</Text>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: 0 }} />
+
+                  {/* Supplier Identity */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Supplier Identity</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Supplier name match (PO)</Text>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: 0 }} />
+
+                  {/* Financial Accuracy */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Financial Accuracy</Text>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Total after tax equals submission amount</Text>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
+                      <Text style={{ fontSize: 12 }}>Total after tax equals net plus VAT (12%)</Text>
+                    </div>
+                  </div>
+
+                  <Divider style={{ margin: 0 }} />
                 </div>
-                <Text type="secondary" style={{ fontSize: 11 }}>v0.30 update amounts rule (JS)</Text>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Document Validity Section */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Document Validity</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Document title</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Invoice Regulatory Compliance (ATP)</Text>
-                </div>
-                <div style={{ padding: 12, background: "#fff1f0", borderRadius: 6, marginTop: 8 }}>
-                  <Text style={{ fontSize: 11, color: "#cf1322" }}>
-                    Authority to Print (ATP) is missing/empty and is required for a "SERVICE INVOICE"
-                  </Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Invoice Key Info */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Invoice Key Info</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Invoice date match and range</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Buyer Identity */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Buyer Identity</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Billing name match (Entity Info)</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Billing address match (Entity Info)</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Billing TIN match (Entity Info)</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Supplier Identity */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Supplier Identity</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Supplier name match (PO)</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* Financial Accuracy */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Financial Accuracy</Text>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Total after tax equals submission amount</Text>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 14 }} />
-                  <Text style={{ fontSize: 12 }}>Total after tax equals net plus VAT (12%)</Text>
-                </div>
-              </div>
-
-              <Divider style={{ margin: 0 }} />
-
-              {/* DO Review Agent */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>DO Review Agent</Text>
-                <Tag color="green">Pass</Tag>
-              </div>
+              )}
             </div>
           </Card>
 
-          {/* Human Review Card */}
-          <Card
-            title="Require Review"
-            size="small"
-            style={{ borderRadius: 8 }}
-          >
-            {hrSubmitted ? (
-              <div style={{
-                padding: "12px 16px",
-                background: hrModalType === 'approve' ? "#f6ffed" : "#fff2f0",
-                border: `1px solid ${hrModalType === 'approve' ? "#b7eb8f" : "#ffccc7"}`,
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}>
-                {hrModalType === 'approve'
-                  ? <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 16 }} />
-                  : <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 16 }} />
-                }
-                <Text style={{ fontSize: 13, color: hrModalType === 'approve' ? "#389e0d" : "#cf1322", fontWeight: 500 }}>
-                  {hrModalType === 'approve' ? 'Approved' : 'Rejected'}
-                </Text>
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button
-                  type="primary"
-                  style={{ flex: 1, borderRadius: 6 }}
-                  onClick={() => openHrModal('approve')}
-                  icon={<CheckCircleOutlined />}
-                >
-                  Approve
-                </Button>
-                <Button
-                  danger
-                  style={{ flex: 1, borderRadius: 6 }}
-                  onClick={() => openHrModal('reject')}
-                  icon={<CloseCircleOutlined />}
-                >
-                  Reject
-                </Button>
-              </div>
-            )}
-          </Card>
 
-          {/* Human Review Modal */}
-          <Modal
-            open={hrModalOpen}
-            onCancel={() => setHrModalOpen(false)}
-            onOk={handleHrConfirm}
-            okText="Confirm"
-            cancelText="Cancel"
-            okButtonProps={{ disabled: isHrConfirmDisabled, danger: hrModalType === 'reject' }}
-            title={
-              <div>
-                <Text strong style={{ fontSize: 15 }}>
-                  {hrModalType === 'approve' ? 'Approve' : 'Reject'}
-                </Text>
-                <br />
-                <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
-                  {hrModalType === 'approve'
-                    ? 'All check items are confirmed. You may uncheck any items with issues.'
-                    : 'Select the check items that have issues.'}
-                </Text>
-              </div>
-            }
-            width={480}
-          >
-            {(() => {
-              const hrAiMap = Object.fromEntries((pr.aiReview?.checkItems ?? []).map(i => [i.key, i]))
-              return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 0, marginTop: 8 }}>
-                  {CHECK_ITEMS.map((item, idx) => {
-                    const isChecked = hrCheckedItems.includes(item.key)
-                    const ai = hrAiMap[item.key]
-                    const cfg = ai ? AI_STATUS_CONFIG[ai.status] : null
-                    const showNote = (hrModalType === 'reject' && isChecked) || (hrModalType === 'approve' && !isChecked)
-                    return (
-                      <div
-                        key={item.key}
-                        style={{
-                          paddingTop: 10,
-                          paddingBottom: 10,
-                          borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
-                        }}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...hrCheckedItems, item.key]
-                              : hrCheckedItems.filter(k => k !== item.key)
-                            setHrCheckedItems(next)
-                            if (!e.target.checked) {
-                              const { [item.key]: _, ...rest } = hrItemNotes
-                              setHrItemNotes(rest)
-                            }
-                          }}
-                        >
-                          <Text style={{ fontSize: 13 }}>{item.label}</Text>
-                        </Checkbox>
-                        {ai && cfg && (
-                          <div style={{
-                            display: "flex", alignItems: "flex-start", gap: 6,
-                            marginTop: 5, marginLeft: 24, padding: "5px 8px",
-                            background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 6,
-                          }}>
-                            <Text style={{ fontSize: 11, color: cfg.color, fontWeight: 700, flexShrink: 0, lineHeight: "16px" }}>
-                              AI {ai.status.toUpperCase()}
-                            </Text>
-                            <Text style={{ fontSize: 11, color: "#595959", lineHeight: "16px" }}>{ai.feedback}</Text>
-                          </div>
-                        )}
-                        {showNote && (
-                          <Input.TextArea
-                            placeholder="Add your note..."
-                            rows={2}
-                            value={hrItemNotes[item.key] || ""}
-                            onChange={(e) => setHrItemNotes({ ...hrItemNotes, [item.key]: e.target.value })}
-                            style={{ fontSize: 12, borderRadius: 6, marginTop: 8, marginLeft: 24 }}
-                          />
-                        )}
-                      </div>
-                    )
-                  })}
-                  <div style={{ padding: "10px 0", borderTop: "1px solid #f0f0f0" }}>
-                    <Checkbox
-                      checked={hrOthersChecked}
-                      onChange={(e) => { setHrOthersChecked(e.target.checked); if (!e.target.checked) setHrOthersText("") }}
-                    >
-                      <Text style={{ fontSize: 13 }}>Others</Text>
-                    </Checkbox>
-                    {hrOthersChecked && (
-                      <Input.TextArea
-                        placeholder="Please describe the issue..."
-                        rows={2}
-                        value={hrOthersText}
-                        onChange={(e) => setHrOthersText(e.target.value)}
-                        style={{ fontSize: 12, borderRadius: 6, marginTop: 8 }}
-                      />
-                    )}
-                  </div>
-                </div>
-              )
-            })()}
-          </Modal>
 
           {/* Feedback Modal — select which check items AI got wrong */}
           <Modal
@@ -1099,274 +963,50 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title={
               <div>
                 <Text strong style={{ fontSize: 15 }}>
-                  {pendingAction === 'Accept' ? '赞' : '有什么问题？'}
+                  {pendingAction === 'Accept' ? '赞' : 'Please identify the items wrongly judged'}
                 </Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                   {pendingAction === 'Accept'
                     ? 'Review the AI conclusion on this invoice'
-                    : 'How would you like to handle this invoice?'}
+                    : 'Select check items that were incorrectly judged by AI'}
                 </Text>
               </div>
             }
             width={480}
           >
             {pendingAction === 'Not Accept' ? (
-              /* ── Not Accept Modal ── */
+              /* ── Not Accept Modal — directly show checklist ── */
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
-                {/* AI conclusion banner */}
-                <div style={{
-                  padding: "12px 14px",
-                  background: mockResult === 'Approve' ? "#f6ffed" : "#fff2f0",
-                  border: `1px solid ${mockResult === 'Approve' ? "#b7eb8f" : "#ffccc7"}`,
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}>
-                  {mockResult === 'Approve'
-                    ? <CheckCircleOutlined style={{ fontSize: 18, color: "#52c41a" }} />
-                    : <CloseCircleOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
-                  }
-                  <div>
-                    <Text style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: mockResult === 'Approve' ? "#389e0d" : "#cf1322",
-                    }}>
-                      AI Decision: {mockResult}
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {mockResult === 'Approve'
-                        ? 'You disagree — choose how to proceed with this invoice.'
-                        : 'You disagree — choose how to proceed with this invoice.'}
-                    </Text>
+                <ChecklistSection
+                  checkedItems={checkedItems}
+                  othersChecked={othersChecked}
+                  othersText={othersText}
+                  aiCheckItems={pr.aiReview?.checkItems}
+                  onToggleItem={(key, checked) => {
+                    const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                    setCheckedItems(next)
+                  }}
+                  onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                  onOthersTextChange={setOthersText}
+                />
+
+                {/* Overall note — shown when at least one item or Others is selected */}
+                {(checkedItems.length > 0 || othersChecked) && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                    <Input.TextArea
+                      placeholder="Add any additional notes or comments..."
+                      rows={3}
+                      value={overallNote}
+                      onChange={(e) => setOverallNote(e.target.value)}
+                      style={{ fontSize: 12, borderRadius: 6 }}
+                    />
                   </div>
-                </div>
-
-                {/* Options — differ by AI result */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {mockResult === 'Approve' ? (
-                    /* AI said Approve → user can Reject (with items) or Still Approve (with exceptions) */
-                    <>
-                      {([
-                        {
-                          key: 'reject-with-items',
-                          label: 'Reject this invoice',
-                          desc: 'Override AI — reject and specify which check items have issues',
-                        },
-                        {
-                          key: 'approve-exception',
-                          label: 'Still approve — issues accepted as exception',
-                          desc: 'Approve despite issues, flagging them as accepted exceptions',
-                        },
-                      ] as const).map(({ key, label, desc }) => {
-                        const isSelected = notAcceptChoice === key
-                        return (
-                          <div
-                            key={key}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
-                            onClick={() => setNotAcceptChoice(key)}
-                            style={{
-                              padding: "10px 14px",
-                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              borderRadius: 8,
-                              background: isSelected ? "#e6f4ff" : "#fff",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <div style={{
-                              width: 16, height: 16, borderRadius: "50%",
-                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              background: isSelected ? "#1677ff" : "#fff",
-                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <div>
-                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  ) : mockResult === 'Require Human Review' ? (
-                    /* AI said Require Human Review → user provides own decision with correct issues */
-                    <>
-                      {([
-                        {
-                          key: 'hr-approve-wrong-issues',
-                          label: 'Approve — wrong issues identified by AI',
-                          desc: 'Approve the invoice and specify the actual issues (if any)',
-                        },
-                        {
-                          key: 'hr-reject-wrong-issues',
-                          label: 'Reject — wrong issues identified by AI',
-                          desc: 'Reject the invoice and specify the actual issues',
-                        },
-                      ] as const).map(({ key, label, desc }) => {
-                        const isSelected = notAcceptChoice === key
-                        return (
-                          <div
-                            key={key}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
-                            onClick={() => setNotAcceptChoice(key)}
-                            style={{
-                              padding: "10px 14px",
-                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              borderRadius: 8,
-                              background: isSelected ? "#e6f4ff" : "#fff",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <div style={{
-                              width: 16, height: 16, borderRadius: "50%",
-                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              background: isSelected ? "#1677ff" : "#fff",
-                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <div>
-                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  ) : (
-                    /* AI said Reject → user can Approve (2 ways) or Still Reject with different reason */
-                    <>
-                      {([
-                        {
-                          key: 'approve-no-issue',
-                          label: 'Approve — no issue identified',
-                          desc: 'Override AI — approve the invoice as no real issues were found',
-                        },
-                        {
-                          key: 'approve-exception',
-                          label: 'Approve — issues accepted as exception',
-                          desc: 'Approve despite identified issues, flagging them as accepted exceptions',
-                        },
-                        {
-                          key: 'still-reject',
-                          label: 'Still reject, but with a different reason',
-                          desc: 'Reject the invoice and specify your own check items',
-                        },
-                      ] as const).map(({ key, label, desc }) => {
-                        const isSelected = notAcceptChoice === key
-                        const clearsChecklist = key === 'approve-no-issue'
-                        return (
-                          <div
-                            key={key}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
-                            onClick={() => {
-                              setNotAcceptChoice(key)
-                              if (clearsChecklist) { setCheckedItems([]); setItemNotes({}); setOthersChecked(false); setOthersText("") }
-                            }}
-                            style={{
-                              padding: "10px 14px",
-                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              borderRadius: 8,
-                              background: isSelected ? "#e6f4ff" : "#fff",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <div style={{
-                              width: 16, height: 16, borderRadius: "50%",
-                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              background: isSelected ? "#1677ff" : "#fff",
-                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <div>
-                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  )}
-                </div>
-
-                {/* Checklist — shown when option requires flagging items */}
-                {needsChecklist && (
-                  <ChecklistSection
-                    checkedItems={checkedItems}
-                    itemNotes={itemNotes}
-                    othersChecked={othersChecked}
-                    othersText={othersText}
-                    aiCheckItems={pr.aiReview?.checkItems}
-                    onToggleItem={(key, checked) => {
-                      const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
-                      setCheckedItems(next)
-                      if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                    }}
-                    onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
-                    onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
-                    onOthersTextChange={setOthersText}
-                  />
                 )}
               </div>
             ) : pendingAction === 'Accept' ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
-                {/* AI conclusion display */}
-                <div style={{
-                  padding: "12px 14px",
-                  background: mockResult === 'Approve' ? "#f6ffed" : mockResult === 'Reject' ? "#fff2f0" : "#fff7e6",
-                  border: `1px solid ${mockResult === 'Approve' ? "#b7eb8f" : mockResult === 'Reject' ? "#ffccc7" : "#ffd591"}`,
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}>
-                  {mockResult === 'Approve'
-                    ? <CheckCircleOutlined style={{ fontSize: 18, color: "#52c41a" }} />
-                    : mockResult === 'Reject'
-                    ? <CloseCircleOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
-                    : <ExclamationCircleOutlined style={{ fontSize: 18, color: "#fa8c16" }} />
-                  }
-                  <div>
-                    <Text style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: mockResult === 'Approve' ? "#389e0d" : mockResult === 'Reject' ? "#cf1322" : "#d46b08",
-                    }}>
-                      AI Decision: {mockResult}
-                    </Text>
-                    <br />
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Do you agree with this conclusion on the invoice?
-                    </Text>
-                  </div>
-                </div>
-
                 {/* Yes / Yes with feedback choice */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {(['yes', 'yes-feedback'] as const).map((choice) => {
@@ -1381,7 +1021,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                           setAcceptInvoiceChoice(choice)
                           if (choice === 'yes') {
                             setCheckedItems([])
-                            setItemNotes({})
                             setOthersChecked(false)
                             setOthersText("")
                           }
@@ -1413,7 +1052,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         </div>
                         <div>
                           <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>
-                            {choice === 'yes' ? 'Yes' : 'Yes with feedback'}
+                            {choice === 'yes' ? 'All Issues Identified Correctly' : 'Good Alert but with Feedback'}
                           </Text>
                           <br />
                           <Text type="secondary" style={{ fontSize: 11 }}>
@@ -1429,40 +1068,67 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
                 {/* Checklist — only shown when "yes with feedback" selected */}
                 {acceptInvoiceChoice === 'yes-feedback' && (
-                  <ChecklistSection
-                    checkedItems={checkedItems}
-                    itemNotes={itemNotes}
-                    othersChecked={othersChecked}
-                    othersText={othersText}
-                    aiCheckItems={pr.aiReview?.checkItems}
-                    onToggleItem={(key, checked) => {
-                      const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
-                      setCheckedItems(next)
-                      if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                    }}
-                    onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
-                    onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
-                    onOthersTextChange={setOthersText}
-                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <ChecklistSection
+                      checkedItems={checkedItems}
+                      othersChecked={othersChecked}
+                      othersText={othersText}
+                      aiCheckItems={pr.aiReview?.checkItems}
+                      onToggleItem={(key, checked) => {
+                        const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                        setCheckedItems(next)
+                      }}
+                      onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                      onOthersTextChange={setOthersText}
+                      label="WHAT ISSUES DID AI IDENTIFY INCORRECTLY?"
+                    />
+
+                    {/* Overall note — shown when at least one item or Others is selected */}
+                    {(checkedItems.length > 0 || othersChecked) && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                        <Input.TextArea
+                          placeholder="Add any additional notes or comments..."
+                          rows={3}
+                          value={overallNote}
+                          onChange={(e) => setOverallNote(e.target.value)}
+                          style={{ fontSize: 12, borderRadius: 6 }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
               /* fallback — original checklist */
-              <ChecklistSection
-                checkedItems={checkedItems}
-                itemNotes={itemNotes}
-                othersChecked={othersChecked}
-                othersText={othersText}
-                aiCheckItems={pr.aiReview?.checkItems}
-                onToggleItem={(key, checked) => {
-                  const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
-                  setCheckedItems(next)
-                  if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                }}
-                onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
-                onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
-                onOthersTextChange={setOthersText}
-              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <ChecklistSection
+                  checkedItems={checkedItems}
+                  othersChecked={othersChecked}
+                  othersText={othersText}
+                  aiCheckItems={pr.aiReview?.checkItems}
+                  onToggleItem={(key, checked) => {
+                    const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                    setCheckedItems(next)
+                  }}
+                  onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                  onOthersTextChange={setOthersText}
+                />
+
+                {/* Overall note — shown when at least one item or Others is selected */}
+                {(checkedItems.length > 0 || othersChecked) && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Text style={{ fontSize: 12, color: "#595959", fontWeight: 500 }}>Additional Notes (Optional)</Text>
+                    <Input.TextArea
+                      placeholder="Add any additional notes or comments..."
+                      rows={3}
+                      value={overallNote}
+                      onChange={(e) => setOverallNote(e.target.value)}
+                      style={{ fontSize: 12, borderRadius: 6 }}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </Modal>
         </Col>

@@ -1803,7 +1803,7 @@ export interface PRAttachment {
 }
 
 // AI Review Result Types
-export type AIReviewResult = 'Approve' | 'Reject' | 'Require Human Review' | 'Cannot Provide Decision'
+export type AIReviewResult = 'Approve' | 'Reject' | 'Require Human Review' | 'Cannot Provide Decision' | 'High Risk Item'
 
 export interface AICheckItemResult {
   key: string           // matches CHECK_ITEMS key in payment-request-detail
