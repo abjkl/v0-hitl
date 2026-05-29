@@ -315,13 +315,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     setSubmitted(true)
   }
 
-  const needsChecklist =
-    notAcceptChoice === 'reject-with-items' ||
-    notAcceptChoice === 'approve-exception' ||
-    notAcceptChoice === 'still-reject' ||
-    notAcceptChoice === 'hr-approve-wrong-issues' ||
-    notAcceptChoice === 'hr-reject-wrong-issues'
-
   const checklistInvalid =
     (checkedItems.length === 0 && !othersChecked) ||
     (othersChecked && !othersText.trim())
@@ -333,9 +326,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       return false
     }
     if (pendingAction === 'Not Accept') {
-      if (!notAcceptChoice) return true
-      if (needsChecklist) return checklistInvalid
-      return false
+      // Directly check if at least one item or Others is selected
+      return checklistInvalid
     }
     return false
   })()
@@ -1112,210 +1104,36 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title={
               <div>
                 <Text strong style={{ fontSize: 15 }}>
-                  {pendingAction === 'Accept' ? '赞' : '有什么问题？'}
+                  {pendingAction === 'Accept' ? '赞' : 'Please identify the issues wrongly detected'}
                 </Text>
                 <br />
                 <Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                   {pendingAction === 'Accept'
                     ? 'Review the AI conclusion on this invoice'
-                    : 'How would you like to handle this invoice?'}
+                    : 'Select check items that were incorrectly flagged by AI'}
                 </Text>
               </div>
             }
             width={480}
           >
             {pendingAction === 'Not Accept' ? (
-              /* ── Not Accept Modal ── */
+              /* ── Not Accept Modal — directly show checklist ── */
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
-
-                {/* Options — differ by AI result */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {mockResult === 'Approve' ? (
-                    /* AI said Approve → user can Reject (with items) or Still Approve (with exceptions) */
-                    <>
-                      {([
-                        {
-                          key: 'reject-with-items',
-                          label: 'Reject this invoice',
-                          desc: 'Override AI — reject and specify which check items have issues',
-                        },
-                        {
-                          key: 'approve-exception',
-                          label: 'Still approve — issues accepted as exception',
-                          desc: 'Approve despite issues, flagging them as accepted exceptions',
-                        },
-                      ] as const).map(({ key, label, desc }) => {
-                        const isSelected = notAcceptChoice === key
-                        return (
-                          <div
-                            key={key}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
-                            onClick={() => setNotAcceptChoice(key)}
-                            style={{
-                              padding: "10px 14px",
-                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              borderRadius: 8,
-                              background: isSelected ? "#e6f4ff" : "#fff",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <div style={{
-                              width: 16, height: 16, borderRadius: "50%",
-                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              background: isSelected ? "#1677ff" : "#fff",
-                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <div>
-                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  ) : mockResult === 'Require Human Review' ? (
-                    /* AI said Require Human Review → user provides own decision with correct issues */
-                    <>
-                      {([
-                        {
-                          key: 'hr-approve-wrong-issues',
-                          label: 'Approve — wrong issues identified by AI',
-                          desc: 'Approve the invoice and specify the actual issues (if any)',
-                        },
-                        {
-                          key: 'hr-reject-wrong-issues',
-                          label: 'Reject — wrong issues identified by AI',
-                          desc: 'Reject the invoice and specify the actual issues',
-                        },
-                      ] as const).map(({ key, label, desc }) => {
-                        const isSelected = notAcceptChoice === key
-                        return (
-                          <div
-                            key={key}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
-                            onClick={() => setNotAcceptChoice(key)}
-                            style={{
-                              padding: "10px 14px",
-                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              borderRadius: 8,
-                              background: isSelected ? "#e6f4ff" : "#fff",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <div style={{
-                              width: 16, height: 16, borderRadius: "50%",
-                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              background: isSelected ? "#1677ff" : "#fff",
-                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <div>
-                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  ) : (
-                    /* AI said Reject → user can Approve (2 ways) or Still Reject with different reason */
-                    <>
-                      {([
-                        {
-                          key: 'approve-no-issue',
-                          label: 'Approve — no issue identified',
-                          desc: 'Override AI — approve the invoice as no real issues were found',
-                        },
-                        {
-                          key: 'approve-exception',
-                          label: 'Approve — issues accepted as exception',
-                          desc: 'Approve despite identified issues, flagging them as accepted exceptions',
-                        },
-                        {
-                          key: 'still-reject',
-                          label: 'Still reject, but with a different reason',
-                          desc: 'Reject the invoice and specify your own check items',
-                        },
-                      ] as const).map(({ key, label, desc }) => {
-                        const isSelected = notAcceptChoice === key
-                        const clearsChecklist = key === 'approve-no-issue'
-                        return (
-                          <div
-                            key={key}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.currentTarget.click() }}
-                            onClick={() => {
-                              setNotAcceptChoice(key)
-                              if (clearsChecklist) { setCheckedItems([]); setItemNotes({}); setOthersChecked(false); setOthersText("") }
-                            }}
-                            style={{
-                              padding: "10px 14px",
-                              border: `1.5px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              borderRadius: 8,
-                              background: isSelected ? "#e6f4ff" : "#fff",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <div style={{
-                              width: 16, height: 16, borderRadius: "50%",
-                              border: `2px solid ${isSelected ? "#1677ff" : "#d9d9d9"}`,
-                              background: isSelected ? "#1677ff" : "#fff",
-                              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                              {isSelected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
-                            </div>
-                            <div>
-                              <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>{label}</Text>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: 11 }}>{desc}</Text>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </>
-                  )}
-                </div>
-
-                {/* Checklist — shown when option requires flagging items */}
-                {needsChecklist && (
-                  <ChecklistSection
-                    checkedItems={checkedItems}
-                    itemNotes={itemNotes}
-                    othersChecked={othersChecked}
-                    othersText={othersText}
-                    aiCheckItems={pr.aiReview?.checkItems}
-                    onToggleItem={(key, checked) => {
-                      const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
-                      setCheckedItems(next)
-                      if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
-                    }}
-                    onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
-                    onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
-                    onOthersTextChange={setOthersText}
-                  />
-                )}
+                <ChecklistSection
+                  checkedItems={checkedItems}
+                  itemNotes={itemNotes}
+                  othersChecked={othersChecked}
+                  othersText={othersText}
+                  aiCheckItems={pr.aiReview?.checkItems}
+                  onToggleItem={(key, checked) => {
+                    const next = checked ? [...checkedItems, key] : checkedItems.filter(k => k !== key)
+                    setCheckedItems(next)
+                    if (!checked) { const { [key]: _, ...rest } = itemNotes; setItemNotes(rest) }
+                  }}
+                  onNoteChange={(key, val) => setItemNotes({ ...itemNotes, [key]: val })}
+                  onToggleOthers={(checked) => { setOthersChecked(checked); if (!checked) setOthersText("") }}
+                  onOthersTextChange={setOthersText}
+                />
               </div>
             ) : pendingAction === 'Accept' ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 8 }}>
