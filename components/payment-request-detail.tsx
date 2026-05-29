@@ -846,33 +846,8 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
 
               <Divider style={{ margin: 0 }} />
 
-              {mockResult === 'High Risk Item' ? (
-                /* High Risk Item — all items marked Not Covered */
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {[
-                    { group: "Document Validity", items: ["Document title", "Invoice Regulatory Compliance (ATP)"] },
-                    { group: "Invoice Key Info", items: ["Invoice date match and range", "Invoice number match PA entry"] },
-                    { group: "Buyer Identity", items: ["Billing name match (Entity Info)", "Billing address match (Entity Info)", "Billing TIN match (Entity Info)"] },
-                    { group: "Supplier Identity", items: ["Supplier name match (PO)"] },
-                    { group: "Financial Accuracy", items: ["Total after tax equals submission amount", "Total after tax equals net plus VAT (12%)"] },
-                  ].map(({ group, items }, gIdx, arr) => (
-                    <div key={group}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>{group}</Text>
-                        {items.map((item) => (
-                          <div key={item} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 14 }} />
-                            <Text style={{ fontSize: 12, color: "#cf1322" }}>{item}</Text>
-                          </div>
-                        ))}
-                      </div>
-                      {gIdx < arr.length - 1 && <Divider style={{ margin: "8px 0" }} />}
-                    </div>
-                  ))}
-                  <Divider style={{ margin: "8px 0" }} />
-                </div>
-              ) : (
-                <>
+              {mockResult !== 'High Risk Item' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   {/* Document Validity Section */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Document Validity</Text>
@@ -948,7 +923,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                   </div>
 
                   <Divider style={{ margin: 0 }} />
-                </>
+                </div>
               )}
 
               {/* DO Review Agent */}
