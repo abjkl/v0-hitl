@@ -875,7 +875,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 </>
               )}
 
-              {mockResult !== 'High Risk Item' && (() => {
+              {mockResult !== 'High Risk Item' && mockResult !== 'Approve' && (() => {
                 const isIssuesAlert = ['Reject', 'Require Human Review', 'Cannot Provide Decision'].includes(mockResult)
                 return (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
