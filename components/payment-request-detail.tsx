@@ -646,7 +646,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
             title="AI Review"
             size="small"
             style={{ borderRadius: 8 }}
-            extra={<Button type="text">Parsing Invoice Retry</Button>}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
