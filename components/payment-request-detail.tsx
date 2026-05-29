@@ -261,6 +261,11 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
       message: 'Unable to process: Missing critical invoice data. Document quality too low for OCR. Please re-upload with clearer image quality.',
       timestamp: '2026-05-20 09:45:12',
     },
+    'High Risk Item': {
+      confidence: 0.91,
+      message: 'Not Covered. This invoice contains high-risk patterns that fall outside automated processing scope. Mandatory manual review required.',
+      timestamp: '2026-05-20 08:30:00',
+    },
   }
 
   const canProvideDecision = mockResult !== 'Cannot Provide Decision'
@@ -675,6 +680,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
           { label: "Reject", value: "Reject" },
           { label: "AI Warning", value: "Require Human Review" },
           { label: "No Decision", value: "Cannot Provide Decision" },
+          { label: "High Risk", value: "High Risk Item" },
                   ]}
                   style={{ width: "100%" }}
                 />
@@ -716,6 +722,13 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
                     label: "Issues Alert",
+                  },
+                  'High Risk Item': {
+                    icon: <CloseCircleOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />,
+                    bg: "#fff2f0",
+                    border: "1px solid #ffccc7",
+                    titleColor: "#cf1322",
+                    label: "Not Covered",
                   },
                 }
 
