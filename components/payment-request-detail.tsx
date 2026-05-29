@@ -749,10 +749,12 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 )
               })()}
 
-              <Divider style={{ margin: 0 }} />
+              {mockResult !== 'High Risk Item' && (
+                <>
+                  <Divider style={{ margin: 0 }} />
 
-              {/* User Action Area - Decision buttons */}
-              {submitted ? (
+                  {/* User Action Area - Decision buttons */}
+                  {submitted ? (
                 <div style={{
                   padding: "12px 16px",
                   background: "#f6ffed",
@@ -848,7 +850,9 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       </Button>
                     </div>
                   )}
-                </div>
+                  </div>
+                  )}
+                </>
               )}
 
               {mockResult !== 'High Risk Item' && (
