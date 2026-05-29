@@ -1365,7 +1365,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                         </div>
                         <div>
                           <Text style={{ fontSize: 13, fontWeight: isSelected ? 600 : 400 }}>
-                            {choice === 'yes' ? 'Yes' : 'Yes with feedback'}
+                            {choice === 'yes' ? 'All Issues Identified Correctly' : 'Good Alert but with Feedback'}
                           </Text>
                           <br />
                           <Text type="secondary" style={{ fontSize: 11 }}>
