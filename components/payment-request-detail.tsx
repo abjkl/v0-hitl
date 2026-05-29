@@ -103,12 +103,17 @@ function ChecklistSection({
   label = "SELECT CHECK ITEMS WITH ISSUES",
 }: ChecklistSectionProps) {
   const aiMap = Object.fromEntries((aiCheckItems ?? []).map(i => [i.key, i]))
+  // Only show items the AI flagged with an issue (fail/warning). AI PASS items are hidden.
+  const visibleItems = CHECK_ITEMS.filter((item) => {
+    const ai = aiMap[item.key]
+    return ai && ai.status !== 'pass'
+  })
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0, borderTop: "1px solid #f0f0f0", paddingTop: 4 }}>
       <Text type="secondary" style={{ fontSize: 11, fontWeight: 500, padding: "6px 0", letterSpacing: "0.02em" }}>
         {label}
       </Text>
-      {CHECK_ITEMS.map((item, idx) => {
+      {visibleItems.map((item, idx) => {
         const isChecked = checkedItems.includes(item.key)
         const ai = aiMap[item.key]
         const cfg = ai ? AI_STATUS_CONFIG[ai.status] : null
@@ -118,7 +123,7 @@ function ChecklistSection({
             style={{
               paddingTop: 10,
               paddingBottom: 10,
-              borderBottom: idx < CHECK_ITEMS.length - 1 ? "1px solid #f0f0f0" : "none",
+              borderBottom: idx < visibleItems.length - 1 ? "1px solid #f0f0f0" : "none",
             }}
           >
             <Checkbox
