@@ -275,7 +275,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
     if (action === 'Accept' || action === 'Not Accept') {
       setPendingAction(action)
       setCheckedItems([])
-      setItemNotes({})
+      setOverallNote("")
       setOthersChecked(false)
       setOthersText("")
       setAcceptInvoiceChoice(null)
