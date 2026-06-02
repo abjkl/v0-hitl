@@ -724,7 +724,7 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 }
 
                 const config = resultConfig[mockResult]
-                const { confidence, message, timestamp } = mockConfig[mockResult]
+                const { message, timestamp } = mockConfig[mockResult]
 
                 return (
                   <div style={{ padding: 16, background: config.bg, borderRadius: 8, border: config.border }}>
@@ -733,7 +733,6 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       <Title level={4} style={{ margin: 0, color: config.titleColor }}>
                         {config.label}
                       </Title>
-                      <Text style={{ fontSize: 12, color: "#666" }}>{confidence.toFixed(2)} / 1</Text>
                     </div>
                     <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
                       {message}
