@@ -24,7 +24,7 @@ import type { ColumnsType } from "antd/es/table"
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
-  ExclamationCircleOutlined,
+  WarningOutlined,
   QuestionCircleOutlined,
   LikeFilled,
   DislikeFilled,
@@ -695,21 +695,21 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                     label: "No Alert Raised",
                   },
                   'Reject': {
-                    icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+                    icon: <WarningOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
                     label: "Higher-severity review point",
                   },
                   'Require Human Review': {
-                    icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+                    icon: <WarningOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
                     label: "Review Point Identified",
                   },
                   'Cannot Provide Decision': {
-                    icon: <ExclamationCircleOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
+                    icon: <WarningOutlined style={{ fontSize: 20, color: "#fa8c16" }} />,
                     bg: "#fff7e6",
                     border: "1px solid #ffd591",
                     titleColor: "#d46b08",
