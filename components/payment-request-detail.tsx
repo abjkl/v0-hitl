@@ -18,6 +18,7 @@ import {
   Segmented,
   Modal,
   Checkbox,
+  Popover,
 } from "antd"
 import type { ColumnsType } from "antd/es/table"
 import {
@@ -726,6 +727,21 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                 const config = resultConfig[mockResult]
                 const { message, timestamp } = mockConfig[mockResult]
 
+                // Disclaimer wording shown via the info icon, based on the mock / PR state
+                const disclaimerMap: Record<string, string> = {
+                  'Require Human Review':
+                    "AI found a possible review point based on current rules and available data. This is not an approval or rejection decision.",
+                  'Cannot Provide Decision':
+                    "AI found a possible review point based on current rules and available data. This is not an approval or rejection decision.",
+                  'Reject':
+                    "AI found a higher-severity concern based on current rules and available data. This is not an automated rejection.",
+                  'High Risk Item':
+                    "This flag only highlights a risk dimension, such as amount, duplicate, supplier, document type, or unstable population. It does not complete detailed invoice review.",
+                  'Approve':
+                    "No alert was generated based on current configured rules and available system / digital data. This does not mean the PR is approved, risk-free, or fully checked by AI.",
+                }
+                const disclaimer = disclaimerMap[mockResult]
+
                 return (
                   <div style={{ padding: 16, background: config.bg, borderRadius: 8, border: config.border }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -733,6 +749,23 @@ export function PaymentRequestDetail({ pr, onBack }: PaymentRequestDetailProps) 
                       <Title level={4} style={{ margin: 0, color: config.titleColor }}>
                         {config.label}
                       </Title>
+                      {disclaimer && (
+                        <Popover
+                          trigger="click"
+                          placement="bottomLeft"
+                          title="Disclaimer"
+                          content={
+                            <Text style={{ fontSize: 12, color: "#595959", display: "block", maxWidth: 280 }}>
+                              {disclaimer}
+                            </Text>
+                          }
+                        >
+                          <InfoCircleOutlined
+                            style={{ fontSize: 14, color: config.titleColor, cursor: "pointer" }}
+                            aria-label="View disclaimer"
+                          />
+                        </Popover>
+                      )}
                     </div>
                     <Text type="secondary" style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
                       {message}
